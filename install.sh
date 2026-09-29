@@ -98,6 +98,7 @@ package() {
     busctl:*|systemctl:*) echo systemd ;;
     fc-cache:*) echo fontconfig ;;
     sha256sum:*) echo coreutils ;;
+    cmp:*|diff:*) echo diffutils ;;
     pkg-config:pacman) echo pkgconf ;;
     pkg-config:dnf) echo pkgconf-pkg-config ;;
     pkg-config:*) echo pkg-config ;;
@@ -128,8 +129,8 @@ install_packages() {
 }
 
 check_deps() {
-  local need=(Hyprland hyprctl qs wl-copy gio gdbus xdg-open xdg-settings xdg-mime busctl systemctl zip unzip curl sha256sum fc-cache)
-  [ $plugins = 1 ] && need+=(cmake pkg-config c++)
+  local need=(Hyprland hyprctl qs wl-copy gio gdbus xdg-open xdg-settings xdg-mime busctl systemctl zip unzip curl sha256sum fc-cache cmp diff)
+  [ $plugins = 1 ] && need+=(cmake make pkg-config c++)
   local missing=() bin
   for bin in "${need[@]}"; do command -v "$bin" >/dev/null || missing+=("$bin"); done
   [ ${#missing[@]} = 0 ] && { say "stage=deps result=ok"; return; }
