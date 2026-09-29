@@ -13,7 +13,7 @@ A desktop shell for Hyprland with elements inspired by the [Fluent design langua
 - For the title bar and minimize plugins: `cmake`, `pkg-config`, a C++23 compiler, and Hyprland's headers for the version that is running.
 - Runtime tools: `wl-clipboard`, `glib2` (`gio`, `gdbus`), `xdg-utils`, `systemd`, `zip`, `unzip`, `curl`, `fontconfig`.
 
-The installer checks for all of these. Run it with `--deps` and it installs what is missing through `pacman`, `dnf`, `apt` or `zypper`, using `sudo` or `pkexec`.
+The installer checks for all of these. Run it with `--deps` and it installs what is missing through `pacman`, `dnf` or `apt`, using `sudo` or `pkexec`.
 
 Recommended, not required:
 

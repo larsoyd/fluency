@@ -116,7 +116,7 @@ package() {
 
 manager() {
   local pm
-  for pm in pacman dnf apt zypper; do command -v "$pm" >/dev/null && { echo "$pm"; return; }; done
+  for pm in pacman dnf apt; do command -v "$pm" >/dev/null && { echo "$pm"; return; }; done
   echo unknown
 }
 
@@ -128,7 +128,6 @@ install_packages() {
     pacman) timeout 600 "$root" pacman -S --needed --noconfirm "$@" ;;
     dnf) timeout 600 "$root" dnf install -y "$@" ;;
     apt) timeout 600 "$root" apt install -y "$@" ;;
-    zypper) timeout 600 "$root" zypper --non-interactive install "$@" ;;
     *) return 1 ;;
   esac
 }
@@ -236,13 +235,11 @@ extra_packages() {
     papirus:dnf) echo papirus-icon-theme papirus-icon-theme-dark ;;
     papirus:*) echo papirus-icon-theme ;;
     kvantum:apt) echo qt6-style-kvantum ;;
-    kvantum:zypper) echo kvantum-qt6 ;;
     breeze-gtk:apt) echo breeze-gtk-theme ;;
     breeze-gtk:dnf) echo breeze-gtk-gtk3 breeze-gtk-gtk4 ;;
     noto:pacman) echo noto-fonts noto-fonts-cjk noto-fonts-emoji ;;
     noto:dnf) echo google-noto-sans-vf-fonts google-noto-sans-cjk-vf-fonts google-noto-color-emoji-fonts ;;
     noto:apt) echo fonts-noto-core fonts-noto-cjk fonts-noto-color-emoji ;;
-    noto:zypper) echo noto-sans-fonts noto-sans-cjk-fonts noto-coloremoji-fonts ;;
     *) echo "$1" ;;
   esac
 }
