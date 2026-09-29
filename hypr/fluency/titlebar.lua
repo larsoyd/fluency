@@ -23,7 +23,7 @@ if hl.plugin.fluencytitlebar then
                 title_padding              = 16,
                 bar_padding                = 0,
                 bar_button_padding         = 0,
-                button_icon_size           = 10,
+                button_icon_size           = 16,
                 bar_part_of_window         = true,
                 bar_precedence_over_border = true,
                 on_double_click            = "hyprctl dispatch '" .. maximize .. "'",
