@@ -1,6 +1,6 @@
 # Fluency
 
-A desktop shell for Hyprland in the Fluent style. It includes a taskbar with a Start menu, a system tray, quick settings, toasts, desktop icons, jump lists, title bars with caption buttons, and minimize to the taskbar. It is built with Quickshell and Hyprland's Lua config.
+A desktop shell for Hyprland with elements inspired by the [Fluent design language](https://en.wikipedia.org/wiki/Fluent_Design_System). It includes a taskbar with a Start menu, a system tray, quick settings, toasts, desktop icons, jump lists, title bars with caption buttons, and minimize to the taskbar. It is built with Quickshell and Hyprland's Lua config.
 
 ![Fluency at 1920x1080 with the Start menu open](media/desktop.png)
 
