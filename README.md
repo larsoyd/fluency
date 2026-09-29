@@ -2,7 +2,7 @@
 
 A desktop shell for Hyprland in the Fluent style. It includes a taskbar with a Start menu, a system tray, quick settings, toasts, desktop icons, jump lists, title bars with caption buttons, and minimize to the taskbar. It is built with Quickshell and Hyprland's Lua config.
 
-![wallpaper](shell/assets/wallpaper.png)
+![Fluency at 1920x1080 with the Start menu open](media/desktop.png)
 
 ## Requirements
 
