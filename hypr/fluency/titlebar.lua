@@ -3,7 +3,7 @@ local c = theme.color
 local machine = require("fluency.machine")
 
 -- tests point this at a fresh build
-local lib = os.getenv("FLUENCY_PLUGIN_DIR") or (os.getenv("HOME") .. "/.local/lib")
+local lib = os.getenv("FLUENCY_PLUGIN_DIR") or (os.getenv("HOME") .. "/.local/lib/fluency")
 hl.plugin.load(lib .. "/libfluencyminimize.so")
 hl.plugin.load(lib .. "/libfluencytitlebar.so")
 
