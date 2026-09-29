@@ -93,7 +93,9 @@ package() {
   case $bin:$pm in
     qs:pacman) echo quickshell ;;
     qs:*) echo "" ;;
-    hyprctl:*|Hyprland:*) echo hyprland ;;
+    hyprctl:*|Hyprland:*|hyprland.pc:pacman) echo hyprland ;;
+    hyprland.pc:apt) echo hyprland-dev ;;
+    hyprland.pc:*) echo hyprland-devel ;;
     wl-copy:*) echo wl-clipboard ;;
     gio:apt|gdbus:apt) echo libglib2.0-bin ;;
     gio:*|gdbus:*) echo glib2 ;;
@@ -131,11 +133,16 @@ install_packages() {
   esac
 }
 
+have() {
+  if [ "$1" = hyprland.pc ]; then pkg-config --exists hyprland 2>/dev/null; else command -v "$1" >/dev/null; fi
+}
+
 check_deps() {
   local need=(Hyprland hyprctl qs wl-copy gio gdbus xdg-open xdg-settings xdg-mime busctl systemctl zip unzip curl sha256sum fc-cache cmp diff)
   [ $plugins = 1 ] && need+=(cmake make pkg-config c++)
   local missing=() bin
-  for bin in "${need[@]}"; do command -v "$bin" >/dev/null || missing+=("$bin"); done
+  for bin in "${need[@]}"; do have "$bin" || missing+=("$bin"); done
+  [ $plugins = 1 ] && ! have hyprland.pc && missing+=(hyprland.pc)
   [ ${#missing[@]} = 0 ] && { say "stage=deps result=ok"; return; }
   local pm pkgs=() manual=()
   pm=$(manager)
@@ -148,7 +155,7 @@ check_deps() {
   [ $deps = 1 ] || refuse "missing_deps bins=\"${missing[*]}\" manager=$pm packages=\"${pkgs[*]}\" hint=rerun_with_--deps"
   [ $dry = 1 ] && { say "stage=deps result=dry_run would_install=\"${pkgs[*]}\""; return; }
   install_packages "$pm" "${pkgs[@]}" || refuse "package_install_failed manager=$pm packages=\"${pkgs[*]}\""
-  for bin in "${missing[@]}"; do command -v "$bin" >/dev/null || refuse "still_missing bin=$bin"; done
+  for bin in "${missing[@]}"; do have "$bin" || refuse "still_missing bin=$bin"; done
   say "stage=deps result=installed packages=\"${pkgs[*]}\""
 }
 
