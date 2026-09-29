@@ -4,6 +4,8 @@ A desktop shell for Hyprland with elements inspired by the [Fluent design langua
 
 ![Fluency at 1920x1080 with the Start menu open](media/desktop.png)
 
+Shown with the [Papirus Dark](https://github.com/PapirusDevelopmentTeam/papirus-icon-theme) icons and the Bibata Ghost cursor from [Bibata Translucent](https://github.com/Silicasandwhich/Bibata_Cursor_Translucent).
+
 ## Requirements
 
 - Hyprland 0.56 or newer, with a Lua config (`~/.config/hypr/hyprland.lua`). A hyprlang `hyprland.conf` is refused.
@@ -20,8 +22,11 @@ Recommended, not required:
 | Papirus icons | `papirus-icon-theme` (on Fedora also `papirus-icon-theme-dark`) |
 | kitty, the terminal | `kitty` |
 | Dolphin, the file manager | `dolphin` |
+| Bibata Ghost, the cursor | none, see below |
 
 When one of them is missing, the installer asks whether to install it from your distribution's repository. `--recommended` installs them all without asking, and `--no-recommended` skips them. Without a terminal to ask on, it only names them.
+
+No distribution packages the cursor, so the installer downloads the Bibata Translucent 1.1.2 release from GitHub, checks its SHA-256 and puts Bibata Ghost in `~/.local/share/icons`. `--uninstall` leaves it there, like the packages.
 
 ## Install
 
@@ -54,7 +59,8 @@ Anything specific to your machine goes into `~/.config/hypr/fluency/local.lua`:
 
 - your terminal
 - the default browser, file manager and terminal, as the first pins. The folder handler counts as the file manager only when it is one, otherwise the first installed of Dolphin, Nautilus, Thunar, Nemo, PCManFM and Caja is used
-- your icon theme, or Papirus Dark when the installer just installed it
+- your icon theme. One chosen in KDE comes first, then Papirus Dark when it is installed, then the GTK default
+- Bibata Ghost as the cursor when it is installed, unless your own config or environment sets another
 - the NVIDIA video variables when an NVIDIA driver is loaded, otherwise the AMD ones (`radeonsi`) when `amdgpu` is loaded
 - a Qt platform theme, the first one installed of qt6ct, hyprqt6engine, KDE and GTK
 
@@ -64,7 +70,7 @@ Other options:
 
 ```bash
 ./install.sh --dry-run      # check everything, write nothing
-./install.sh --recommended  # also install Papirus, kitty and Dolphin
+./install.sh --recommended  # also install Papirus, kitty, Dolphin and Bibata Ghost
 ./install.sh --no-plugins   # skip the title bar and minimize plugins
 ./install.sh --uninstall    # remove fluency and the require line
 ```
@@ -90,4 +96,4 @@ These environment variables change the defaults:
 
 ## Licenses
 
-Fluency is under the MIT license, see `LICENSE`. The title bar plugin is based on hyprbars by Vaxry (BSD 3-clause, `plugins/titlebar/LICENSE`). Selawik is under the SIL Open Font License. Fluent System Icons is under the MIT license. Both fonts are downloaded at install time and are not part of this repository.
+Fluency is under the MIT license, see `LICENSE`. The title bar plugin is based on hyprbars by Vaxry (BSD 3-clause, `plugins/titlebar/LICENSE`). Selawik is under the SIL Open Font License. Fluent System Icons is under the MIT license. Both fonts are downloaded at install time and are not part of this repository. Bibata Translucent is under the GPL 3.0 and is only downloaded when you choose it.

@@ -13,12 +13,15 @@ fluent_url=https://raw.githubusercontent.com/microsoft/fluentui-system-icons/a56
 fluent_sum=c5dab901c52362ecc94d3a1d2c88a5c060464eb9eb58bb5b0d64d17066af4d7f
 selawik_url=https://github.com/microsoft/Selawik/releases/download/1.01/Selawik_Release.zip
 selawik_sum=3f62c51e05e3b5a1e6241cf92a371f0be2ea1183aa87b30718bbd40832a8d423
+cursor_url=https://github.com/Silicasandwhich/Bibata_Cursor_Translucent/archive/v1.1.2.tar.gz
+cursor_sum=b0398c478c5968977ea092f64b00ecd49e09f0574e8951acc0a32db3b5132930
+cursor_name=Bibata_Ghost
 
 say() { echo "[install] $*"; }
 refuse() { echo "[install] refused: $*"; exit 1; }
 usage() { sed -n '2s/^# //p' "$0"; }
 
-deps=0 plugins=1 dry=0 remove=0 extras=ask prefer_theme=""
+deps=0 plugins=1 dry=0 remove=0 extras=ask
 for arg in "$@"; do
   case $arg in
     --deps) deps=1 ;;
@@ -136,11 +139,32 @@ check_deps() {
   say "stage=deps result=installed packages=\"${pkgs[*]}\""
 }
 
-# icons, terminal and file manager the shell looks best with, all optional
+cursor_exists() {
+  local dir
+  local IFS=:
+  for dir in "${XDG_DATA_HOME:-$HOME/.local/share}" ${XDG_DATA_DIRS:-/usr/local/share:/usr/share}; do
+    [ -d "$dir/icons/$cursor_name/cursors" ] && return 0
+  done
+  [ -d "$HOME/.icons/$cursor_name/cursors" ]
+}
+
+# icons, terminal, file manager and cursor the shell looks best with, all optional
 recommended() {
   icon_theme_exists Papirus-Dark || echo papirus
   has_entry kitty || echo kitty
   has_entry org.kde.dolphin || echo dolphin
+  cursor_exists || echo bibata-ghost
+}
+
+# no distribution packages this cursor, so it comes from its release at a pinned checksum
+fetch_cursor() {
+  mkdir -p "$work/dl" "$work/cursor"
+  timeout 120 curl -fsSL -o "$work/dl/cursor.tar.gz" "$cursor_url" || refuse "cursor_download url=$cursor_url"
+  local got
+  got=$(sha256sum "$work/dl/cursor.tar.gz" | cut -d' ' -f1)
+  [ "$got" = "$cursor_sum" ] || refuse "cursor_checksum got=$got want=$cursor_sum"
+  timeout 60 tar -xzf "$work/dl/cursor.tar.gz" -C "$work/cursor" --strip-components=1 "Bibata_Cursor_Translucent-1.1.2/$cursor_name" \
+    || refuse "cursor_unpack name=$cursor_name"
 }
 
 extra_packages() {
@@ -170,15 +194,22 @@ recommend() {
       [ ${#chosen[@]} -gt 0 ] || { say "stage=recommend result=declined missing=\"${missing[*]}\""; return; }
       ;;
   esac
-  local pm pkgs=()
+  local pm pkgs=() fetched=()
   pm=$(manager)
-  for name in "${chosen[@]}"; do read -ra answer <<< "$(extra_packages "$name" "$pm")"; pkgs+=("${answer[@]}"); done
-  [ $dry = 1 ] && { say "stage=recommend result=dry_run would_install=\"${pkgs[*]}\""; return; }
-  install_packages "$pm" "${pkgs[@]}" || refuse "recommended_install_failed manager=$pm packages=\"${pkgs[*]}\""
+  for name in "${chosen[@]}"; do
+    if [ "$name" = bibata-ghost ]; then fetched+=("$name"); continue; fi
+    read -ra answer <<< "$(extra_packages "$name" "$pm")"
+    pkgs+=("${answer[@]}")
+  done
+  [ $dry = 1 ] && { say "stage=recommend result=dry_run would_install=\"${pkgs[*]}\" would_fetch=\"${fetched[*]}\""; return; }
+  [ ${#fetched[@]} = 0 ] || fetch_cursor
+  if [ ${#pkgs[@]} -gt 0 ]; then
+    install_packages "$pm" "${pkgs[@]}" || refuse "recommended_install_failed manager=$pm packages=\"${pkgs[*]}\""
+  fi
+  [ ${#fetched[@]} = 0 ] || swap_dir "$work/cursor/$cursor_name" "${XDG_DATA_HOME:-$HOME/.local/share}/icons/$cursor_name"
   mapfile -t missing < <(recommended)
   for name in "${chosen[@]}"; do [[ " ${missing[*]} " != *" $name "* ]] || refuse "still_missing name=$name packages=\"${pkgs[*]}\""; done
-  [[ " ${chosen[*]} " == *" papirus "* ]] && prefer_theme=Papirus-Dark
-  say "stage=recommend result=installed packages=\"${pkgs[*]}\""
+  say "stage=recommend result=installed packages=\"${pkgs[*]}\" fetched=\"${fetched[*]}\""
 }
 
 preflight() {
@@ -258,13 +289,11 @@ icon_theme_exists() {
 
 # kdeglobals names a theme only once chosen, gsettings always has its default
 icon_theme() {
-  local wanted
-  wanted=$(sed -n '/^\[Icons\]/,/^\[/s/^Theme=//p' "${XDG_CONFIG_HOME:-$HOME/.config}/kdeglobals" 2>/dev/null | head -1)
-  if [ -z "$wanted" ]; then
-    wanted=$(timeout 5 gsettings get org.gnome.desktop.interface icon-theme 2>/dev/null | tr -d "'") || wanted=""
-  fi
+  local chosen fallback
+  chosen=$(sed -n '/^\[Icons\]/,/^\[/s/^Theme=//p' "${XDG_CONFIG_HOME:-$HOME/.config}/kdeglobals" 2>/dev/null | head -1)
+  fallback=$(timeout 5 gsettings get org.gnome.desktop.interface icon-theme 2>/dev/null | tr -d "'") || fallback=""
   local name
-  for name in "$prefer_theme" "$wanted" Papirus-Dark; do
+  for name in "$chosen" Papirus-Dark "$fallback"; do
     [ -n "$name" ] && icon_theme_exists "$name" && { echo "$name"; return; }
   done
   echo hicolor
@@ -341,6 +370,10 @@ write_machine() {
     env+=("LIBVA_DRIVER_NAME=radeonsi" "VDPAU_DRIVER=radeonsi")
   fi
   [ -n "$qt" ] && env+=("QT_QPA_PLATFORMTHEME=$qt")
+  if cursor_exists && [ "${XCURSOR_THEME:-$cursor_name}" = "$cursor_name" ] \
+    && ! grep -rqs --exclude-dir=fluency XCURSOR_THEME "$cfg"; then
+    env+=("XCURSOR_THEME=$cursor_name")
+  fi
   plain "$theme" icon_theme
   {
     echo "return {"
