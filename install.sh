@@ -366,7 +366,7 @@ reload() {
   if timeout 5 qs ipc -p "$share/shell" call fluency reload >/dev/null 2>&1; then
     say "stage=reload result=ok"
   else
-    say "stage=start result=not_running hint=\"qs --no-duplicate -p $share/shell\""
+    say "stage=start result=not_running hint=\"qs --no-duplicate --log-rules qt.svg.warning=false -p $share/shell\""
   fi
 }
 

@@ -24,6 +24,6 @@ end
 -- a nested test session brings its own shell
 if os.getenv("FLUENCY_NESTED") ~= "1" then
     hl.on("hyprland.start", function()
-        hl.exec_cmd("qs --no-duplicate -p ~/.local/share/fluency/shell")
+        hl.exec_cmd("qs --no-duplicate --log-rules qt.svg.warning=false -p ~/.local/share/fluency/shell")
     end)
 end
