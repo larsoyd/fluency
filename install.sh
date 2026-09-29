@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# usage: install.sh [--deps] [--no-plugins] [--dry-run] [--uninstall]
+# usage: install.sh [--deps] [--[no-]recommended] [--no-plugins] [--dry-run] [--uninstall]
 set -euo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
@@ -18,10 +18,12 @@ say() { echo "[install] $*"; }
 refuse() { echo "[install] refused: $*"; exit 1; }
 usage() { sed -n '2s/^# //p' "$0"; }
 
-deps=0 plugins=1 dry=0 remove=0
+deps=0 plugins=1 dry=0 remove=0 extras=ask prefer_theme=""
 for arg in "$@"; do
   case $arg in
     --deps) deps=1 ;;
+    --recommended) extras=yes ;;
+    --no-recommended) extras=no ;;
     --no-plugins) plugins=0 ;;
     --dry-run) dry=1 ;;
     --uninstall) remove=1 ;;
@@ -134,12 +136,58 @@ check_deps() {
   say "stage=deps result=installed packages=\"${pkgs[*]}\""
 }
 
+# icons, terminal and file manager the shell looks best with, all optional
+recommended() {
+  icon_theme_exists Papirus-Dark || echo papirus
+  has_entry kitty || echo kitty
+  has_entry org.kde.dolphin || echo dolphin
+}
+
+extra_packages() {
+  case $1:$2 in
+    papirus:dnf) echo papirus-icon-theme papirus-icon-theme-dark ;;
+    papirus:*) echo papirus-icon-theme ;;
+    *) echo "$1" ;;
+  esac
+}
+
+recommend() {
+  local missing=() chosen=() name answer
+  mapfile -t missing < <(recommended)
+  [ ${#missing[@]} = 0 ] && { say "stage=recommend result=ok"; return; }
+  case $extras in
+    no) say "stage=recommend result=skipped missing=\"${missing[*]}\""; return ;;
+    yes) chosen=("${missing[@]}") ;;
+    ask)
+      if [ $dry = 1 ] || [ ! -t 0 ]; then
+        say "stage=recommend result=hint missing=\"${missing[*]}\" hint=rerun_with_--recommended"
+        return
+      fi
+      for name in "${missing[@]}"; do
+        read -r -t 60 -p "[install] recommended: $name, install? [y/N] " answer || answer=n
+        [[ $answer == [yY]* ]] && chosen+=("$name")
+      done
+      [ ${#chosen[@]} -gt 0 ] || { say "stage=recommend result=declined missing=\"${missing[*]}\""; return; }
+      ;;
+  esac
+  local pm pkgs=()
+  pm=$(manager)
+  for name in "${chosen[@]}"; do read -ra answer <<< "$(extra_packages "$name" "$pm")"; pkgs+=("${answer[@]}"); done
+  [ $dry = 1 ] && { say "stage=recommend result=dry_run would_install=\"${pkgs[*]}\""; return; }
+  install_packages "$pm" "${pkgs[@]}" || refuse "recommended_install_failed manager=$pm packages=\"${pkgs[*]}\""
+  mapfile -t missing < <(recommended)
+  for name in "${chosen[@]}"; do [[ " ${missing[*]} " != *" $name "* ]] || refuse "still_missing name=$name packages=\"${pkgs[*]}\""; done
+  [[ " ${chosen[*]} " == *" papirus "* ]] && prefer_theme=Papirus-Dark
+  say "stage=recommend result=installed packages=\"${pkgs[*]}\""
+}
+
 preflight() {
   if [ ! -f "$cfg/hyprland.lua" ] && [ -f "$cfg/hyprland.conf" ]; then
     refuse "hyprlang_config file=$cfg/hyprland.conf hint=fluency_needs_a_lua_config"
   fi
   [ ! -e "$share" ] || [ -f "$share/REVISION" ] || refuse "not_a_fluency_dir dir=$share"
   check_deps
+  recommend
   local hv qv
   hv=$(timeout 10 Hyprland --version 2>/dev/null | sed -n '1s/^Hyprland \([0-9.]*\).*/\1/p')
   [ -n "$hv" ] || refuse "no_hyprland_version"
@@ -216,19 +264,52 @@ icon_theme() {
     wanted=$(timeout 5 gsettings get org.gnome.desktop.interface icon-theme 2>/dev/null | tr -d "'") || wanted=""
   fi
   local name
-  for name in "$wanted" Papirus-Dark; do
+  for name in "$prefer_theme" "$wanted" Papirus-Dark; do
     [ -n "$name" ] && icon_theme_exists "$name" && { echo "$name"; return; }
   done
   echo hicolor
 }
 
-has_entry() {
+entry_file() {
   local dir
   local IFS=:
   for dir in "${XDG_DATA_HOME:-$HOME/.local/share}" ${XDG_DATA_DIRS:-/usr/local/share:/usr/share}; do
-    [ -f "$dir/applications/$1.desktop" ] && return 0
+    [ -f "$dir/applications/$1.desktop" ] && { echo "$dir/applications/$1.desktop"; return 0; }
   done
   return 1
+}
+
+has_entry() { entry_file "$1" >/dev/null; }
+
+in_category() {
+  local file
+  file=$(entry_file "$1") || return 1
+  sed -n '/^\[Desktop Entry\]/,/^\[/s/^Categories=//p' "$file" | head -1 | tr ';' '\n' | grep -qx "$2"
+}
+
+# the folder handler can be any app that opens folders, a terminal among them
+file_manager() {
+  local id
+  id=$(timeout 5 xdg-mime query default inode/directory 2>/dev/null)
+  id=${id%.desktop}
+  [ -n "$id" ] && in_category "$id" FileManager && { echo "$id"; return; }
+  for id in org.kde.dolphin org.gnome.Nautilus thunar nemo pcmanfm-qt pcmanfm caja; do
+    in_category "$id" FileManager && { echo "$id"; return; }
+  done
+}
+
+qt_plugin() {
+  compgen -G "$sys/usr/lib*/qt6/plugins/platformthemes/$1" >/dev/null \
+    || compgen -G "$sys/usr/lib/*/qt6/plugins/platformthemes/$1" >/dev/null
+}
+
+# an engine the user installed on purpose goes before the ones that come with a desktop
+qt_theme() {
+  if qt_plugin 'libqt6ct.so'; then echo qt6ct
+  elif qt_plugin '*hyprqt6engine*.so'; then echo hyprqt6engine
+  elif qt_plugin 'KDEPlasmaPlatformTheme6.so'; then echo kde
+  elif qt_plugin 'libqgtk3.so'; then echo gtk3
+  fi
 }
 
 terminal() {
@@ -243,10 +324,11 @@ terminal() {
 plain() { [[ $1 =~ ^[A-Za-z0-9._,+/\ -]*$ ]] || refuse "odd_value name=$2 value=\"$1\""; }
 
 write_machine() {
-  local theme term pins=() id
+  local theme term qt pins=() id
   theme=$(icon_theme)
   term=$(terminal)
-  for id in "$(timeout 5 xdg-settings get default-web-browser 2>/dev/null)" "$(timeout 5 xdg-mime query default inode/directory 2>/dev/null)" "$term"; do
+  qt=$(qt_theme)
+  for id in "$(timeout 5 xdg-settings get default-web-browser 2>/dev/null)" "$(file_manager)" "$term"; do
     id=${id%.desktop}
     [ -n "$id" ] && has_entry "$id" && [[ " ${pins[*]} " != *" $id "* ]] && pins+=("$id")
   done
@@ -255,11 +337,10 @@ write_machine() {
   [ ${#pins[@]} -gt 0 ] && env+=("FLUENCY_PINS=$(IFS=,; echo "${pins[*]}")")
   if [ -e "$sys/proc/driver/nvidia/version" ]; then
     env+=("LIBVA_DRIVER_NAME=nvidia" "__GLX_VENDOR_LIBRARY_NAME=nvidia" "NVD_BACKEND=direct")
+  elif [ -d "$sys/sys/module/amdgpu" ]; then
+    env+=("LIBVA_DRIVER_NAME=radeonsi" "VDPAU_DRIVER=radeonsi")
   fi
-  if compgen -G "$sys/usr/lib*/qt6/plugins/platformthemes/KDEPlasmaPlatformTheme6.so" >/dev/null \
-    || compgen -G "$sys/usr/lib/*/qt6/plugins/platformthemes/KDEPlasmaPlatformTheme6.so" >/dev/null; then
-    env+=("QT_QPA_PLATFORMTHEME=kde")
-  fi
+  [ -n "$qt" ] && env+=("QT_QPA_PLATFORMTHEME=$qt")
   plain "$theme" icon_theme
   {
     echo "return {"

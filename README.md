@@ -13,6 +13,16 @@ A desktop shell for Hyprland with elements inspired by the [Fluent design langua
 
 The installer checks for all of these. Run it with `--deps` and it installs what is missing through `pacman`, `dnf`, `apt` or `zypper`, using `sudo` or `pkexec`.
 
+Recommended, not required:
+
+| what | package |
+|---|---|
+| Papirus icons | `papirus-icon-theme` (on Fedora also `papirus-icon-theme-dark`) |
+| kitty, the terminal | `kitty` |
+| Dolphin, the file manager | `dolphin` |
+
+When one of them is missing, the installer asks whether to install it from your distribution's repository. `--recommended` installs them all without asking, and `--no-recommended` skips them. Without a terminal to ask on, it only names them.
+
 ## Install
 
 ```bash
@@ -43,10 +53,10 @@ Your `hyprland.lua` is backed up to `hyprland.lua.bak-<time>` before the require
 Anything specific to your machine goes into `~/.config/hypr/fluency/local.lua`:
 
 - your terminal
-- the default browser, file manager and terminal, as the first pins
-- your icon theme
-- the NVIDIA variables, only when an NVIDIA driver is loaded
-- the KDE platform theme, only when it is installed
+- the default browser, file manager and terminal, as the first pins. The folder handler counts as the file manager only when it is one, otherwise the first installed of Dolphin, Nautilus, Thunar, Nemo, PCManFM and Caja is used
+- your icon theme, or Papirus Dark when the installer just installed it
+- the NVIDIA video variables when an NVIDIA driver is loaded, otherwise the AMD ones (`radeonsi`) when `amdgpu` is loaded
+- a Qt platform theme, the first one installed of qt6ct, hyprqt6engine, KDE and GTK
 
 Running the installer again changes nothing unless something is new. If the shell is running, the installer reloads it. Otherwise it starts at your next login.
 
@@ -54,6 +64,7 @@ Other options:
 
 ```bash
 ./install.sh --dry-run      # check everything, write nothing
+./install.sh --recommended  # also install Papirus, kitty and Dolphin
 ./install.sh --no-plugins   # skip the title bar and minimize plugins
 ./install.sh --uninstall    # remove fluency and the require line
 ```
