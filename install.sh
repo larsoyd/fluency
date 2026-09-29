@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # usage: install.sh [--deps] [--[no-]recommended] [--no-plugins] [--dry-run] [--uninstall]
-set -euo pipefail
+set -Eeuo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
 cfg=${XDG_CONFIG_HOME:-$HOME/.config}/hypr
@@ -24,6 +24,9 @@ breeze_dark=/usr/share/color-schemes/BreezeDark.colors
 
 say() { echo "[install] $*"; }
 refuse() { echo "[install] refused: $*"; exit 1; }
+# an unhandled failure names its line, probes inside subshells stay quiet
+caught() { [ "$BASH_SUBSHELL" != 0 ] || refuse "unexpected_failure line=$2 status=$1"; }
+trap 'caught $? $LINENO' ERR
 usage() { sed -n '2s/^# //p' "$0"; }
 
 deps=0 plugins=1 dry=0 remove=0 extras=ask
