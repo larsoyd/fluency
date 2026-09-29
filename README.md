@@ -12,6 +12,7 @@ A desktop shell for Hyprland with elements inspired by the [Fluent design langua
 - Quickshell 0.3 or newer.
 - For the title bar and minimize plugins: `cmake`, `pkg-config`, a C++23 compiler, and Hyprland's headers for the version that is running.
 - Runtime tools: `wl-clipboard`, `glib2` (`gio`, `gdbus`), `xdg-utils`, `systemd`, `zip`, `unzip`, `curl`, `fontconfig`.
+- The QML modules QtQuick.Shapes and Qt.labs.folderlistmodel. Debian ships them apart from Qt Quick, as `qml6-module-qtquick-shapes` and `qml6-module-qt-labs-folderlistmodel`.
 
 The installer checks for all of these. Run it with `--deps` and it installs what is missing through `pacman`, `dnf` or `apt`, using `sudo` or `pkexec`.
 

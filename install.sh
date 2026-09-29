@@ -96,6 +96,10 @@ package() {
     hyprctl:*|Hyprland:*|hyprland.pc:pacman) echo hyprland ;;
     hyprland.pc:apt) echo hyprland-dev ;;
     hyprland.pc:*) echo hyprland-devel ;;
+    QtQuick.Shapes:apt) echo qml6-module-qtquick-shapes ;;
+    Qt.labs.folderlistmodel:apt) echo qml6-module-qt-labs-folderlistmodel ;;
+    Qt*:pacman) echo qt6-declarative ;;
+    Qt*:*) echo qt6-qtdeclarative ;;
     wl-copy:*) echo wl-clipboard ;;
     gio:apt|gdbus:apt) echo libglib2.0-bin ;;
     gio:*|gdbus:*) echo glib2 ;;
@@ -133,11 +137,20 @@ install_packages() {
 }
 
 have() {
-  if [ "$1" = hyprland.pc ]; then pkg-config --exists hyprland 2>/dev/null; else command -v "$1" >/dev/null; fi
+  case $1 in
+    hyprland.pc) pkg-config --exists hyprland 2>/dev/null ;;
+    Qt*.*) qml_module "$1" ;;
+    *) command -v "$1" >/dev/null ;;
+  esac
+}
+
+qml_module() {
+  compgen -G "$sys/usr/lib*/qt6/qml/${1//.//}/qmldir" >/dev/null \
+    || compgen -G "$sys/usr/lib/*/qt6/qml/${1//.//}/qmldir" >/dev/null
 }
 
 check_deps() {
-  local need=(Hyprland hyprctl qs wl-copy gio gdbus xdg-open xdg-settings xdg-mime busctl systemctl zip unzip curl sha256sum fc-cache cmp diff)
+  local need=(Hyprland hyprctl qs wl-copy gio gdbus xdg-open xdg-settings xdg-mime busctl systemctl zip unzip curl sha256sum fc-cache cmp diff QtQuick.Shapes Qt.labs.folderlistmodel)
   [ $plugins = 1 ] && need+=(cmake make pkg-config c++)
   local missing=() bin
   for bin in "${need[@]}"; do have "$bin" || missing+=("$bin"); done
@@ -145,6 +158,7 @@ check_deps() {
   [ ${#missing[@]} = 0 ] && { say "stage=deps result=ok"; return; }
   local pm pkgs=() manual=()
   pm=$(manager)
+  [ "$pm" != unknown ] || refuse "missing_deps bins=\"${missing[*]}\" manager=unknown hint=install_them_by_hand"
   for bin in "${missing[@]}"; do
     local p
     p=$(package "$bin" "$pm")
