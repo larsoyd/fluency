@@ -4,7 +4,7 @@ A desktop shell for Hyprland with elements inspired by the [Fluent design langua
 
 ![Fluency at 1920x1080 with the Start menu open](media/desktop.png)
 
-Shown with the [Papirus Dark](https://github.com/PapirusDevelopmentTeam/papirus-icon-theme) icons and the Bibata Ghost cursor from [Bibata Translucent](https://github.com/Silicasandwhich/Bibata_Cursor_Translucent).
+<sub>Shown with the [Papirus Dark](https://github.com/PapirusDevelopmentTeam/papirus-icon-theme) icons and the Bibata Ghost cursor from [Bibata Translucent](https://github.com/Silicasandwhich/Bibata_Cursor_Translucent).</sub>
 
 ## Requirements
 
