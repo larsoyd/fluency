@@ -81,8 +81,10 @@ export function flyoutX(centre, width, screen, margin) {
     return Math.max(margin, Math.min(Math.round(centre - width / 2), screen - width - margin))
 }
 
-export function screen(names, wanted) {
-    return names.includes(wanted) ? wanted : names[0] ?? ""
+// the full tray goes where asked, else on the screen at the origin
+export function screen(screens, wanted) {
+    const pick = screens.find(s => s.name === wanted) ?? screens.find(s => s.x === 0 && s.y === 0) ?? screens[0]
+    return pick?.name ?? ""
 }
 
 export function volume(level, muted) {

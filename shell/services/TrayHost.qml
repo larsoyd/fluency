@@ -6,8 +6,8 @@ import Quickshell.Services.SystemTray
 import "../logic/tray.mjs" as Logic
 
 Singleton {
-    property string monitor: "DP-1"
-    readonly property string screen: Logic.screen(Quickshell.screens.map(screen => screen.name), monitor)
+    property string monitor: Quickshell.env("FLUENCY_TRAY_SCREEN") ?? ""
+    readonly property string screen: Logic.screen(Quickshell.screens.map(s => ({ name: s.name, x: s.x, y: s.y })), monitor)
     readonly property var items: Logic.keyed(SystemTray.items.values.map(item => ({
         id: item.id,
         title: item.tooltipTitle || item.title,
