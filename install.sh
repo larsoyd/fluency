@@ -304,6 +304,12 @@ recommend() {
   say "stage=recommend result=installed packages=\"${pkgs[*]}\" fetched=\"${fetched[*]}\" built=\"${built[*]}\""
 }
 
+# sets out and status of the caller so a failed probe can say how it failed
+probe() {
+  status=0
+  out=$(timeout 10 "$1" --version 2>/dev/null) || status=$?
+}
+
 preflight() {
   if [ ! -f "$cfg/hyprland.lua" ] && [ -f "$cfg/hyprland.conf" ]; then
     refuse "hyprlang_config file=$cfg/hyprland.conf hint=fluency_needs_a_lua_config"
@@ -311,12 +317,14 @@ preflight() {
   [ ! -e "$share" ] || [ -f "$share/REVISION" ] || refuse "not_a_fluency_dir dir=$share"
   check_deps
   recommend
-  local hv qv
-  hv=$(timeout 10 Hyprland --version 2>/dev/null | sed -n '1s/^Hyprland \([0-9.]*\).*/\1/p')
-  [ -n "$hv" ] || refuse "no_hyprland_version"
+  local hv qv out status
+  probe Hyprland
+  hv=$(sed -n '1s/^Hyprland \([0-9.]*\).*/\1/p' <<< "$out")
+  [ -n "$hv" ] || refuse "no_hyprland_version status=$status"
   at_least "$hv" 0.56 || refuse "old_hyprland version=$hv need=0.56"
-  qv=$(timeout 10 qs --version 2>/dev/null | sed -n '1s/^Quickshell \([0-9.]*\).*/\1/p')
-  [ -n "$qv" ] || refuse "no_quickshell_version"
+  probe qs
+  qv=$(sed -n '1s/^Quickshell \([0-9.]*\).*/\1/p' <<< "$out")
+  [ -n "$qv" ] || refuse "no_quickshell_version status=$status"
   at_least "$qv" 0.3 || refuse "old_quickshell version=$qv need=0.3"
   say "stage=preflight result=ok hyprland=$hv quickshell=$qv"
   hypr_version=$hv
