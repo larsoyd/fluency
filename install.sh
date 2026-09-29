@@ -53,14 +53,18 @@ backup() {
   say "stage=backup file=$1.bak-$stamp"
 }
 
-# replaces a directory in one rename, a reader never sees half of it
+# swaps in place when mv can exchange, otherwise the old dir is gone for a moment
 swap_dir() {
   local new=$1 dest=$2
   mkdir -p "$(dirname "$dest")"
   rm -rf "$dest.new"
   cp -r "$new" "$dest.new"
-  rm -rf "$dest"
-  mv "$dest.new" "$dest"
+  if mv --exchange -T "$dest.new" "$dest" 2>/dev/null; then
+    rm -rf "$dest.new"
+  else
+    rm -rf "$dest"
+    mv "$dest.new" "$dest"
+  fi
 }
 
 uninstall() {
