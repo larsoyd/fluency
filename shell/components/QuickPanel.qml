@@ -28,7 +28,6 @@ Item {
     signal muteAsked(bool silent)
     signal chosen(int id)
     signal appMoved(var ids, real value)
-    signal launched(string appId)
 
     function reset() {
         page = "main"
@@ -248,16 +247,6 @@ Item {
                         text: "Volume mixer"
                         font.weight: Type.bodyStrong.weight
                     }
-
-                    GlyphButton {
-                        objectName: "mixerSettings"
-                        x: parent.width - Metrics.soundSliderRight - width + 8
-                        y: (parent.height - height) / 2
-                        width: 28
-                        height: 28
-                        glyph: Glyphs.glyph("settings")
-                        onClicked: root.launched("kcm_pulseaudio")
-                    }
                 }
 
                 Repeater {
@@ -291,24 +280,7 @@ Item {
                 }
             }
 
-            Footer {
-                StartButton {
-                    anchors.fill: parent
-                    anchors.margins: Metrics.soundInsetX
-                    onClicked: root.launched("kcm_pulseaudio")
-
-                    Text {
-                        objectName: "moreSettings"
-                        x: Metrics.soundTextX - Metrics.soundInsetX
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: "More volume settings"
-                        color: Colors.textSecondary
-                        font.family: Type.family
-                        font.pixelSize: Type.body.size
-                        renderType: Text.NativeRendering
-                    }
-                }
-            }
+            Footer {}
         }
     }
 }

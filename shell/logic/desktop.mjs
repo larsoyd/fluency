@@ -224,11 +224,6 @@ export function desktopMenu(state) {
         line,
         row("submenu", "New", { submenu: "new", more: true, glyph: glyph("add") }),
         line,
-        ...(state.settings === false ? [] : [
-            row("display", "Display settings", { glyph: glyph("display") }),
-            row("personalize", "Personalize", { glyph: glyph("personalize") }),
-            line,
-        ]),
         row("terminal", "Open in Terminal", { glyph: glyph("console") }),
     ]
     return state.paste ? [{ kind: "buttons", buttons: [{ action: "paste", text: "Paste", glyph: glyph("paste"), enabled: true }] }, ...rows] : rows
@@ -348,8 +343,6 @@ const plans = {
         return [run(["gdbus", "call", "--session", "--dest", "org.freedesktop.FileManager1", "--object-path", "/org/freedesktop/FileManager1",
             "--method", "org.freedesktop.FileManager1.ShowItems", `['${uri(item.target)}']`, ""])]
     },
-    display: () => [launch(["systemsettings", "kcm_kscreen"])],
-    personalize: () => [launch(["systemsettings", "kcm_colors"])],
 }
 
 const needItems = new Set(["open", "delete", "zip", "path", "copy", "cut", "location"])

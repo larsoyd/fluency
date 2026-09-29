@@ -57,10 +57,6 @@ PanelWindow {
             onMuteAsked: silent => Status.setMuted(silent)
             onChosen: id => Status.choose(id)
             onAppMoved: (ids, value) => Status.setApp(ids, value)
-            onLaunched: appId => {
-                root.open = false
-                Windows.run({ action: "launch", appId })
-            }
 
             Behavior on opacity {
                 NumberAnimation { duration: Motion.controlFaster }

@@ -16,7 +16,7 @@ PanelWindow {
     property var targets: []
     property bool holding: false
     property bool grabbing: false
-    readonly property var launches: ["open", "terminal", "display", "personalize", "location"]
+    readonly property var launches: ["open", "terminal", "location"]
     property point spot: Qt.point(-1, -1)
 
     function showMenu(names: var, x: real, y: real): void {
@@ -28,7 +28,7 @@ PanelWindow {
     }
 
     function rows(): var {
-        if (!targets.length) return Logic.desktopMenu({ paste: Desktop.pasteable, settings: !!DesktopEntries.byId("systemsettings") })
+        if (!targets.length) return Logic.desktopMenu({ paste: Desktop.pasteable })
         return Logic.itemMenu(targets.map(name => Desktop.items.find(item => item.name === name)).filter(item => item), Apps.pins)
     }
 
