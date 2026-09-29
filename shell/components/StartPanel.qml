@@ -1,6 +1,7 @@
 import QtQuick
 import qs.tokens
 import "../logic/acrylic.mjs" as Acrylic
+import "../logic/glyphs.mjs" as Glyphs
 
 Item {
     id: root
@@ -94,7 +95,7 @@ Item {
             objectName: "searchIcon"
             x: Metrics.startSearchIconX
             anchors.verticalCenter: parent.verticalCenter
-            text: "\ue721"
+            text: Glyphs.glyph("search")
             color: Colors.textPrimary
             font.family: Type.iconFamily
             font.pixelSize: Metrics.startGlyph
@@ -175,7 +176,7 @@ Item {
                 objectName: "avatarGlyph"
                 anchors.centerIn: parent
                 visible: picture.status !== Image.Ready
-                text: "\ue77b"
+                text: Glyphs.glyph("user")
                 color: Colors.textPrimary
                 font.family: Type.iconFamily
                 font.pixelSize: Metrics.startGlyph
@@ -236,7 +237,7 @@ Item {
             renderType: Text.NativeRendering
             objectName: "powerGlyph"
             anchors.centerIn: parent
-            text: "\ue7e8"
+            text: Glyphs.glyph("power")
             color: Colors.textPrimary
             font.family: Type.iconFamily
             font.pixelSize: Metrics.startGlyph

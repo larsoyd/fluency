@@ -1,3 +1,5 @@
+import { glyph } from "./glyphs.mjs"
+
 // measured on the stock desktop at 100 percent with 48 px icons
 const base = { plate: 75, gap: 1, label: 8, line: 17, pad: 1, below: 45, originX: 2, originY: 7 }
 
@@ -216,18 +218,18 @@ const row = (action, text, extra) => Object.assign({ kind: "item", action, text,
 
 export function desktopMenu(state) {
     const rows = [
-        row("submenu", "View", { submenu: "view", more: true, glyph: "\ue8a9" }),
-        row("submenu", "Sort by", { submenu: "sort", more: true, glyph: "\ue8cb" }),
-        row("refresh", "Refresh", { glyph: "\ue72c" }),
+        row("submenu", "View", { submenu: "view", more: true, glyph: glyph("grid") }),
+        row("submenu", "Sort by", { submenu: "sort", more: true, glyph: glyph("sort") }),
+        row("refresh", "Refresh", { glyph: glyph("refresh") }),
         line,
-        row("submenu", "New", { submenu: "new", more: true, glyph: "\uecc8" }),
+        row("submenu", "New", { submenu: "new", more: true, glyph: glyph("add") }),
         line,
-        row("display", "Display settings", { glyph: "\ue7f4" }),
-        row("personalize", "Personalize", { glyph: "\ue771" }),
+        row("display", "Display settings", { glyph: glyph("display") }),
+        row("personalize", "Personalize", { glyph: glyph("personalize") }),
         line,
-        row("terminal", "Open in Terminal", { glyph: "\ue756" }),
+        row("terminal", "Open in Terminal", { glyph: glyph("console") }),
     ]
-    return state.paste ? [{ kind: "buttons", buttons: [{ action: "paste", text: "Paste", glyph: "\ue77f", enabled: true }] }, ...rows] : rows
+    return state.paste ? [{ kind: "buttons", buttons: [{ action: "paste", text: "Paste", glyph: glyph("paste"), enabled: true }] }, ...rows] : rows
 }
 
 export const sizes = { large: 96, medium: 48, small: 32 }
@@ -235,14 +237,14 @@ export const sizes = { large: 96, medium: 48, small: 32 }
 export function viewMenu(s) {
     const size = (icon, text, accel, glyph) => row(`size:${icon}`, text, { accel, glyph, mark: "bullet", checked: s.icon === icon })
     return [
-        size(sizes.large, "Large icons", "Ctrl+Shift+2", "\ue739"),
-        size(sizes.medium, "Medium icons", "Ctrl+Shift+3", "\ue7f4"),
-        size(sizes.small, "Small icons", "Ctrl+Shift+4", "\ue8a9"),
+        size(sizes.large, "Large icons", "Ctrl+Shift+2", glyph("square")),
+        size(sizes.medium, "Medium icons", "Ctrl+Shift+3", glyph("display")),
+        size(sizes.small, "Small icons", "Ctrl+Shift+4", glyph("grid")),
         line,
-        row("auto", "Auto arrange icons", { glyph: "\ue8b3", mark: "check", checked: s.auto }),
-        row("grid", "Align icons to grid", { glyph: "\ue80a", mark: "check", checked: s.grid }),
+        row("auto", "Auto arrange icons", { glyph: glyph("selectAll"), mark: "check", checked: s.auto }),
+        row("grid", "Align icons to grid", { glyph: glyph("gridDots"), mark: "check", checked: s.grid }),
         line,
-        row("shown", "Show desktop icons", { glyph: "\ue7f8", mark: "check", checked: s.shown }),
+        row("shown", "Show desktop icons", { glyph: glyph("eye"), mark: "check", checked: s.shown }),
     ]
 }
 
@@ -263,15 +265,15 @@ export function newMenu() {
 // what one item offers, several items share what fits them all
 export function itemMenu(items, pins) {
     const one = items.length === 1 ? items[0] : null
-    const buttons = [["cut", "Cut", "\ue8c6"], ["copy", "Copy", "\ue8c8"], ["rename", "Rename", "\ue8ac"], ["delete", "Delete", "\ue74d"]]
+    const buttons = [["cut", "Cut", glyph("cut")], ["copy", "Copy", glyph("copy")], ["rename", "Rename", glyph("rename")], ["delete", "Delete", glyph("delete")]]
         .map(([action, text, glyph]) => ({ action, text, glyph, enabled: action !== "rename" || one !== null }))
-    const rows = [{ kind: "buttons", buttons }, row("open", "Open", { accel: "Enter", glyph: "\ue8e5" })]
-    if (one?.link) rows.push(row("location", "Open file location", { glyph: "\ue838" }))
+    const rows = [{ kind: "buttons", buttons }, row("open", "Open", { accel: "Enter", glyph: glyph("open") })]
+    if (one?.link) rows.push(row("location", "Open file location", { glyph: glyph("folder") }))
     if (one?.app) rows.push(pins.includes(one.app)
-        ? row("unpin", "Unpin from Start", { glyph: "\ue77a" })
-        : row("pin", "Pin to Start", { glyph: "\ue718" }))
-    rows.push(row("zip", "Compress to ZIP file", { glyph: "\uf012" }), row("path", "Copy as path", { accel: "Ctrl+Shift+C", glyph: "\ue62f" }))
-    if (one?.dir) rows.push(line, row("terminal", "Open in Terminal", { glyph: "\ue756" }))
+        ? row("unpin", "Unpin from Start", { glyph: glyph("unpin") })
+        : row("pin", "Pin to Start", { glyph: glyph("pin") }))
+    rows.push(row("zip", "Compress to ZIP file", { glyph: glyph("zip") }), row("path", "Copy as path", { accel: "Ctrl+Shift+C", glyph: glyph("link") }))
+    if (one?.dir) rows.push(line, row("terminal", "Open in Terminal", { glyph: glyph("console") }))
     return rows
 }
 

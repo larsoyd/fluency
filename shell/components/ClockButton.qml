@@ -1,6 +1,7 @@
 import QtQuick
 import qs.tokens
 import "../logic/tray.mjs" as Tray
+import "../logic/glyphs.mjs" as Glyphs
 
 TrayButton {
     id: root
@@ -50,7 +51,7 @@ TrayButton {
         Text {
             objectName: "glyph"
             anchors.centerIn: parent
-            text: "\uea8f"
+            text: Glyphs.glyph("bell")
             color: root.foreground
             font.family: Type.iconFamily
             font.pixelSize: Metrics.trayGlyphSize

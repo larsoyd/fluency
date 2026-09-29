@@ -2,6 +2,7 @@ import QtQuick
 import qs.tokens
 import "../logic/acrylic.mjs" as Acrylic
 import "../logic/menu.mjs" as Menu
+import "../logic/glyphs.mjs" as Glyphs
 
 Item {
     id: root
@@ -84,7 +85,7 @@ Item {
                     visible: !row.line && !!row.modelData.checked
                     x: Metrics.menuItemMarginX + Metrics.menuItemPaddingX
                     anchors.verticalCenter: parent.verticalCenter
-                    text: String.fromCharCode(0xe73e)
+                    text: Glyphs.glyph("check")
                     color: row.modelData.enabled ? Colors.textPrimary : Colors.textDisabled
                     font.family: Type.iconFamily
                     font.pixelSize: Type.body.size
@@ -126,7 +127,7 @@ Item {
                     anchors.right: parent.right
                     anchors.rightMargin: Metrics.menuItemMarginX + Metrics.menuItemPaddingX
                     anchors.verticalCenter: parent.verticalCenter
-                    text: String.fromCharCode(0xe76c)
+                    text: Glyphs.glyph("more")
                     color: Colors.textSecondary
                     font.family: Type.iconFamily
                     font.pixelSize: Type.caption.size

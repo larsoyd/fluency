@@ -30,11 +30,18 @@ if hl.plugin.fluencytitlebar then
         },
     })
 
-    -- right to left, glyphs of segoe fluent icons, the red of close has no source yet
+    -- fluent system icons regular, the icon name and its codepoint
+    local glyphs = {
+        close    = { "dismiss_16", 0xf368 },
+        maximize = { "maximize_16", 0xf533 },
+        minimize = { "subtract_16", 0xebcf },
+    }
+
+    -- right to left, the red of close has no source yet
     local buttons = {
-        { glyph = 0xe8bb, call = "hl.dsp.window.close()", hover = "rgba(c42b1cff)", pressed = "rgba(c42b1ce6)", hover_fg = c.text },
-        { glyph = 0xe922, call = maximize },
-        { glyph = 0xe921, call = [[require("fluency.minimize").active()]] },
+        { glyph = glyphs.close, call = "hl.dsp.window.close()", hover = "rgba(c42b1cff)", pressed = "rgba(c42b1ce6)", hover_fg = c.text },
+        { glyph = glyphs.maximize, call = maximize },
+        { glyph = glyphs.minimize, call = [[require("fluency.minimize").active()]] },
     }
     for _, b in ipairs(buttons) do
         hl.plugin.fluencytitlebar.add_button({
@@ -44,7 +51,7 @@ if hl.plugin.fluencytitlebar then
             pressed_color  = b.pressed or c.subtle_pressed,
             hover_fg_color = b.hover_fg,
             size           = 46,
-            icon           = utf8.char(b.glyph),
+            icon           = utf8.char(b.glyph[2]),
             action         = "hyprctl dispatch '" .. b.call .. "'",
         })
     end

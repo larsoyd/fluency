@@ -17,7 +17,7 @@ return {
         subtle_pressed = "rgba(ffffff0a)",
     },
 
-    font   = "Noto Sans",
+    font   = "Selawik",
     radius = { control = 4, overlay = 8 },
     smoke  = 0.3,
 

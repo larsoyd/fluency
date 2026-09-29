@@ -1,4 +1,6 @@
-const pinGlyph = "\ue718", unpinGlyph = "\ue77a", closeGlyph = "\ue711"
+import { glyph } from "./glyphs.mjs"
+
+const pinGlyph = glyph("pin"), unpinGlyph = glyph("unpin"), closeGlyph = glyph("dismiss")
 
 // the app's own tasks come first under a header, then the app, the pin and the close
 export function rows(task, entry) {

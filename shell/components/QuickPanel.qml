@@ -4,6 +4,7 @@ import "../logic/acrylic.mjs" as Acrylic
 import "../logic/curve.mjs" as Curve
 import "../logic/tray.mjs" as Tray
 import "../logic/volume.mjs" as Volume
+import "../logic/glyphs.mjs" as Glyphs
 
 Item {
     id: root
@@ -131,7 +132,7 @@ Item {
                 objectName: "more"
                 x: root.width - root.edge - width
                 y: Metrics.quickPaddingTop + (Metrics.quickRow - height) / 2
-                glyph: ""
+                glyph: Glyphs.glyph("more")
                 onClicked: root.page = "sound"
             }
 
@@ -150,7 +151,7 @@ Item {
                 y: (Metrics.soundHeader - height) / 2
                 width: 32
                 height: 32
-                glyph: ""
+                glyph: Glyphs.glyph("back")
                 onClicked: root.page = "main"
             }
 
@@ -206,7 +207,7 @@ Item {
                         Text {
                             x: Metrics.soundRowIconX - Metrics.soundInsetX
                             anchors.verticalCenter: parent.verticalCenter
-                            text: ""
+                            text: Glyphs.glyph("speakers")
                             color: Colors.textPrimary
                             font.family: Type.iconFamily
                             font.pixelSize: Metrics.trayGlyphSize
@@ -254,7 +255,7 @@ Item {
                         y: (parent.height - height) / 2
                         width: 28
                         height: 28
-                        glyph: ""
+                        glyph: Glyphs.glyph("settings")
                         onClicked: root.launched("kcm_pulseaudio")
                     }
                 }

@@ -1,4 +1,5 @@
 import { launch } from "./hypr.mjs"
+import { glyph } from "./glyphs.mjs"
 
 const plans = {
     signout: () => ["hl.dsp.exit()"],
@@ -10,9 +11,9 @@ const plans = {
 export const actions = Object.keys(plans)
 
 export const powerRows = [
-    { action: "sleep", text: "Sleep", glyph: "\ue708" },
-    { action: "shutdown", text: "Shut down", glyph: "\ue7e8" },
-    { action: "restart", text: "Restart", glyph: "\ue777" },
+    { action: "sleep", text: "Sleep", glyph: glyph("sleep") },
+    { action: "shutdown", text: "Shut down", glyph: glyph("power") },
+    { action: "restart", text: "Restart", glyph: glyph("restart") },
 ]
 
 export const userRows = [{ action: "signout", text: "Sign out" }]

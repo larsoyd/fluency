@@ -1,3 +1,5 @@
+import { glyph } from "./glyphs.mjs"
+
 // names without a letter in front gather under #
 export function letter(name) {
     const first = (name ?? "").charAt(0).toUpperCase()
@@ -76,7 +78,7 @@ export function edit(pins, action, id) {
     return edits[action](pins, id)
 }
 
-const pinGlyph = "\ue718", unpinGlyph = "\ue77a"
+const pinGlyph = glyph("pin"), unpinGlyph = glyph("unpin")
 
 // a tile offers move to front unless it is first already
 export function menu(id, tile, start, taskbar) {

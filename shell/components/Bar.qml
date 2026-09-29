@@ -4,6 +4,7 @@ import "../logic/acrylic.mjs" as Acrylic
 import "../logic/bounce.mjs" as Bounce
 import "../logic/layout.mjs" as Layout
 import "../logic/tasks.mjs" as Tasks
+import "../logic/glyphs.mjs" as Glyphs
 
 Item {
     id: root
@@ -28,8 +29,8 @@ Item {
     })
     readonly property var system: [
         { name: "start", source: Qt.resolvedUrl("../assets/start.svg") },
-        { name: "search", glyph: "\ue721" },
-        { name: "taskview", glyph: "\ue7c4" },
+        { name: "search", glyph: Glyphs.glyph("search") },
+        { name: "taskview", glyph: Glyphs.glyph("taskView") },
     ]
 
     signal activated(string name)

@@ -1,3 +1,5 @@
+import { glyph } from "./glyphs.mjs"
+
 const statuses = ["passive", "active", "attention"]
 
 export function split(items) {
@@ -89,15 +91,15 @@ export function screen(screens, wanted) {
 
 export function volume(level, muted) {
     const percent = Math.round(level * 100)
-    if (muted) return "\ue74f"
-    if (percent <= 0) return "\ue992"
-    return percent < 33 ? "\ue993" : percent < 66 ? "\ue994" : "\ue995"
+    if (muted) return glyph("mute")
+    if (percent <= 0) return glyph("volume0")
+    return percent < 50 ? glyph("volume1") : glyph("volume2")
 }
 
 export function network(kind) {
-    const glyph = { wired: "\ue839", wifi: "\ue701", none: "\uf384" }[kind]
-    if (!glyph) throw new Error(`refused: unknown network ${kind}`)
-    return glyph
+    const icon = { wired: "wired", wifi: "wifi", none: "offline" }[kind]
+    if (!icon) throw new Error(`refused: unknown network ${kind}`)
+    return glyph(icon)
 }
 
 // a stack of two lines centred in the bar, the margin shifts it
@@ -106,7 +108,7 @@ export function clockTop(height, line, margin) {
     return (height - (2 * line + top + bottom)) / 2 + top
 }
 
-const loudest = "\ue995"
+const loudest = glyph("volume2")
 
 // the level is drawn over a faint full speaker, as the text icons of the tray do
 export function glyphs({ network: kind, volume: level, muted }) {

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Shapes
 import qs.tokens
 import "../logic/desktop.mjs" as Desktop
+import "../logic/glyphs.mjs" as Glyphs
 
 Item {
     id: root
@@ -83,7 +84,7 @@ Item {
 
             Text {
                 anchors.centerIn: parent
-                text: String.fromCharCode(0xee35)
+                text: Glyphs.glyph("shortcut")
                 color: Colors.desktopArrow
                 font.family: Type.iconFamily
                 font.pixelSize: parent.width - 4

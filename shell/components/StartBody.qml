@@ -2,6 +2,7 @@ import QtQuick
 import qs.tokens
 import "../logic/apps.mjs" as Apps
 import "../logic/scroll.mjs" as Scroll
+import "../logic/glyphs.mjs" as Glyphs
 
 Flickable {
     id: root
@@ -123,7 +124,7 @@ Flickable {
             renderType: Text.NativeRendering
             x: moreText.x + moreText.implicitWidth + Metrics.startMoreTextGap
             anchors.verticalCenter: parent.verticalCenter
-            text: String.fromCharCode(0xe76c)
+            text: Glyphs.glyph("more")
             color: moreText.color
             font.family: Type.iconFamily
             font.pixelSize: Metrics.startMoreGlyph

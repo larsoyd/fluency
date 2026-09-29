@@ -1,6 +1,7 @@
 import QtQuick
 import qs.tokens
 import "../logic/acrylic.mjs" as Acrylic
+import "../logic/glyphs.mjs" as Glyphs
 
 Item {
     id: root
@@ -102,7 +103,7 @@ Item {
         height: Metrics.toastCloseSize
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
-        text: String.fromCharCode(0xe8bb)
+        text: Glyphs.glyph("close")
         color: Colors.textSecondary
         font.family: Type.iconFamily
         font.pixelSize: Type.caption.size

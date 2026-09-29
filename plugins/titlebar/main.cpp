@@ -221,7 +221,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     g_pGlobalState->config.barButtonPadding    = makeShared<Config::Values::CIntValue>("plugin:fluencytitlebar:bar_button_padding", "Padding of the bar buttons", 5);
     g_pGlobalState->config.enabled             = makeShared<Config::Values::CBoolValue>("plugin:fluencytitlebar:enabled", "Whether bars are enabled", true);
     g_pGlobalState->config.iconOnHover         = makeShared<Config::Values::CBoolValue>("plugin:fluencytitlebar:icon_on_hover", "Whether to use an icon on hover of the buttons", false);
-    g_pGlobalState->config.buttonFont     = makeShared<Config::Values::CStringValue>("plugin:fluencytitlebar:button_font", "Font of the button glyphs", "Segoe Fluent Icons");
+    g_pGlobalState->config.buttonFont     = makeShared<Config::Values::CStringValue>("plugin:fluencytitlebar:button_font", "Font of the button glyphs", "FluentSystemIcons-Regular");
     g_pGlobalState->config.titlePadding   = makeShared<Config::Values::CIntValue>("plugin:fluencytitlebar:title_padding", "Space before the title", 16);
     g_pGlobalState->config.buttonIconSize = makeShared<Config::Values::CIntValue>("plugin:fluencytitlebar:button_icon_size", "Size of the button glyphs", 10);
     g_pGlobalState->config.onDoubleClick       = makeShared<Config::Values::CStringValue>("plugin:fluencytitlebar:on_double_click", "Action to execute on double click of the bar", "");

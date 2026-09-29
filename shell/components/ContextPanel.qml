@@ -3,6 +3,7 @@ import qs.tokens
 import "../logic/acrylic.mjs" as Acrylic
 import "../logic/context.mjs" as Context
 import "../logic/icons.mjs" as Icons
+import "../logic/glyphs.mjs" as Glyphs
 
 Item {
     id: root
@@ -87,7 +88,7 @@ Item {
                 visible: row.item && !!row.modelData.checked
                 x: Context.columns.markX
                 anchors.verticalCenter: parent.verticalCenter
-                text: row.modelData.mark === "bullet" ? String.fromCharCode(0xe915) : String.fromCharCode(0xe73e)
+                text: row.modelData.mark === "bullet" ? Glyphs.glyph("bullet") : Glyphs.glyph("check")
                 color: row.enabled ? Colors.textPrimary : Colors.textDisabled
                 font.family: Type.iconFamily
                 font.pixelSize: root.m.glyph
@@ -148,7 +149,7 @@ Item {
                 anchors.right: parent.right
                 anchors.rightMargin: Context.columns.endPad
                 anchors.verticalCenter: parent.verticalCenter
-                text: String.fromCharCode(0xe76c)
+                text: Glyphs.glyph("more")
                 color: Colors.textSecondary
                 font.family: Type.iconFamily
                 font.pixelSize: Type.caption.size

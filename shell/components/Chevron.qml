@@ -2,6 +2,7 @@ import QtQuick
 import qs.tokens
 import "../logic/curve.mjs" as Curve
 import "../logic/tray.mjs" as Tray
+import "../logic/glyphs.mjs" as Glyphs
 
 TrayButton {
     id: root
@@ -30,7 +31,7 @@ TrayButton {
         Text {
             objectName: "glyph"
             anchors.centerIn: parent
-            text: "\ue70e"
+            text: Glyphs.glyph("up")
             color: root.foreground
             font.family: Type.iconFamily
             font.pixelSize: Metrics.trayGlyphSize
