@@ -1,10 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256" version="1.1">
   <defs>
-    <linearGradient id="fill" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="201.63" y2="293.37">
-      <stop offset="0" stop-color="#8decfe"/>
-      <stop offset="0.5" stop-color="#3fc5fb"/>
-      <stop offset="1" stop-color="#0798fd"/>
+    <linearGradient id="lit" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="256">
+      <stop offset="0" stop-color="#6ccbff"/>
+      <stop offset="1" stop-color="#1a7fe0"/>
+    </linearGradient>
+    <linearGradient id="shade" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="256">
+      <stop offset="0" stop-color="#1f74d6"/>
+      <stop offset="1" stop-color="#0b3f9c"/>
     </linearGradient>
   </defs>
-  <path fill="url(#fill)" d="M128 0c-11.39482 27.937051-18.31337 46.237163-31 73.34375 7.7785 8.245207 17.33826 17.811753 32.84375 28.65625-16.66992-6.859577-28.03357-13.728504-36.53125-20.875C77.076039 115.00489 51.621645 163.24639 0 256c40.562707-23.41756 72.007597-37.86167 101.3125-43.375-1.25376-5.40435-1.923505-11.27752-1.875-17.375l.03125-1.28125c.64379-25.99398 14.16934-45.98224 30.1875-44.625 16.01815 1.35723 28.48754 23.53727 27.84375 49.53125-.12127 4.89622-.6905 9.60082-1.65625 13.96875C184.83328 218.51691 215.98162 232.89667 256 256c-7.89193-14.52962-14.96051-27.61983-21.6875-40.09375-10.59609-8.21269-21.64301-18.89743-44.1875-30.46875 15.4958 4.02645 26.60184 8.6825 35.25 13.875C156.97985 71.972668 151.45422 55.040376 128 0z"/>
+  <path fill="url(#lit)" d="M160 0 L48 256 H184 Z"/>
+  <path fill="url(#shade)" d="M160 0 L184 256 H256 Z"/>
+  <path fill="url(#lit)" d="M72 72 L0 256 H92 Z"/>
+  <path fill="url(#shade)" d="M72 72 L92 256 H152 Z"/>
 </svg>

@@ -11,7 +11,7 @@ import "../logic/icons.mjs" as Icons
 Singleton {
     id: root
 
-    readonly property url wallpaper: "file://" + (Quickshell.env("FLUENCY_WALLPAPER") ?? Quickshell.env("HOME") + "/.local/share/fluency/wallpaper.png")
+    readonly property url wallpaper: Quickshell.env("FLUENCY_WALLPAPER") ? "file://" + Quickshell.env("FLUENCY_WALLPAPER") : Qt.resolvedUrl("../assets/wallpaper.png")
     readonly property string dir: Quickshell.env("FLUENCY_DESKTOP_DIR") || Quickshell.env("HOME") + "/Desktop"
     readonly property var items: store.build(store.revision, store.entries, store.targets, settings.order, Apps.entries)
     property var settings: ({ icon: Logic.sizes.medium, auto: false, grid: true, shown: true, places: {}, order: [] })
