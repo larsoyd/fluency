@@ -17,16 +17,21 @@ The installer checks for all of these. Run it with `--deps` and it installs what
 
 Recommended, not required:
 
-| what | package |
-|---|---|
-| Papirus icons | `papirus-icon-theme` (on Fedora also `papirus-icon-theme-dark`) |
-| kitty, the terminal | `kitty` |
-| Dolphin, the file manager | `dolphin` |
-| Bibata Ghost, the cursor | none, see below |
+| what | offered when | package |
+|---|---|---|
+| Papirus icons | you have no icon theme besides the stock ones (hicolor, Adwaita) | `papirus-icon-theme` (on Fedora also `papirus-icon-theme-dark`) |
+| kitty, the terminal | kitty is missing | `kitty` |
+| Dolphin, the file manager | you have no file manager | `dolphin` |
+| Bibata Ghost, the cursor | it is missing | none, see below |
+| hyprqt6engine, the Qt theme engine | you have no Qt engine (qt6ct, hyprqt6engine or KDE's) | none, see below |
 
-When one of them is missing, the installer asks whether to install it from your distribution's repository. `--recommended` installs them all without asking, and `--no-recommended` skips them. Without a terminal to ask on, it only names them.
+When one of them is offered, the installer asks whether to install it. `--recommended` installs them all without asking, and `--no-recommended` skips them. Without a terminal to ask on, it only names them.
 
 No distribution packages the cursor, so the installer downloads the Bibata Translucent 1.1.2 release from GitHub, checks its SHA-256 and puts Bibata Ghost in `~/.local/share/icons`. `--uninstall` leaves it there, like the packages.
+
+hyprqt6engine is not packaged either, so the installer builds it from a pinned commit of its GitHub repository into `~/.local/lib/fluency/qt6`, for your user only. The build needs `cmake`, a C++ compiler, the hyprlang and hyprutils headers, Qt 6.9 or newer with its private headers, the KF6 Config, ColorScheme and IconThemes headers, and Breeze for its colours. When any of that is missing or the build fails, the installer installs qt6ct and Kvantum from your repository instead.
+
+The engine gets a dark look, but only when it has no config yet: hyprqt6engine gets Breeze Dark in `~/.config/hypr/hyprqt6engine.conf`, and qt6ct gets the dark Kvantum style in `~/.config/qt6ct/qt6ct.conf`. A config you already have is never changed.
 
 ## Install
 
@@ -62,7 +67,7 @@ Anything specific to your machine goes into `~/.config/hypr/fluency/local.lua`:
 - your icon theme. One chosen in KDE comes first, then Papirus Dark when it is installed, then the GTK default
 - Bibata Ghost as the cursor when it is installed, unless your own config or environment sets another
 - the NVIDIA video variables when an NVIDIA driver is loaded, otherwise the AMD ones (`radeonsi`) when `amdgpu` is loaded
-- a Qt platform theme, the first one installed of qt6ct, hyprqt6engine, KDE and GTK
+- a Qt platform theme, the first one installed of qt6ct, hyprqt6engine (also the one the installer built), KDE and GTK
 
 Running the installer again changes nothing unless something is new. If the shell is running, the installer reloads it. Otherwise it starts at your next login.
 
@@ -96,4 +101,4 @@ These environment variables change the defaults:
 
 ## Licenses
 
-Fluency is under the MIT license, see `LICENSE`. The title bar plugin is based on hyprbars by Vaxry (BSD 3-clause, `plugins/titlebar/LICENSE`). Selawik is under the SIL Open Font License. Fluent System Icons is under the MIT license. Both fonts are downloaded at install time and are not part of this repository. Bibata Translucent is under the GPL 3.0 and is only downloaded when you choose it.
+Fluency is under the MIT license, see `LICENSE`. The title bar plugin is based on hyprbars by Vaxry (BSD 3-clause, `plugins/titlebar/LICENSE`). Selawik is under the SIL Open Font License. Fluent System Icons is under the MIT license. Both fonts are downloaded at install time and are not part of this repository. Bibata Translucent is under the GPL 3.0 and hyprqt6engine is under the BSD 3-clause license. Both are only downloaded when you choose them.

@@ -16,6 +16,10 @@ selawik_sum=3f62c51e05e3b5a1e6241cf92a371f0be2ea1183aa87b30718bbd40832a8d423
 cursor_url=https://github.com/Silicasandwhich/Bibata_Cursor_Translucent/archive/v1.1.2.tar.gz
 cursor_sum=b0398c478c5968977ea092f64b00ecd49e09f0574e8951acc0a32db3b5132930
 cursor_name=Bibata_Ghost
+engine_url=https://github.com/hyprwm/hyprqt6engine/archive/d0ce29ca5471f406c71558cd9453573686b8c976.tar.gz
+engine_sum=a6f113357277246002e56d844b0ff94699c4822ebf78f7748c395752b3bab42b
+engine_plugin=$lib/qt6/plugins/platformthemes/libhyprqt6engine.so
+breeze_dark=/usr/share/color-schemes/BreezeDark.colors
 
 say() { echo "[install] $*"; }
 refuse() { echo "[install] refused: $*"; exit 1; }
@@ -148,12 +152,32 @@ cursor_exists() {
   [ -d "$HOME/.icons/$cursor_name/cursors" ]
 }
 
-# icons, terminal, file manager and cursor the shell looks best with, all optional
+# stock themes and cursor themes do not count as icons of the user's own
+own_icons() {
+  local dirs=() dir index name
+  IFS=: read -ra dirs <<< "${XDG_DATA_HOME:-$HOME/.local/share}:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+  for dir in "${dirs[@]/%//icons}" "$HOME/.icons"; do
+    for index in "$dir"/*/index.theme; do
+      [ -f "$index" ] || continue
+      name=$(basename "$(dirname "$index")")
+      case $name in hicolor|Adwaita*|default|locolor|HighContrast) continue ;; esac
+      grep -q '^Directories=' "$index" && return 0
+    done
+  done
+  return 1
+}
+
+qt_engine_exists() {
+  qt_plugin libqt6ct.so || qt_plugin '*hyprqt6engine*.so' || [ -f "$engine_plugin" ] || qt_plugin KDEPlasmaPlatformTheme6.so
+}
+
+# icons, terminal, file manager, cursor and qt engine the shell looks best with, all optional
 recommended() {
-  icon_theme_exists Papirus-Dark || echo papirus
+  icon_theme_exists Papirus-Dark || own_icons || echo papirus
   has_entry kitty || echo kitty
-  has_entry org.kde.dolphin || echo dolphin
+  [ -n "$(file_manager)" ] || echo dolphin
   cursor_exists || echo bibata-ghost
+  qt_engine_exists || echo hyprqt6engine
 }
 
 # no distribution packages this cursor, so it comes from its release at a pinned checksum
@@ -171,8 +195,32 @@ extra_packages() {
   case $1:$2 in
     papirus:dnf) echo papirus-icon-theme papirus-icon-theme-dark ;;
     papirus:*) echo papirus-icon-theme ;;
+    kvantum:apt) echo qt6-style-kvantum ;;
+    kvantum:zypper) echo kvantum-qt6 ;;
     *) echo "$1" ;;
   esac
+}
+
+# no distribution packages hyprqt6engine, so it is built for this user with breeze dark support
+build_engine() {
+  local bin
+  for bin in cmake c++ pkg-config; do command -v "$bin" >/dev/null || { engine_reason=no_$bin; return 1; }; done
+  pkg-config --exists hyprlang hyprutils || { engine_reason=no_hyprlang; return 1; }
+  [ -f "$sys$breeze_dark" ] || { engine_reason=no_breeze_dark; return 1; }
+  mkdir -p "$work/dl" "$work/engine"
+  timeout 120 curl -fsSL -o "$work/dl/engine.tar.gz" "$engine_url" || refuse "qtengine_download url=$engine_url"
+  local got log=$work/build-hyprqt6engine.log
+  got=$(sha256sum "$work/dl/engine.tar.gz" | cut -d' ' -f1)
+  [ "$got" = "$engine_sum" ] || refuse "qtengine_checksum got=$got want=$engine_sum"
+  timeout 60 tar -xzf "$work/dl/engine.tar.gz" -C "$work/engine" --strip-components=1 || refuse "qtengine_unpack"
+  timeout 120 cmake -S "$work/engine" -B "$work/engine/build" -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX="$lib/qt6" -DCMAKE_INSTALL_LIBDIR=lib -DPLUGINDIR="$lib/qt6/plugins" \
+    -DCMAKE_INSTALL_RPATH="$lib/qt6/lib" -DCMAKE_REQUIRE_FIND_PACKAGE_KF6Config=ON \
+    -DCMAKE_REQUIRE_FIND_PACKAGE_KF6ColorScheme=ON -DCMAKE_REQUIRE_FIND_PACKAGE_KF6IconThemes=ON >"$log" 2>&1 \
+    || { tail -5 "$log"; engine_reason=configure_failed; return 1; }
+  timeout 900 cmake --build "$work/engine/build" -j"$(nproc)" >>"$log" 2>&1 || { tail -5 "$log"; engine_reason=build_failed; return 1; }
+  DESTDIR="$work/engine/stage" timeout 60 cmake --install "$work/engine/build" >>"$log" 2>&1 \
+    || { tail -5 "$log"; engine_reason=install_failed; return 1; }
 }
 
 recommend() {
@@ -194,22 +242,31 @@ recommend() {
       [ ${#chosen[@]} -gt 0 ] || { say "stage=recommend result=declined missing=\"${missing[*]}\""; return; }
       ;;
   esac
-  local pm pkgs=() fetched=()
+  local pm pkgs=() fetched=() built=()
   pm=$(manager)
   for name in "${chosen[@]}"; do
-    if [ "$name" = bibata-ghost ]; then fetched+=("$name"); continue; fi
+    case $name in
+      bibata-ghost) fetched+=("$name"); continue ;;
+      hyprqt6engine) built+=("$name"); continue ;;
+    esac
     read -ra answer <<< "$(extra_packages "$name" "$pm")"
     pkgs+=("${answer[@]}")
   done
-  [ $dry = 1 ] && { say "stage=recommend result=dry_run would_install=\"${pkgs[*]}\" would_fetch=\"${fetched[*]}\""; return; }
+  [ $dry = 1 ] && { say "stage=recommend result=dry_run would_install=\"${pkgs[*]}\" would_fetch=\"${fetched[*]}\" would_build=\"${built[*]}\""; return; }
   [ ${#fetched[@]} = 0 ] || fetch_cursor
+  if [ ${#built[@]} -gt 0 ] && ! build_engine; then
+    say "stage=qtengine result=fallback reason=$engine_reason packages=\"qt6ct kvantum\""
+    built=()
+    for name in qt6ct kvantum; do pkgs+=("$(extra_packages "$name" "$pm")"); done
+  fi
   if [ ${#pkgs[@]} -gt 0 ]; then
     install_packages "$pm" "${pkgs[@]}" || refuse "recommended_install_failed manager=$pm packages=\"${pkgs[*]}\""
   fi
   [ ${#fetched[@]} = 0 ] || swap_dir "$work/cursor/$cursor_name" "${XDG_DATA_HOME:-$HOME/.local/share}/icons/$cursor_name"
+  [ ${#built[@]} = 0 ] || swap_dir "$work/engine/stage$lib/qt6" "$lib/qt6"
   mapfile -t missing < <(recommended)
   for name in "${chosen[@]}"; do [[ " ${missing[*]} " != *" $name "* ]] || refuse "still_missing name=$name packages=\"${pkgs[*]}\""; done
-  say "stage=recommend result=installed packages=\"${pkgs[*]}\" fetched=\"${fetched[*]}\""
+  say "stage=recommend result=installed packages=\"${pkgs[*]}\" fetched=\"${fetched[*]}\" built=\"${built[*]}\""
 }
 
 preflight() {
@@ -328,14 +385,15 @@ file_manager() {
 }
 
 qt_plugin() {
-  compgen -G "$sys/usr/lib*/qt6/plugins/platformthemes/$1" >/dev/null \
-    || compgen -G "$sys/usr/lib/*/qt6/plugins/platformthemes/$1" >/dev/null
+  local kind=${2:-platformthemes}
+  compgen -G "$sys/usr/lib*/qt6/plugins/$kind/$1" >/dev/null \
+    || compgen -G "$sys/usr/lib/*/qt6/plugins/$kind/$1" >/dev/null
 }
 
 # an engine the user installed on purpose goes before the ones that come with a desktop
 qt_theme() {
   if qt_plugin 'libqt6ct.so'; then echo qt6ct
-  elif qt_plugin '*hyprqt6engine*.so'; then echo hyprqt6engine
+  elif qt_plugin '*hyprqt6engine*.so' || [ -f "$engine_plugin" ]; then echo hyprqt6engine
   elif qt_plugin 'KDEPlasmaPlatformTheme6.so'; then echo kde
   elif qt_plugin 'libqgtk3.so'; then echo gtk3
   fi
@@ -353,10 +411,10 @@ terminal() {
 plain() { [[ $1 =~ ^[A-Za-z0-9._,+/\ -]*$ ]] || refuse "odd_value name=$2 value=\"$1\""; }
 
 write_machine() {
-  local theme term qt pins=() id
+  local theme term pins=() id
   theme=$(icon_theme)
   term=$(terminal)
-  qt=$(qt_theme)
+  qt_engine=$(qt_theme)
   for id in "$(timeout 5 xdg-settings get default-web-browser 2>/dev/null)" "$(file_manager)" "$term"; do
     id=${id%.desktop}
     [ -n "$id" ] && has_entry "$id" && [[ " ${pins[*]} " != *" $id "* ]] && pins+=("$id")
@@ -369,7 +427,10 @@ write_machine() {
   elif [ -d "$sys/sys/module/amdgpu" ]; then
     env+=("LIBVA_DRIVER_NAME=radeonsi" "VDPAU_DRIVER=radeonsi")
   fi
-  [ -n "$qt" ] && env+=("QT_QPA_PLATFORMTHEME=$qt")
+  [ -n "$qt_engine" ] && env+=("QT_QPA_PLATFORMTHEME=$qt_engine")
+  if [ "$qt_engine" = hyprqt6engine ] && ! qt_plugin '*hyprqt6engine*.so'; then
+    env+=("QT_PLUGIN_PATH=$lib/qt6/plugins")
+  fi
   if cursor_exists && [ "${XCURSOR_THEME:-$cursor_name}" = "$cursor_name" ] \
     && ! grep -rqs --exclude-dir=fluency XCURSOR_THEME "$cfg"; then
     env+=("XCURSOR_THEME=$cursor_name")
@@ -472,6 +533,28 @@ apply_config() {
   say "stage=config result=installed dir=$cfg"
 }
 
+# a dark look for the engine this installer set up, never over a config the user has
+apply_qt() {
+  local conf
+  case $qt_engine in
+    hyprqt6engine) conf=$cfg/hyprqt6engine.conf ;;
+    qt6ct) conf=${XDG_CONFIG_HOME:-$HOME/.config}/qt6ct/qt6ct.conf ;;
+    *) return 0 ;;
+  esac
+  [ ! -e "$conf" ] || { say "stage=qttheme result=kept file=$conf"; return; }
+  mkdir -p "$(dirname "$conf")"
+  if [ "$qt_engine" = hyprqt6engine ]; then
+    [ -f "$sys$breeze_dark" ] || { say "stage=qttheme result=skipped reason=no_breeze_dark"; return; }
+    local style=Fusion
+    qt_plugin breeze6.so styles && style=Breeze
+    printf 'theme {\n    color_scheme = %s\n    style = %s\n    icon_theme = %s\n}\n' "$breeze_dark" "$style" "$icon" > "$conf"
+  else
+    qt_plugin libkvantum.so styles || { say "stage=qttheme result=skipped reason=no_kvantum"; return; }
+    printf '[Appearance]\ncustom_palette=false\nicon_theme=%s\nstyle=kvantum-dark\n' "$icon" > "$conf"
+  fi
+  say "stage=qttheme result=written file=$conf"
+}
+
 reload() {
   [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ] || { say "stage=start result=next_login"; return; }
   local errors
@@ -498,5 +581,6 @@ apply_fonts
 apply_plugins
 apply_shell
 apply_config
+apply_qt
 reload
 say "result=ok"
