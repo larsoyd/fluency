@@ -215,14 +215,14 @@ static std::optional<fs::path> inTheme(const std::string& theme, const std::stri
     return std::nullopt;
 }
 
-static std::optional<fs::path> lookupIcon(const std::string& name, int size) {
+static std::optional<fs::path> lookupIcon(const std::string& name, int size, const std::string& theme) {
     if (name.empty())
         return std::nullopt;
     if (name.starts_with('/'))
         return fs::exists(name) ? std::optional<fs::path>{name} : std::nullopt;
     std::vector<std::string> visited;
-    for (const auto theme : {"Papirus-Dark", "hicolor"})
-        if (auto found = inTheme(theme, name, size, visited))
+    for (const auto& each : {theme, std::string{"hicolor"}})
+        if (auto found = each.empty() ? std::nullopt : inTheme(each, name, size, visited))
             return found;
     for (const auto& dir : dataDirs())
         for (const auto ext : {".png", ".svg"})
@@ -231,7 +231,7 @@ static std::optional<fs::path> lookupIcon(const std::string& name, int size) {
     return std::nullopt;
 }
 
-cairo_surface_t* loadAppIcon(const std::string& appClass, const std::string& initialClass, int size, int pid) {
+cairo_surface_t* loadAppIcon(const std::string& appClass, const std::string& initialClass, int size, int pid, const std::string& theme) {
     const auto entries = desktopEntries();
     auto       entry   = byClass(entries, appClass);
     if (!entry && initialClass != appClass)
@@ -239,11 +239,11 @@ cairo_surface_t* loadAppIcon(const std::string& appClass, const std::string& ini
     if (!entry)
         entry = bySteamId(entries, steamId(appClass, pid));
 
-    auto path = entry ? lookupIcon(entry->icon, size) : std::nullopt;
+    auto path = entry ? lookupIcon(entry->icon, size, theme) : std::nullopt;
     if (!path)
-        path = lookupIcon(appClass, size);
+        path = lookupIcon(appClass, size, theme);
     if (!path)
-        path = lookupIcon("application-x-executable", size);
+        path = lookupIcon("application-x-executable", size, theme);
     if (!path)
         return nullptr;
 

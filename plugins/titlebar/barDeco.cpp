@@ -580,7 +580,7 @@ void CHyprBar::renderPass(PHLMONITOR pMonitor, const float& a) {
         m_iconInitialClass = PWINDOW->m_initialClass;
         m_iconSize = iconSize;
         m_pAppIcon.reset();
-        if (auto surface = loadAppIcon(m_iconClass, m_iconInitialClass, iconSize, PWINDOW->getPID())) {
+        if (auto surface = loadAppIcon(m_iconClass, m_iconInitialClass, iconSize, PWINDOW->getPID(), g_pGlobalState->config.iconTheme->value())) {
             m_pAppIcon = g_pHyprRenderer->createTexture(surface);
             cairo_surface_destroy(surface);
         }

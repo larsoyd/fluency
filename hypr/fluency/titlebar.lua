@@ -1,5 +1,6 @@
 local theme = require("fluency.theme")
 local c = theme.color
+local machine = require("fluency.machine")
 
 -- tests point this at a fresh build
 local lib = os.getenv("FLUENCY_PLUGIN_DIR") or (os.getenv("HOME") .. "/.local/lib")
@@ -26,6 +27,7 @@ if hl.plugin.fluencytitlebar then
                 bar_part_of_window         = true,
                 bar_precedence_over_border = true,
                 on_double_click            = "hyprctl dispatch '" .. maximize .. "'",
+                icon_theme                 = machine.icon_theme or "",
             },
         },
     })
@@ -59,7 +61,7 @@ if hl.plugin.fluencytitlebar then
     -- these draw a titlebar of their own
     hl.window_rule({
         name  = "own-titlebar",
-        match = { class = "^(firefox|Mullvad VPN|aquamarine)$" },
+        match = { class = "^(firefox)$" },
         ["fluencytitlebar:no_bar"] = true,
     })
 

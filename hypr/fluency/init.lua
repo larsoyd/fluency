@@ -10,5 +10,6 @@ require("fluency.startkey")
 require("fluency.keys")
 require("fluency.autostart")
 
--- written by the installer for this machine, absent in a plain checkout
-pcall(require, "fluency.local")
+for name, value in pairs(require("fluency.machine").env) do
+    hl.env(name, value)
+end

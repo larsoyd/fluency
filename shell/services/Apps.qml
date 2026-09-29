@@ -10,15 +10,14 @@ import "../logic/icons.mjs" as Icons
 Singleton {
     id: root
     property var entries: []
-    property var pins: ["firefox", "org.kde.dolphin", "kitty", "systemsettings", "steam", "org.mozilla.Thunderbird",
-        "gimp", "blender", "com.obsproject.Studio", "audacity", "org.kde.kate", "org.kde.spectacle", "org.kde.gwenview", "mpv"]
+    property var pins: Logic.defaults(Quickshell.env("FLUENCY_PINS"))
 
     function launch(id: string): string {
         let result = "ok"
         try {
             const entry = DesktopEntries.byId(id)
             if (!entry) throw new Error(`refused: no desktop entry ${id}`)
-            const line = Logic.command(entry, Quickshell.env("TERMINAL") ?? "kitty")
+            const line = Logic.command(entry, Quickshell.env("TERMINAL"))
             for (const step of Hypr.launch(line, entry.workingDirectory)) Hyprland.dispatch(step)
             Windows.expect(id)
         } catch (e) {

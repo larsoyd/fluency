@@ -222,6 +222,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     g_pGlobalState->config.enabled             = makeShared<Config::Values::CBoolValue>("plugin:fluencytitlebar:enabled", "Whether bars are enabled", true);
     g_pGlobalState->config.iconOnHover         = makeShared<Config::Values::CBoolValue>("plugin:fluencytitlebar:icon_on_hover", "Whether to use an icon on hover of the buttons", false);
     g_pGlobalState->config.buttonFont     = makeShared<Config::Values::CStringValue>("plugin:fluencytitlebar:button_font", "Font of the button glyphs", "FluentSystemIcons-Regular");
+    g_pGlobalState->config.iconTheme      = makeShared<Config::Values::CStringValue>("plugin:fluencytitlebar:icon_theme", "Icon theme for the app icon, hicolor is always searched", "");
     g_pGlobalState->config.titlePadding   = makeShared<Config::Values::CIntValue>("plugin:fluencytitlebar:title_padding", "Space before the title", 16);
     g_pGlobalState->config.buttonIconSize = makeShared<Config::Values::CIntValue>("plugin:fluencytitlebar:button_icon_size", "Size of the button glyphs", 10);
     g_pGlobalState->config.onDoubleClick       = makeShared<Config::Values::CStringValue>("plugin:fluencytitlebar:on_double_click", "Action to execute on double click of the bar", "");
@@ -245,6 +246,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.iconOnHover);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.onDoubleClick);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.buttonFont);
+    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.iconTheme);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.buttonIconSize);
     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.titlePadding);
 

@@ -11,7 +11,7 @@ import "../logic/apps.mjs" as Apps
 
 Singleton {
     id: root
-    property var pinned: ["org.kde.dolphin", "kitty", "firefox"]
+    property var pinned: Apps.defaults(Quickshell.env("FLUENCY_PINS"))
     property string mode: "own"
     property var homes: ({})
     property var order: []

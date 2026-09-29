@@ -28,7 +28,7 @@ PanelWindow {
     }
 
     function rows(): var {
-        if (!targets.length) return Logic.desktopMenu({ paste: Desktop.pasteable })
+        if (!targets.length) return Logic.desktopMenu({ paste: Desktop.pasteable, settings: !!DesktopEntries.byId("systemsettings") })
         return Logic.itemMenu(targets.map(name => Desktop.items.find(item => item.name === name)).filter(item => item), Apps.pins)
     }
 

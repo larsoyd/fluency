@@ -224,9 +224,11 @@ export function desktopMenu(state) {
         line,
         row("submenu", "New", { submenu: "new", more: true, glyph: glyph("add") }),
         line,
-        row("display", "Display settings", { glyph: glyph("display") }),
-        row("personalize", "Personalize", { glyph: glyph("personalize") }),
-        line,
+        ...(state.settings === false ? [] : [
+            row("display", "Display settings", { glyph: glyph("display") }),
+            row("personalize", "Personalize", { glyph: glyph("personalize") }),
+            line,
+        ]),
         row("terminal", "Open in Terminal", { glyph: glyph("console") }),
     ]
     return state.paste ? [{ kind: "buttons", buttons: [{ action: "paste", text: "Paste", glyph: glyph("paste"), enabled: true }] }, ...rows] : rows

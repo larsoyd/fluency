@@ -125,7 +125,7 @@ Singleton {
         }
 
         function context() {
-            return { dir: root.dir, terminal: Quickshell.env("TERMINAL") || "kitty", taken: items.map(item => item.name) }
+            return { dir: root.dir, terminal: Quickshell.env("TERMINAL"), taken: items.map(item => item.name) }
         }
 
         function update(change) {

@@ -70,6 +70,12 @@ const edits = {
     front: (pins, id) => [id, ...pins.filter(pin => pin !== id)],
 }
 
+// the installer lists the default apps it found, as ids or desktop file names
+export function defaults(text) {
+    const ids = (text ?? "").split(",").map(id => id.trim().replace(/\.desktop$/, "")).filter(id => id)
+    return ids.filter((id, at) => ids.indexOf(id) === at)
+}
+
 export function edit(pins, action, id) {
     if (!Object.prototype.hasOwnProperty.call(edits, action)) throw new Error(`refused: unknown pin action ${JSON.stringify(action)}`)
     if (!id) throw new Error("refused: no app id")
