@@ -7,6 +7,7 @@ cfg=${XDG_CONFIG_HOME:-$HOME/.config}/hypr
 share=$HOME/.local/share/fluency
 lib=$HOME/.local/lib/fluency
 fonts=${XDG_DATA_HOME:-$HOME/.local/share}/fonts/fluency
+fontconf=${XDG_CONFIG_HOME:-$HOME/.config}/fontconfig/conf.d/50-fluency.conf
 sys=${FLUENCY_SYSROOT:-}
 
 fluent_url=https://raw.githubusercontent.com/microsoft/fluentui-system-icons/a563cf9166f4f91aa617557ed272612b7f0a2f72/fonts/FluentSystemIcons-Regular.ttf
@@ -68,7 +69,7 @@ uninstall() {
     grep -vx 'require("fluency")' "$cfg/hyprland.lua" > "$work/hyprland.lua" || true
     mv "$work/hyprland.lua" "$cfg/hyprland.lua"
   fi
-  rm -rf "$cfg/fluency" "$share" "$lib" "$fonts"
+  rm -rf "$cfg/fluency" "$share" "$lib" "$fonts" "$fontconf"
   command -v fc-cache >/dev/null && timeout 60 fc-cache -f >/dev/null 2>&1 || true
   say "stage=uninstall result=ok"
 }
@@ -167,6 +168,28 @@ own_icons() {
   return 1
 }
 
+# with no name, any theme but the ones gtk ships counts
+gtk_theme_exists() {
+  local dirs=() dir theme
+  IFS=: read -ra dirs <<< "${XDG_DATA_HOME:-$HOME/.local/share}:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+  for dir in "${dirs[@]/%//themes}" "$HOME/.themes"; do
+    for theme in "$dir"/*/gtk-3.0; do
+      [ -d "$theme" ] || continue
+      theme=${theme%/gtk-3.0}
+      theme=${theme##*/}
+      if [ -n "${1:-}" ]; then [ "$theme" = "$1" ] && return 0; continue; fi
+      case $theme in Default|Emacs|Raleigh|HighContrast*|Adwaita*) ;; *) return 0 ;; esac
+    done
+  done
+  return 1
+}
+
+has_noto() {
+  local families
+  families=$(timeout 30 fc-list : family 2>/dev/null)
+  [[ $'\n'${families//,/$'\n'}$'\n' == *$'\n''Noto Sans'$'\n'* ]]
+}
+
 qt_engine_exists() {
   qt_plugin libqt6ct.so || qt_plugin '*hyprqt6engine*.so' || [ -f "$engine_plugin" ] || qt_plugin KDEPlasmaPlatformTheme6.so
 }
@@ -178,6 +201,8 @@ recommended() {
   [ -n "$(file_manager)" ] || echo dolphin
   cursor_exists || echo bibata-ghost
   qt_engine_exists || echo hyprqt6engine
+  gtk_theme_exists || echo breeze-gtk
+  has_noto || echo noto
 }
 
 # no distribution packages this cursor, so it comes from its release at a pinned checksum
@@ -197,6 +222,12 @@ extra_packages() {
     papirus:*) echo papirus-icon-theme ;;
     kvantum:apt) echo qt6-style-kvantum ;;
     kvantum:zypper) echo kvantum-qt6 ;;
+    breeze-gtk:apt) echo breeze-gtk-theme ;;
+    breeze-gtk:dnf) echo breeze-gtk-gtk3 breeze-gtk-gtk4 ;;
+    noto:pacman) echo noto-fonts noto-fonts-cjk noto-fonts-emoji ;;
+    noto:dnf) echo google-noto-sans-vf-fonts google-noto-sans-cjk-vf-fonts google-noto-color-emoji-fonts ;;
+    noto:apt) echo fonts-noto-core fonts-noto-cjk fonts-noto-color-emoji ;;
+    noto:zypper) echo noto-sans-fonts noto-sans-cjk-fonts noto-coloremoji-fonts ;;
     *) echo "$1" ;;
   esac
 }
@@ -314,6 +345,20 @@ fetch_fonts() {
   [ "$got" = "$selawik_sum" ] || refuse "font_checksum file=Selawik_Release.zip got=$got want=$selawik_sum"
   cp "$work/dl/fluent.ttf" "$work/fonts/FluentSystemIcons-Regular.ttf"
   timeout 30 unzip -q -j "$work/dl/selawik.zip" '*.ttf' -d "$work/fonts" || refuse "font_unpack file=Selawik_Release.zip"
+  cat > "$work/fontconf" <<'XML'
+<?xml version="1.0"?>
+<!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
+<fontconfig>
+  <alias binding="same">
+    <family>Selawik</family>
+    <accept>
+      <family>Noto Sans</family>
+      <family>Noto Sans CJK SC</family>
+      <family>Noto Color Emoji</family>
+    </accept>
+  </alias>
+</fontconfig>
+XML
   say "stage=fonts result=fetched files=$(ls "$work/fonts" | wc -l)"
 }
 
@@ -368,9 +413,10 @@ entry_file() {
 has_entry() { entry_file "$1" >/dev/null; }
 
 in_category() {
-  local file
+  local file categories
   file=$(entry_file "$1") || return 1
-  sed -n '/^\[Desktop Entry\]/,/^\[/s/^Categories=//p' "$file" | head -1 | tr ';' '\n' | grep -qx "$2"
+  categories=$(sed -n '/^\[Desktop Entry\]/,/^\[/s/^Categories=//p' "$file")
+  [[ ";${categories%%$'\n'*};" == *";$2;"* ]]
 }
 
 # the folder handler can be any app that opens folders, a terminal among them
@@ -494,9 +540,12 @@ build_config() {
   say "stage=verify result=ok"
 }
 
+# selawik covers latin only, noto takes the rest
 apply_fonts() {
-  if same_tree "$work/fonts" "$fonts"; then say "stage=fonts result=same"; return; fi
+  if same_tree "$work/fonts" "$fonts" && cmp -s "$work/fontconf" "$fontconf"; then say "stage=fonts result=same"; return; fi
   swap_dir "$work/fonts" "$fonts"
+  mkdir -p "$(dirname "$fontconf")"
+  cp "$work/fontconf" "$fontconf"
   timeout 60 fc-cache -f "$fonts" >/dev/null 2>&1 || say "stage=fonts warn=fc_cache_failed"
   say "stage=fonts result=installed dir=$fonts"
 }
@@ -555,6 +604,24 @@ apply_qt() {
   say "stage=qttheme result=written file=$conf"
 }
 
+# gtk gets the same dark look, a key the user ever set stays theirs
+apply_gtk() {
+  if ! command -v gsettings >/dev/null || ! command -v dconf >/dev/null; then
+    say "stage=gtk result=skipped reason=no_gsettings"
+    return
+  fi
+  local pairs=() set=() kept=() pair key
+  gtk_theme_exists Breeze-Dark && pairs+=("gtk-theme=Breeze-Dark")
+  pairs+=("color-scheme=prefer-dark" "icon-theme=$icon")
+  cursor_exists && pairs+=("cursor-theme=$cursor_name")
+  for pair in "${pairs[@]}"; do
+    key=${pair%%=*}
+    if [ -n "$(timeout 5 dconf read "/org/gnome/desktop/interface/$key" 2>/dev/null)" ]; then kept+=("$key"); continue; fi
+    if timeout 5 gsettings set org.gnome.desktop.interface "$key" "${pair#*=}"; then set+=("$key"); else say "stage=gtk warn=set_failed key=$key"; fi
+  done
+  say "stage=gtk result=ok set=\"${set[*]}\" kept=\"${kept[*]}\""
+}
+
 reload() {
   [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ] || { say "stage=start result=next_login"; return; }
   local errors
@@ -582,5 +649,6 @@ apply_plugins
 apply_shell
 apply_config
 apply_qt
+apply_gtk
 reload
 say "result=ok"
