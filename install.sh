@@ -208,11 +208,12 @@ icon_theme_exists() {
   [ -f "$HOME/.icons/$1/index.theme" ]
 }
 
+# kdeglobals names a theme only once chosen, gsettings always has its default
 icon_theme() {
   local wanted
-  wanted=$(timeout 5 gsettings get org.gnome.desktop.interface icon-theme 2>/dev/null | tr -d "'") || wanted=""
+  wanted=$(sed -n '/^\[Icons\]/,/^\[/s/^Theme=//p' "${XDG_CONFIG_HOME:-$HOME/.config}/kdeglobals" 2>/dev/null | head -1)
   if [ -z "$wanted" ]; then
-    wanted=$(sed -n '/^\[Icons\]/,/^\[/s/^Theme=//p' "${XDG_CONFIG_HOME:-$HOME/.config}/kdeglobals" 2>/dev/null | head -1)
+    wanted=$(timeout 5 gsettings get org.gnome.desktop.interface icon-theme 2>/dev/null | tr -d "'") || wanted=""
   fi
   local name
   for name in "$wanted" Papirus-Dark; do
