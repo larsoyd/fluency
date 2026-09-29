@@ -467,6 +467,7 @@ terminal() {
   for t in kitty foot alacritty wezterm ghostty konsole gnome-terminal xterm; do
     command -v "$t" >/dev/null && { echo "$t"; return; }
   done
+  return 0
 }
 
 # values land in a lua string and a qml pragma, anything odd is refused
