@@ -24,6 +24,7 @@ Recommended, not required:
 | kitty, the terminal | kitty is missing | `kitty` |
 | Dolphin, the file manager | you have no file manager | `dolphin` |
 | Bibata Ghost, the cursor | it is missing | none, see below |
+| Bibata Ghost as a Hyprcursor theme | it is missing and `hyprcursor-util` and `xcur2png` are installed | none, see below |
 | hyprqt6engine, the Qt theme engine | you have no Qt engine (qt6ct, hyprqt6engine or KDE's) | none, see below |
 | Breeze for GTK | you have no GTK theme besides the stock ones (Adwaita, HighContrast) | `breeze-gtk`, on Debian and Ubuntu `breeze-gtk-theme`, on Fedora `breeze-gtk-gtk3` and `breeze-gtk-gtk4` |
 | Noto fonts | Noto Sans is missing | Noto Sans, Noto Sans CJK and Noto Color Emoji, named per distribution |
@@ -32,6 +33,8 @@ When one of them is offered, the installer asks whether to install it. `--recomm
 
 No distribution packages the cursor, so the installer downloads the Bibata Translucent 1.1.2 release from GitHub, checks its SHA-256 and puts Bibata Ghost in `~/.local/share/icons`. `--uninstall` leaves it there, like the packages.
 
+Hyprland loads Hyprcursor themes natively, so the installer also converts Bibata Ghost into `~/.local/share/icons/Bibata_Ghost_Hyprcursor` with `hyprcursor-util` and `xcur2png`. The artwork keeps every size and frame, and the original theme stays for apps that draw their own cursor. Without the two tools the installer says so and keeps plain Bibata Ghost.
+
 hyprqt6engine is not packaged either, so the installer builds it from a pinned commit of its GitHub repository into `~/.local/lib/fluency/qt6`, for your user only. The build needs `cmake`, a C++ compiler, the hyprlang and hyprutils headers, Qt 6.9 or newer with its private headers, the KF6 Config, ColorScheme and IconThemes headers, and Breeze for its colours. When any of that is missing or the build fails, the installer installs qt6ct and Kvantum from your repository instead.
 
 The engine gets a dark look, but only when it has no config yet: hyprqt6engine gets Breeze Dark in `~/.config/hypr/hyprqt6engine.conf`, and qt6ct gets the dark Kvantum style in `~/.config/qt6ct/qt6ct.conf`. A config you already have is never changed.
@@ -39,6 +42,15 @@ The engine gets a dark look, but only when it has no config yet: hyprqt6engine g
 GTK apps follow the same dark look through gsettings: the Breeze Dark theme when it is installed, the dark colour scheme, your icon theme and Bibata Ghost. Only settings you never changed yourself are set, anything you chose stays.
 
 Selawik only covers Latin scripts. A fontconfig file in `~/.config/fontconfig/conf.d/50-fluency.conf` makes Noto Sans, Noto Sans CJK and Noto Color Emoji the fallback for everything else. `--uninstall` removes it.
+
+## Versions
+
+| branch | built for |
+|---|---|
+| `main` | Hyprland 0.56.2, the version Arch Linux ships |
+| `canary` | Hyprland `main`, last built against e826317 on 2026-09-30 |
+
+Install from `main`. `canary` follows Hyprland's development branch and gets fixes for it before a release reaches Arch.
 
 ## Install
 
@@ -72,7 +84,7 @@ Anything specific to your machine goes into `~/.config/hypr/fluency/local.lua`:
 - your terminal
 - the default browser, file manager and terminal, as the first pins. The folder handler counts as the file manager only when it is one, otherwise the first installed of Dolphin, Nautilus, Thunar, Nemo, PCManFM and Caja is used
 - your icon theme. One chosen in KDE comes first, then Papirus Dark when it is installed, then the GTK default
-- Bibata Ghost as the cursor when it is installed, unless your own config or environment sets another
+- Bibata Ghost as the cursor when it is installed, and its Hyprcursor theme when that is there too, unless your own config or environment sets another
 - the NVIDIA video variables when an NVIDIA driver is loaded, otherwise the AMD ones (`radeonsi`) when `amdgpu` is loaded
 - a Qt platform theme, the first one installed of qt6ct, hyprqt6engine (also the one the installer built), KDE and GTK
 
