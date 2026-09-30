@@ -17,6 +17,7 @@ selawik_sum=3f62c51e05e3b5a1e6241cf92a371f0be2ea1183aa87b30718bbd40832a8d423
 cursor_url=https://github.com/Silicasandwhich/Bibata_Cursor_Translucent/archive/v1.1.2.tar.gz
 cursor_sum=b0398c478c5968977ea092f64b00ecd49e09f0574e8951acc0a32db3b5132930
 cursor_name=Bibata_Ghost
+hyprcursor_name=Bibata_Ghost_Hyprcursor
 engine_url=https://github.com/hyprwm/hyprqt6engine/archive/d0ce29ca5471f406c71558cd9453573686b8c976.tar.gz
 engine_sum=a6f113357277246002e56d844b0ff94699c4822ebf78f7748c395752b3bab42b
 engine_plugin=$lib/qt6/plugins/platformthemes/libhyprqt6engine.so
@@ -172,13 +173,22 @@ check_deps() {
   say "stage=deps result=installed packages=\"${pkgs[*]}\""
 }
 
-cursor_exists() {
+# prints the first icons dir that holds the path
+icon_path() {
   local dir
   local IFS=:
   for dir in "${XDG_DATA_HOME:-$HOME/.local/share}" ${XDG_DATA_DIRS:-/usr/local/share:/usr/share}; do
-    [ -d "$dir/icons/$cursor_name/cursors" ] && return 0
+    [ -e "$dir/icons/$1" ] && { echo "$dir/icons/$1"; return 0; }
   done
-  [ -d "$HOME/.icons/$cursor_name/cursors" ]
+  [ -e "$HOME/.icons/$1" ] && echo "$HOME/.icons/$1"
+}
+
+cursor_exists() { [ -n "$(icon_path "$cursor_name/cursors")" ]; }
+hyprcursor_exists() { [ -n "$(icon_path "$hyprcursor_name/manifest.hl")" ]; }
+
+hyprcursor_tools() {
+  local bin
+  for bin in hyprcursor-util xcur2png; do command -v "$bin" >/dev/null || { hc_reason=no_$bin; return 1; }; done
 }
 
 # stock themes and cursor themes do not count as icons of the user's own
@@ -228,6 +238,7 @@ recommended() {
   has_entry kitty || echo kitty
   [ -n "$(file_manager)" ] || echo dolphin
   cursor_exists || echo bibata-ghost
+  hyprcursor_exists || ! hyprcursor_tools || echo bibata-hyprcursor
   qt_engine_exists || echo hyprqt6engine
   gtk_theme_exists || echo breeze-gtk
   has_noto || echo noto
@@ -242,6 +253,47 @@ fetch_cursor() {
   [ "$got" = "$cursor_sum" ] || refuse "cursor_checksum got=$got want=$cursor_sum"
   timeout 60 tar -xzf "$work/dl/cursor.tar.gz" -C "$work/cursor" --strip-components=1 "Bibata_Cursor_Translucent-1.1.2/$cursor_name" \
     || refuse "cursor_unpack name=$cursor_name"
+}
+
+# hyprland draws the cursor itself from a hyprcursor theme, made here from the xcursor one
+convert_cursor() {
+  local src out=$1 stage=$work/hc log=$work/hyprcursor.log link pair shape spot shapes=0 aliases=0
+  hyprcursor_tools || return 1
+  src=$(icon_path "$cursor_name")
+  [ -n "$src" ] || { hc_reason=no_xcursor; return 1; }
+  # the extractor empties this fixed dir, so one it did not make is left alone
+  [ ! -e /tmp/hyprcursor-util ] || { hc_reason=extractor_busy; return 1; }
+  mkdir -p "$stage"
+  cp -a "$src" "$stage/$cursor_name" || { hc_reason=copy; return 1; }
+  for pair in diamond_cross:crosshair draft_large:draft ew-resize:size_hor; do
+    link=$stage/$cursor_name/cursors/${pair%%:*}
+    if [ -L "$link" ] && [ ! -e "$link" ]; then ln -sfn "${pair#*:}" "$link"; fi
+  done
+  timeout 300 hyprcursor-util --extract "$stage/$cursor_name" --output "$stage" --resize bilinear >"$log" 2>&1
+  local status=$?
+  rm -rf /tmp/hyprcursor-util
+  [ $status = 0 ] || { tail -5 "$log"; hc_reason=extract; return 1; }
+  local theme=$stage/extracted_$cursor_name
+  printf 'name = %s\ndescription = Bibata Ghost as hyprcursor\nversion = 1.1.2\ncursors_directory = hyprcursors\n' "$hyprcursor_name" > "$theme/manifest.hl"
+  for shape in "$stage/$cursor_name"/cursors/*; do
+    if [ -L "$shape" ]; then
+      link=$(basename "$(readlink -f "$shape")")
+      grep -qxF "define_override = ${shape##*/}" "$theme/hyprcursors/$link/meta.hl" 2>/dev/null || { hc_reason=lost_alias_${shape##*/}; return 1; }
+      aliases=$((aliases + 1))
+      continue
+    fi
+    # one hotspot per shape, taken from the size the artwork was drawn at
+    spot=$(timeout 10 xcur2png -q -n -c - "$shape" 2>/dev/null | awk '$1 == 40 { print $2, $3 }' | sort -u)
+    [[ $spot =~ ^[0-9]+\ [0-9]+$ ]] || { hc_reason=hotspot_${shape##*/}; return 1; }
+    awk -v x="${spot% *}" -v y="${spot#* }" 'BEGIN { printf "hotspot_x = %.9f\nhotspot_y = %.9f\n", x / 40, y / 40 } !/^hotspot_[xy]/' \
+      "$theme/hyprcursors/${shape##*/}/meta.hl" > "$stage/meta.hl" && mv "$stage/meta.hl" "$theme/hyprcursors/${shape##*/}/meta.hl" \
+      || { hc_reason=meta_${shape##*/}; return 1; }
+    shapes=$((shapes + 1))
+  done
+  timeout 300 hyprcursor-util --create "$theme" --output "$stage" >>"$log" 2>&1 || { tail -5 "$log"; hc_reason=create; return 1; }
+  mv "$stage/theme_$hyprcursor_name" "$out" || { hc_reason=move; return 1; }
+  printf 'Bibata Ghost by the Bibata Cursor Translucent contributors, GPL-3.0.\nSource: %s\n' "${cursor_url%/archive/*}" > "$out/README.txt"
+  say "stage=hyprcursor result=ok shapes=$shapes aliases=$aliases"
 }
 
 extra_packages() {
@@ -299,17 +351,19 @@ recommend() {
       [ ${#chosen[@]} -gt 0 ] || { say "stage=recommend result=declined missing=\"${missing[*]}\""; return; }
       ;;
   esac
-  local pm pkgs=() fetched=() built=()
+  hyprcursor_exists || hyprcursor_tools || say "stage=hyprcursor result=skipped reason=$hc_reason"
+  local pm pkgs=() fetched=() built=() converted=()
   pm=$(manager)
   for name in "${chosen[@]}"; do
     case $name in
       bibata-ghost) fetched+=("$name"); continue ;;
       hyprqt6engine) built+=("$name"); continue ;;
+      bibata-hyprcursor) converted+=("$name"); continue ;;
     esac
     read -ra answer <<< "$(extra_packages "$name" "$pm")"
     pkgs+=("${answer[@]}")
   done
-  [ $dry = 1 ] && { say "stage=recommend result=dry_run would_install=\"${pkgs[*]}\" would_fetch=\"${fetched[*]}\" would_build=\"${built[*]}\""; return; }
+  [ $dry = 1 ] && { say "stage=recommend result=dry_run would_install=\"${pkgs[*]}\" would_fetch=\"${fetched[*]}\" would_build=\"${built[*]}\" would_convert=\"${converted[*]}\""; return; }
   [ ${#fetched[@]} = 0 ] || fetch_cursor
   if [ ${#built[@]} -gt 0 ] && ! build_engine; then
     say "stage=qtengine result=fallback reason=$engine_reason packages=\"qt6ct kvantum\""
@@ -321,8 +375,19 @@ recommend() {
   fi
   [ ${#fetched[@]} = 0 ] || swap_dir "$work/cursor/$cursor_name" "${XDG_DATA_HOME:-$HOME/.local/share}/icons/$cursor_name"
   [ ${#built[@]} = 0 ] || swap_dir "$work/engine/stage$lib/qt6" "$lib/qt6"
+  if [ ${#converted[@]} -gt 0 ]; then
+    if convert_cursor "$work/hyprcursor"; then
+      swap_dir "$work/hyprcursor" "${XDG_DATA_HOME:-$HOME/.local/share}/icons/$hyprcursor_name"
+    else
+      say "stage=hyprcursor result=skipped reason=$hc_reason"
+      converted=()
+    fi
+  fi
   mapfile -t missing < <(recommended)
-  for name in "${chosen[@]}"; do [[ " ${missing[*]} " != *" $name "* ]] || refuse "still_missing name=$name packages=\"${pkgs[*]}\""; done
+  for name in "${chosen[@]}"; do
+    [ "$name" = bibata-hyprcursor ] && [ ${#converted[@]} = 0 ] && continue
+    [[ " ${missing[*]} " != *" $name "* ]] || refuse "still_missing name=$name packages=\"${pkgs[*]}\""
+  done
   say "stage=recommend result=installed packages=\"${pkgs[*]}\" fetched=\"${fetched[*]}\" built=\"${built[*]}\""
 }
 
@@ -515,6 +580,10 @@ write_machine() {
   if cursor_exists && [ "${XCURSOR_THEME:-$cursor_name}" = "$cursor_name" ] \
     && ! grep -rqs --exclude-dir=fluency XCURSOR_THEME "$cfg"; then
     env+=("XCURSOR_THEME=$cursor_name")
+    if hyprcursor_exists && [ "${HYPRCURSOR_THEME:-$hyprcursor_name}" = "$hyprcursor_name" ] \
+      && ! grep -rqs --exclude-dir=fluency HYPRCURSOR_THEME "$cfg"; then
+      env+=("HYPRCURSOR_THEME=$hyprcursor_name")
+    fi
   fi
   plain "$theme" icon_theme
   {
