@@ -29,3 +29,11 @@ export function displayName(passwdLine, user) {
     const full = (passwdLine.split(":")[4] ?? "").split(",")[0].trim()
     return full || user
 }
+
+// the session daemon sends one line per change
+export function lockState(line) {
+    let state = null
+    try { state = JSON.parse(line).locked } catch (e) {}
+    if (typeof state !== "boolean") throw new Error(`refused: no lock state in ${JSON.stringify(line)}`)
+    return state
+}
