@@ -24,7 +24,7 @@ Recommended, not required:
 | kitty, the terminal | kitty is missing | `kitty` |
 | Dolphin, the file manager | you have no file manager | `dolphin` |
 | Bibata Ghost, the cursor | it is missing | none, see below |
-| Bibata Ghost as a Hyprcursor theme | it is missing and `hyprcursor-util` and `xcur2png` are installed | none, see below |
+| Bibata Ghost as a Hyprcursor theme | it is missing | the tools that make it, `hyprcursor` and `xcur2png`, on Debian and Ubuntu `hyprcursor-util` and `xcur2png` (on Fedora `xcur2png` comes from the sdegler/hyprland COPR) |
 | hyprqt6engine, the Qt theme engine | you have no Qt engine (qt6ct, hyprqt6engine or KDE's) | none, see below |
 | Breeze for GTK | you have no GTK theme besides the stock ones (Adwaita, HighContrast) | `breeze-gtk`, on Debian and Ubuntu `breeze-gtk-theme`, on Fedora `breeze-gtk-gtk3` and `breeze-gtk-gtk4` |
 | Noto fonts | Noto Sans is missing | Noto Sans, Noto Sans CJK and Noto Color Emoji, named per distribution |
@@ -33,7 +33,7 @@ When one of them is offered, the installer asks whether to install it. `--recomm
 
 No distribution packages the cursor, so the installer downloads the Bibata Translucent 1.1.2 release from GitHub, checks its SHA-256 and puts Bibata Ghost in `~/.local/share/icons`. `--uninstall` leaves it there, like the packages.
 
-Hyprland loads Hyprcursor themes natively, so the installer also converts Bibata Ghost into `~/.local/share/icons/Bibata_Ghost_Hyprcursor` with `hyprcursor-util` and `xcur2png`. The artwork keeps every size and frame, and the original theme stays for apps that draw their own cursor. Without the two tools the installer says so and keeps plain Bibata Ghost.
+Hyprland loads Hyprcursor themes natively, so the installer also converts Bibata Ghost into `~/.local/share/icons/Bibata_Ghost_Hyprcursor` with `hyprcursor-util` and `xcur2png`. The artwork keeps every size and frame, and the original theme stays for apps that draw their own cursor. It installs the two tools from your distribution when they are missing and keeps them. If the distribution has no package for one, the installer says so and keeps plain Bibata Ghost.
 
 hyprqt6engine is not packaged either, so the installer builds it from a pinned commit of its GitHub repository into `~/.local/lib/fluency/qt6`, for your user only. The build needs `cmake`, a C++ compiler, the hyprlang and hyprutils headers, Qt 6.9 or newer with its private headers, the KF6 Config, ColorScheme and IconThemes headers, and Breeze for its colours. When any of that is missing or the build fails, the installer installs qt6ct and Kvantum from your repository instead.
 
