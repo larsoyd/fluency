@@ -47,7 +47,7 @@ FocusScope {
     }
 
     width: Metrics.clipWidth
-    height: Math.min(maxHeight, listTop + (list.count ? list.contentHeight + Metrics.clipInset : Metrics.clipEmpty))
+    height: Math.min(maxHeight, Metrics.clipMaxHeight, listTop + (list.count ? list.contentHeight + Metrics.clipInset : Metrics.clipEmpty))
     onQueryChanged: cursor = -1
     onCursorChanged: if (cursor >= 0) list.positionViewAtIndex(cursor, ListView.Contain)
 
@@ -204,5 +204,21 @@ FocusScope {
             onMoreToggled: root.opened = expanded ? -1 : modelData.id
             onActed: name => root.act(modelData, name)
         }
+    }
+
+    WheelGlide {
+        view: list
+        anchors.fill: list
+    }
+
+    HoverHandler { id: over }
+
+    ScrollRail {
+        objectName: "scrollBar"
+        view: list
+        x: parent.width - width
+        y: list.y
+        height: list.height
+        watching: over.hovered
     }
 }

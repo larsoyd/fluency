@@ -216,4 +216,9 @@ Item {
             }
         }
     }
+
+    WheelGlide {
+        view: list
+        anchors.fill: list
+    }
 }
