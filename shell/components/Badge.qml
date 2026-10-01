@@ -12,10 +12,19 @@ Rectangle {
     radius: height / 2
     color: Colors.badgeFill
 
+    FontMetrics {
+        id: metrics
+        font: label.font
+    }
+
+    // centre the digits, not the line box of a font with a deep descender
     Text {
         id: label
         objectName: "label"
         anchors.centerIn: parent
+        anchors.verticalCenterOffset: Math.round((metrics.descent + metrics.tightBoundingRect("0").height - metrics.ascent) / 2)
+        width: Math.ceil(implicitWidth)
+        horizontalAlignment: Text.AlignHCenter
         text: root.text
         color: Colors.badgeText
         font.family: Type.family
