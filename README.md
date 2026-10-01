@@ -107,6 +107,10 @@ Other options:
 | Super + Up | maximize, or restore what Super + Down minimized |
 | Super + Down | minimize to the taskbar |
 | Super + Ctrl + V | volume mixer |
+| Super + S | search |
+| Super + Tab | task view, with new desktops that stay until closed |
+| Super + N | notifications and calendar |
+| Alt + Tab | switch windows while Alt is held, Shift goes back |
 | Alt + F4 | close the window |
 
 ## Settings
