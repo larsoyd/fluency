@@ -1,6 +1,6 @@
 # Fluency
 
-[![Arch, Debian and Fedora](https://img.shields.io/github/actions/workflow/status/larsoyd/fluency/distros.yml?branch=main&label=Arch%2C%20Debian%2C%20Fedora&logo=githubactions&logoColor=white)](https://github.com/larsoyd/fluency/actions/workflows/distros.yml)
+[![Arch, Debian, Fedora](https://github.com/larsoyd/fluency/actions/workflows/distros.yml/badge.svg?branch=main)](https://github.com/larsoyd/fluency/actions/workflows/distros.yml)
 [![Hyprland 0.56.2](https://img.shields.io/badge/Hyprland-0.56.2-58E1FF?logo=hyprland&logoColor=white)](https://hypr.land)
 [![Quickshell 0.3](https://img.shields.io/badge/Quickshell-0.3-41CD52?logo=qt&logoColor=white)](https://quickshell.org)
 [![Arch Linux](https://img.shields.io/badge/Arch%20Linux-1793D1?logo=arch-linux&logoColor=fff)](#install)

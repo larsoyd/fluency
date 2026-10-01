@@ -1,4 +1,4 @@
-name: canary
+name: Hyprland main
 
 # a schedule runs from the default branch, so this file sits on both and always tests the canary branch
 on:
