@@ -6,7 +6,9 @@
 
 **NOTE: At the moment of writing (01.10.2016) Fluency is still in active development without a proper release. Do not run this on production level machines.**
 
-A desktop shell for Hyprland with elements inspired by the [Fluent design language](https://en.wikipedia.org/wiki/Fluent_Design_System), built with Quickshell and Hyprland's Lua config. Fluency is built for the version of **Hyprland** that Arch Linux, Debian sid and Fedora ship. It is built for Arch Linux first so Arch should always work with it even if the others don't, however full compatibility with Debian & Fedora is the goal. Every push and a weekly run install it on all three with their own packages. 
+A desktop shell for Hyprland with elements inspired by the [Fluent design language](https://en.wikipedia.org/wiki/Fluent_Design_System), built with Quickshell and Hyprland's Lua config. 
+
+Fluency is built for the version of **Hyprland** that Arch Linux, Debian sid and Fedora ship. It is built for Arch Linux first so Arch should always work with it even if the others don't, however full compatibility with Debian & Fedora is the goal. Every push and a weekly run install it on all three with their own packages. 
 
 
 ![Fluency at 1920x1080 with the Start menu open](media/desktop.png)
