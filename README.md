@@ -163,3 +163,12 @@ These environment variables change the defaults:
 ## Licenses
 
 Fluency is under the MIT license, see `LICENSE`. The title bar plugin is based on hyprbars by Vaxry (BSD 3-clause, `plugins/titlebar/LICENSE`). Selawik is under the SIL Open Font License. Fluent System Icons is under the MIT license. Both fonts are downloaded at install time and are not part of this repository. Bibata Translucent is under the GPL 3.0 and hyprqt6engine is under the BSD 3-clause license. Both are only downloaded when you choose them.
+
+## Contribution
+
+Contributions are welcome.
+
+## AI usage / Disclosure
+LLMs were used to write documentation (sans this disclosure) for grammar and professionalism,  code and comments in code was written by me. LLMs were used to troubleshoot and research, some tests were written with AI during this process.
+
+Use of LLMs for contributions is not prohibited, but a human in the loop is required. Fully automated PRs are not permitted.
