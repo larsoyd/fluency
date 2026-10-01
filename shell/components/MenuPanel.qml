@@ -1,5 +1,6 @@
 import QtQuick
 import qs.tokens
+import "../logic/fonts.mjs" as Fonts
 import "../logic/acrylic.mjs" as Acrylic
 import "../logic/menu.mjs" as Menu
 import "../logic/glyphs.mjs" as Glyphs
@@ -24,7 +25,7 @@ Item {
         return rows.reduce((most, row) => row.kind === "item" ? Math.max(most, measure.advanceWidth(row.text)) : most, 0)
     }
 
-    width: Math.min(Metrics.menuMaxWidth, Math.ceil(widest()) + indent + Metrics.menuItemPaddingX + 2 * (Metrics.menuItemMarginX + Metrics.flyoutBorder))
+    width: Math.min(Metrics.menuMaxWidth, Fonts.drawnWidth(widest()) + indent + Metrics.menuItemPaddingX + 2 * (Metrics.menuItemMarginX + Metrics.flyoutBorder))
     height: Menu.height(rows, Metrics)
     clip: true
 
