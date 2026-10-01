@@ -6,13 +6,8 @@
 #include <hyprland/src/desktop/state/WindowState.hpp>
 #include <hyprland/src/desktop/state/LayerState.hpp>
 #include <hyprland/src/desktop/state/ViewHitTester.hpp>
-#include <hyprland/src/desktop/view/window/Window.hpp>
-#include <hyprland/src/desktop/view/window/WindowPresentation.hpp>
-#include <hyprland/src/desktop/view/window/WindowMetadata.hpp>
-#include <hyprland/src/desktop/view/window/WindowBackend.hpp>
 #include <hyprland/src/desktop/view/LayerSurface.hpp>
 #include <hyprland/src/helpers/MiscFunctions.hpp>
-#include <hyprland/src/keybinds/Manager.hpp>
 #include <hyprland/src/managers/SeatManager.hpp>
 #include <hyprland/src/managers/input/InputManager.hpp>
 #include <hyprland/src/render/Renderer.hpp>
@@ -29,6 +24,7 @@
 #include <hyprland/src/state/MonitorState.hpp>
 
 #include "globals.hpp"
+#include "compat.hpp"
 #include "BarPassElement.hpp"
 
 #include <climits>
@@ -170,13 +166,12 @@ void CHyprBar::onTouchMove(Event::SCallbackInfo& info, ITouch::SMotionEvent e) {
     if (!m_bDragPending || !m_bTouchEv || !validMapped(m_pWindow) || e.touchID != m_touchId)
         return;
 
-    if (!m_bDraggingThis) {
-        (void)Config::Actions::floatWindow(Config::Actions::eTogglableAction::TOGGLE_ACTION_ENABLE, m_pWindow.lock());
-        // pin it so you can change workspaces while dragging a window
-        (void)Config::Actions::pinWindow(Config::Actions::eTogglableAction::TOGGLE_ACTION_ENABLE, m_pWindow.lock());
-        g_layoutManager->beginDragTarget(m_pWindow.lock()->layoutTarget(), MBIND_MOVE);
-        m_bDraggingThis = true;
-    }
+    auto PMONITOR     = m_pWindow->m_monitor.lock();
+    PMONITOR          = PMONITOR ? PMONITOR : Desktop::focusState()->monitor();
+    const auto COORDS = Vector2D(PMONITOR->m_position.x + e.pos.x * PMONITOR->m_size.x, PMONITOR->m_position.y + e.pos.y * PMONITOR->m_size.y);
+
+    compat::touchDrag(m_pWindow.lock(), !m_bDraggingThis, {COORDS.x - (assignedBoxGlobal().w / 2), COORDS.y});
+    m_bDraggingThis = true;
 }
 
 void CHyprBar::handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch::SDownEvent> touchEvent) {
@@ -206,9 +201,7 @@ void CHyprBar::handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch:
     if (!VECINRECT(COORDS, 0, 0, assignedBoxGlobal().w, HEIGHT - 1)) {
 
         if (m_bDraggingThis) {
-            if (m_bTouchEv)
-                (void)Config::Actions::floatWindow(Config::Actions::eTogglableAction::TOGGLE_ACTION_DISABLE);
-            g_layoutManager->endDragTarget();
+            compat::cancelDrag(m_bTouchEv);
             LOG(Log::DEBUG, "[fluencytitlebar] Dragging ended on {:x}", (uintptr_t)PWINDOW.get());
         }
 
@@ -221,7 +214,7 @@ void CHyprBar::handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch:
     if (Desktop::focusState()->window() != PWINDOW)
         Desktop::focusState()->fullWindowFocus(PWINDOW, Desktop::FOCUS_REASON_CLICK);
 
-    if (PWINDOW->isFloating())
+    if (compat::floating(PWINDOW))
         Desktop::windowState()->raise(PWINDOW);
 
     info.cancelled   = true;
@@ -260,11 +253,11 @@ void CHyprBar::handleUpEvent(Event::SCallbackInfo& info) {
         // a caption button acts on the release and only over the button that was pressed
         const int button = buttonAt(cursorRelativeToBar());
         if (button >= 0 && pressed == 1u << button)
-            Config::Supplementary::executor()->spawn(g_pGlobalState->buttons[button].cmd);
+            compat::exec(g_pGlobalState->buttons[button].cmd);
     }
 
     if (m_bDraggingThis) {
-        g_layoutManager->endDragTarget();
+        compat::endDrag();
         m_bDraggingThis = false;
         if (m_bTouchEv) {
             if (const auto res = Config::Actions::floatWindow(Config::Actions::eTogglableAction::TOGGLE_ACTION_DISABLE); !res)
@@ -280,7 +273,7 @@ void CHyprBar::handleUpEvent(Event::SCallbackInfo& info) {
 }
 
 void CHyprBar::handleMovement() {
-    g_layoutManager->beginDragTarget(m_pWindow.lock()->layoutTarget(), MBIND_MOVE);
+    compat::beginDrag(m_pWindow.lock());
     m_bDraggingThis = true;
     LOG(Log::DEBUG, "[fluencytitlebar] Dragging initiated on {:x}", (uintptr_t)m_pWindow.lock().get());
     return;
@@ -383,15 +376,15 @@ void CHyprBar::renderBarButtons(CBox* barBox, const float scale, const float a) 
 
         if (color.a > 0) {
             const auto window = m_pWindow.lock();
-            const auto rounding = window->presentation().rounding() +
-                (g_pGlobalState->config.barPrecedenceOverBorder->value() ? 0 : window->presentation().borderSize());
+            const auto rounding = compat::rounding(window) +
+                (g_pGlobalState->config.barPrecedenceOverBorder->value() ? 0 : compat::borderSize(window));
             const auto radius = std::max(0.0, rounding * scale - 2.0);
             CBox fillBox = *barBox;
             fillBox.h += rounding * scale * 3;
             CRegion damage{buttonBox};
             damage.intersect(g_pHyprRenderer->m_renderData.damage);
             g_pHyprOpenGL->renderRect(fillBox, color,
-                {.damage = &damage, .round = static_cast<int>(radius), .roundingPower = window->presentation().roundingPower()});
+                {.damage = &damage, .round = static_cast<int>(radius), .roundingPower = compat::roundingPower(window)});
         }
 
         offset += scaledButtonsPad + scaledButtonSize;
@@ -511,9 +504,9 @@ void CHyprBar::renderPass(PHLMONITOR pMonitor, const float& a) {
     }
 
     const auto PWORKSPACE      = PWINDOW->m_workspace;
-    const auto WORKSPACEOFFSET = PWORKSPACE && !(PWINDOW->m_state & Desktop::View::WINDOW_STATE_PINNED) ? PWORKSPACE->m_renderOffset->value() : Vector2D();
+    const auto WORKSPACEOFFSET = PWORKSPACE && !compat::pinned(PWINDOW) ? PWORKSPACE->m_renderOffset->value() : Vector2D();
 
-    const auto ROUNDING = PWINDOW->presentation().rounding() + (PRECEDENCE ? 0 : PWINDOW->presentation().borderSize());
+    const auto ROUNDING = compat::rounding(PWINDOW) + (PRECEDENCE ? 0 : compat::borderSize(PWINDOW));
 
     const auto scaledRounding = ROUNDING > 0 ? ROUNDING * pMonitor->m_scale - 2 /* idk why but otherwise it looks bad due to the gaps */ : 0;
 
@@ -526,7 +519,7 @@ void CHyprBar::renderPass(PHLMONITOR pMonitor, const float& a) {
     CBox       titleBarBox = {DECOBOX.x - pMonitor->m_position.x, DECOBOX.y - pMonitor->m_position.y, DECOBOX.w,
                               DECOBOX.h + ROUNDING * 3 /* to fill the bottom cuz we can't disable rounding there */};
 
-    titleBarBox.translate(PWINDOW->presentation().floatingOffset()).scale(pMonitor->m_scale).round();
+    titleBarBox.translate(compat::floatingOffset(PWINDOW)).scale(pMonitor->m_scale).round();
 
     if (titleBarBox.w < 1 || titleBarBox.h < 1)
         return;
@@ -535,8 +528,8 @@ void CHyprBar::renderPass(PHLMONITOR pMonitor, const float& a) {
 
     if (ROUNDING) {
         // the +1 is a shit garbage temp fix until renderRect supports an alpha matte
-        CBox windowBox = {PWINDOW->position(Desktop::View::IGeometric::GEOMETRIC_CURRENT).x + PWINDOW->presentation().floatingOffset().x - pMonitor->m_position.x + 1,
-                          PWINDOW->position(Desktop::View::IGeometric::GEOMETRIC_CURRENT).y + PWINDOW->presentation().floatingOffset().y - pMonitor->m_position.y + 1,
+        CBox windowBox = {PWINDOW->position(Desktop::View::IGeometric::GEOMETRIC_CURRENT).x + compat::floatingOffset(PWINDOW).x - pMonitor->m_position.x + 1,
+                          PWINDOW->position(Desktop::View::IGeometric::GEOMETRIC_CURRENT).y + compat::floatingOffset(PWINDOW).y - pMonitor->m_position.y + 1,
                           PWINDOW->size(Desktop::View::IGeometric::GEOMETRIC_CURRENT).x - 2, PWINDOW->size(Desktop::View::IGeometric::GEOMETRIC_CURRENT).y - 2};
 
         if (windowBox.w < 1 || windowBox.h < 1)
@@ -555,7 +548,7 @@ void CHyprBar::renderPass(PHLMONITOR pMonitor, const float& a) {
         glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
         windowBox.translate(WORKSPACEOFFSET).scale(pMonitor->m_scale).round();
-        g_pHyprOpenGL->renderRect(windowBox, CHyprColor(0, 0, 0, 0), {.round = static_cast<int>(scaledRounding), .roundingPower = m_pWindow->presentation().roundingPower()});
+        g_pHyprOpenGL->renderRect(windowBox, CHyprColor(0, 0, 0, 0), {.round = static_cast<int>(scaledRounding), .roundingPower = compat::roundingPower(m_pWindow.lock())});
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
         glStencilFunc(GL_NOTEQUAL, 1, -1);
@@ -563,9 +556,9 @@ void CHyprBar::renderPass(PHLMONITOR pMonitor, const float& a) {
     }
 
     if (SHOULDBLUR)
-        g_pHyprOpenGL->renderRect(titleBarBox, color, {.round = static_cast<int>(scaledRounding), .roundingPower = m_pWindow->presentation().roundingPower(), .blur = true, .blurA = a});
+        g_pHyprOpenGL->renderRect(titleBarBox, color, {.round = static_cast<int>(scaledRounding), .roundingPower = compat::roundingPower(m_pWindow.lock()), .blur = true, .blurA = a});
     else
-        g_pHyprOpenGL->renderRect(titleBarBox, color, {.round = static_cast<int>(scaledRounding), .roundingPower = m_pWindow->presentation().roundingPower()});
+        g_pHyprOpenGL->renderRect(titleBarBox, color, {.round = static_cast<int>(scaledRounding), .roundingPower = compat::roundingPower(m_pWindow.lock())});
 
     if (m_lastScale != pMonitor->m_scale) {
         m_pTextTex = nullptr;
@@ -573,12 +566,12 @@ void CHyprBar::renderPass(PHLMONITOR pMonitor, const float& a) {
     }
 
     const int iconSize = std::max(1, int(std::round(16 * pMonitor->m_scale)));
-    if (ENABLETITLE && (m_iconClass != PWINDOW->metadata().appID() || m_iconInitialClass != PWINDOW->metadata().initialAppID() || m_iconSize != iconSize)) {
-        m_iconClass = PWINDOW->metadata().appID();
-        m_iconInitialClass = PWINDOW->metadata().initialAppID();
+    if (ENABLETITLE && (m_iconClass != compat::appID(PWINDOW) || m_iconInitialClass != compat::initialAppID(PWINDOW) || m_iconSize != iconSize)) {
+        m_iconClass = compat::appID(PWINDOW);
+        m_iconInitialClass = compat::initialAppID(PWINDOW);
         m_iconSize = iconSize;
         m_pAppIcon.reset();
-        if (auto surface = loadAppIcon(m_iconClass, m_iconInitialClass, iconSize, PWINDOW->backend().pid(), g_pGlobalState->config.iconTheme->value())) {
+        if (auto surface = loadAppIcon(m_iconClass, m_iconInitialClass, iconSize, compat::pid(PWINDOW), g_pGlobalState->config.iconTheme->value())) {
             m_pAppIcon = g_pHyprRenderer->createTexture(surface);
             cairo_surface_destroy(surface);
         }
@@ -586,8 +579,8 @@ void CHyprBar::renderPass(PHLMONITOR pMonitor, const float& a) {
     }
 
     // render title
-    if (ENABLETITLE && (m_szLastTitle != PWINDOW->metadata().title() || m_bWindowSizeChanged || !m_pTextTex || m_pTextTex->m_texID == 0 || m_bTitleColorChanged)) {
-        m_szLastTitle = PWINDOW->metadata().title();
+    if (ENABLETITLE && (m_szLastTitle != compat::title(PWINDOW) || m_bWindowSizeChanged || !m_pTextTex || m_pTextTex->m_texID == 0 || m_bTitleColorChanged)) {
+        m_szLastTitle = compat::title(PWINDOW);
         renderBarTitle(BARBUF, pMonitor->m_scale);
     }
 
@@ -611,7 +604,7 @@ void CHyprBar::renderPass(PHLMONITOR pMonitor, const float& a) {
             buttonSizes += b.size + BARBUTTONPADDING;
         }
 
-        const auto scaledBorderSize  = PWINDOW->presentation().borderSize() * pMonitor->m_scale;
+        const auto scaledBorderSize  = compat::borderSize(PWINDOW) * pMonitor->m_scale;
         const auto scaledButtonsSize = buttonSizes * pMonitor->m_scale;
         const auto scaledBarPadding  = BARPADDING * pMonitor->m_scale;
         const auto iconSpace         = m_pAppIcon ? 24 * pMonitor->m_scale : 0;
@@ -686,7 +679,7 @@ CBox CHyprBar::assignedBoxGlobal() {
     box.translate(g_pDecorationPositioner->getEdgeDefinedPoint(DECORATION_EDGE_TOP, m_pWindow.lock()));
 
     const auto PWORKSPACE      = m_pWindow->m_workspace;
-    const auto WORKSPACEOFFSET = PWORKSPACE && !(m_pWindow->m_state & Desktop::View::WINDOW_STATE_PINNED) ? PWORKSPACE->m_renderOffset->value() : Vector2D();
+    const auto WORKSPACEOFFSET = PWORKSPACE && !compat::pinned(m_pWindow.lock()) ? PWORKSPACE->m_renderOffset->value() : Vector2D();
 
     return box.translate(WORKSPACEOFFSET);
 }
@@ -713,7 +706,7 @@ void CHyprBar::updateRules() {
 
     const auto size = PWINDOW->size(Desktop::View::IGeometric::GEOMETRIC_GOAL);
     // tiny floating popups like a slider tooltip get no caption buttons
-    m_hidden = m_hidden || (PWINDOW->isFloating() && size.x > 0 && size.x <= 320 && size.y > 0 && size.y <= 64);
+    m_hidden = m_hidden || (compat::floating(PWINDOW) && size.x > 0 && size.x <= 320 && size.y > 0 && size.y <= 64);
 
     if (prevHidden != m_hidden)
         g_pDecorationPositioner->repositionDeco(this);
