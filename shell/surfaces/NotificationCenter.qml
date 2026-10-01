@@ -70,6 +70,7 @@ PanelWindow {
                 iconOf: n => Words.source(n, name => Quickshell.iconPath(name, "application-x-executable"))
                 onActivated: n => Notifications.activate(n)
                 onDismissed: n => Notifications.dismiss(n)
+                onInvoked: (n, id) => Notifications.invoke(n, id)
                 onCleared: Notifications.clear()
                 onClearedApp: app => Notifications.clearApp(app)
                 onDndToggled: Notifications.setDnd(!Notifications.dnd)

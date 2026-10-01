@@ -104,6 +104,13 @@ QtObject {
     readonly property int toastsShown: 3
     readonly property int notifyKept: 50
     readonly property int toastCloseSize: 32
+    readonly property int toastProgressHeight: 3
+    readonly property int toastProgressTrack: 1
+    // no source gives the toast's section and button gaps or the button height
+    readonly property int toastSectionGap: 12
+    readonly property int toastButtonHeight: 32
+    readonly property int toastButtonGap: 8
+    readonly property int controlRadius: 4
 
     readonly property int startCellWidth: 96
     readonly property int startCellHeight: 84

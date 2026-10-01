@@ -30,3 +30,20 @@ export function source(n, themed) {
     if (name.startsWith("/")) return "file://" + name
     return name.startsWith("file:") || name.startsWith("image:") ? name : themed(name)
 }
+
+// the value hint is a percent, two fluency hints name the step and the count beside the bar
+export function progress(n) {
+    const hints = n.hints || {}, raw = Number(hints.value)
+    if (!("value" in hints) || !(raw >= 0)) return null
+    const pct = Math.min(100, Math.round(raw))
+    return { value: pct / 100, status: hints["x-fluency-status"] || "", text: hints["x-fluency-value"] || `${pct}%` }
+}
+
+// windows shows at most five buttons, the default action is the toast itself
+export function buttons(n) {
+    return (n.actions || []).filter(a => a.identifier !== "default").slice(0, 5).map(a => ({ id: a.identifier, text: a.text }))
+}
+
+export function view(n, themed) {
+    return Object.assign(text(n), { icon: source(n, themed), bar: progress(n), buttons: buttons(n) })
+}
