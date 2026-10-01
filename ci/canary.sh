@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# usage: canary.sh <fluency checkout>   inside the dev shell of hyprland main
+# usage: [CANARY_BADGE=<file>] canary.sh <fluency checkout>   inside the dev shell of hyprland main
 set -uo pipefail
 
 src=$(realpath "${1:?fluency checkout}")
@@ -28,5 +28,12 @@ echo 'require("fluency")' > "$work/cfg/hyprland.lua"
 if out=$(timeout 30 Hyprland --verify-config -c "$work/cfg/hyprland.lua" 2>&1); then step verify ok
 else echo "$out" | tail -15; step verify fail; fi
 
-echo "[canary] done fails=$fails"
+commit=$(grep -oE 'at commit [0-9a-f]{40}' <<< "$version" | cut -c11-17)
+if [ -n "${CANARY_BADGE:-}" ]; then
+  if [ $fails = 0 ]; then message="${commit:-unknown} $(date -u +%F)" color=brightgreen
+  else message="${commit:-unknown} failing $(date -u +%F)" color=red; fi
+  printf '{"schemaVersion":1,"label":"hyprland main","message":"%s","color":"%s"}' "$message" "$color" > "$CANARY_BADGE"
+fi
+
+echo "[canary] done fails=$fails commit=${commit:-unknown}"
 [ $fails = 0 ]
