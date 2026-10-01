@@ -15,6 +15,7 @@ const icons = {
     dismiss: ["dismiss_20", 0xf369],
     display: ["desktop_20", 0xf359],
     document: ["document_20", 0xf378],
+    down: ["chevron_down_20", 0xf2a3],
     download: ["arrow_download_20", 0xf150],
     eye: ["eye_20", 0xe5f2],
     folder: ["folder_open_20", 0xf42e],

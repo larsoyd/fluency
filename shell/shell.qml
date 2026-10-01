@@ -36,6 +36,12 @@ ShellRoot {
         }
     }
 
+    Binding {
+        target: Notifications
+        property: "centerOpen"
+        value: bars.instances.some(bar => bar.notify.open)
+    }
+
     Toasts {
         id: toasts
         screen: Quickshell.screens.find(screen => screen.name === TrayHost.screen) ?? Quickshell.screens[0]
