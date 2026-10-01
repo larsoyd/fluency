@@ -33,7 +33,7 @@ jobs:
           case "${{ matrix.distro }}" in
             arch) sed -i '/^\[options\]/a DisableSandbox' /etc/pacman.conf && pacman -Sy --noconfirm --needed git ;;
             debian) apt-get update && apt-get install -y git ca-certificates ;;
-            fedora) dnf install -y git-core ;;
+            fedora) dnf install -y --disablerepo=fedora-cisco-openh264 git-core ;;
           esac
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
