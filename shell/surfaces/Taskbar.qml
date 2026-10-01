@@ -18,11 +18,12 @@ PanelWindow {
     property alias overflow: overflow
     property alias trayMenu: trayMenu
     property alias start: start
+    property alias search: search
     property alias quick: quick
     property alias jump: jump
     readonly property var icons: Tray.split(TrayHost.items)
     readonly property var lines: Pictures.lines(Clock.now, Clock.pictures)
-    readonly property var flyouts: ({ start, quick })
+    readonly property var flyouts: ({ start, search, quick })
     readonly property var events: ({ "fluency-start": "start", "fluency-search": "search", "fluency-taskview": "taskview", "fluency-notify": "notify" })
 
     function states() {
@@ -98,6 +99,11 @@ PanelWindow {
         screen: root.screen
     }
 
+    SearchPane {
+        id: search
+        screen: root.screen
+    }
+
     QuickSettings {
         id: quick
         screen: root.screen
@@ -141,6 +147,12 @@ PanelWindow {
         windows: [root, start]
         active: start.open
         onCleared: start.open = false
+    }
+
+    HyprlandFocusGrab {
+        windows: [root, search]
+        active: search.open
+        onCleared: search.open = false
     }
 
     HyprlandFocusGrab {

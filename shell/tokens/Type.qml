@@ -11,4 +11,5 @@ QtObject {
     readonly property var caption: ({ size: 12, lineHeight: 16, weight: 400 })
     readonly property var body: ({ size: 14, lineHeight: 20, weight: 400 })
     readonly property var bodyStrong: ({ size: 14, lineHeight: 20, weight: 600 })
+    readonly property var subtitle: ({ size: 20, lineHeight: 28, weight: 600 })
 }
