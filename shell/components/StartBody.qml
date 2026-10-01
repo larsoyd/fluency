@@ -1,7 +1,6 @@
 import QtQuick
 import qs.tokens
 import "../logic/apps.mjs" as Apps
-import "../logic/scroll.mjs" as Scroll
 import "../logic/glyphs.mjs" as Glyphs
 
 Flickable {
@@ -45,28 +44,11 @@ Flickable {
         : listY + list.height + Metrics.startListEnd
     boundsBehavior: Flickable.StopAtBounds
 
-    // wayland wheels never reached a handler in the flickable, no buttons so rows keep clicks
-    MouseArea {
+    WheelGlide {
+        view: root
         width: root.contentWidth
         height: root.contentHeight
         z: 1
-        acceptedButtons: Qt.NoButton
-        onWheel: event => {
-            if (!event.angleDelta.y || event.pixelDelta.y) {
-                event.accepted = false
-                return
-            }
-            glide.to = Scroll.wheelTarget(glide.running ? glide.to : root.contentY, event.angleDelta.y, root.height, root.contentHeight)
-            glide.restart()
-        }
-    }
-
-    NumberAnimation {
-        id: glide
-        target: root
-        property: "contentY"
-        duration: Motion.controlNormal
-        easing.type: Easing.OutCubic
     }
 
     component Header: Text {
