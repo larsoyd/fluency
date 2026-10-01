@@ -163,6 +163,17 @@ PanelWindow {
         }
     }
 
+    // nothing stays open behind a lock, some flyouts hold no grab the lock would end
+    Connections {
+        target: Session
+        function onLockedChanged() {
+            if (!Session.locked) return
+            const shut = Object.keys(root.flyouts).filter(key => root.flyouts[key].open)
+            for (const key of shut) root.flyouts[key].open = false
+            console.log(`[taskbar] screen=${root.screen.name} locked=true closed=${shut.join(",")}`)
+        }
+    }
+
     HyprlandFocusGrab {
         windows: [root, start]
         active: start.open

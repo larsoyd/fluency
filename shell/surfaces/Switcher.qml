@@ -62,6 +62,13 @@ PanelWindow {
         }
     }
 
+    Connections {
+        target: Session
+        function onLockedChanged() {
+            if (Session.locked && root.holding) root.end("")
+        }
+    }
+
     SwitcherPanel {
         id: panel
         objectName: "switcher"
