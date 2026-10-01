@@ -3,13 +3,6 @@
 [![Arch, Debian, Fedora](https://github.com/larsoyd/fluency/actions/workflows/distros.yml/badge.svg?branch=main)](https://github.com/larsoyd/fluency/actions/workflows/distros.yml)
 [![Hyprland 0.56.2](https://img.shields.io/badge/Hyprland-0.56.2-58E1FF?logo=hyprland&logoColor=white)](https://hypr.land)
 [![Quickshell 0.3](https://img.shields.io/badge/Quickshell-0.3-41CD52?logo=qt&logoColor=white)](https://quickshell.org)
-[![Arch Linux](https://img.shields.io/badge/Arch%20Linux-1793D1?logo=arch-linux&logoColor=fff)](#install)
-[![Debian](https://img.shields.io/badge/Debian-A81D33?logo=debian&logoColor=fff)](#install)
-[![Fedora](https://img.shields.io/badge/Fedora-51A2DA?logo=fedora&logoColor=fff)](#install)
-[![QML](https://img.shields.io/badge/QML-41CD52?logo=qt&logoColor=fff)](shell)
-[![Lua](https://img.shields.io/badge/Lua-%232C2D72.svg?logo=lua&logoColor=white)](hypr/fluency)
-[![C++](https://img.shields.io/badge/C++-%2300599C.svg?logo=c%2B%2B&logoColor=white)](plugins)
-[![MIT License](https://img.shields.io/badge/MIT%20License-FFFFFF)](LICENSE)
 
 A desktop shell for Hyprland with elements inspired by the [Fluent design language](https://en.wikipedia.org/wiki/Fluent_Design_System), built with Quickshell and Hyprland's Lua config.
 
