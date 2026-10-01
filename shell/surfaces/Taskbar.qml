@@ -6,6 +6,7 @@ import qs.tokens
 import qs.components
 import qs.services
 import "../logic/clock.mjs" as Pictures
+import "../logic/flyouts.mjs" as Flyouts
 import "../logic/tasks.mjs" as Tasks
 import "../logic/tray.mjs" as Tray
 import "../logic/volume.mjs" as Volume
@@ -21,6 +22,20 @@ PanelWindow {
     property alias jump: jump
     readonly property var icons: Tray.split(TrayHost.items)
     readonly property var lines: Pictures.lines(Clock.now, Clock.pictures)
+    readonly property var flyouts: ({ start, quick })
+    readonly property var events: ({ "fluency-start": "start", "fluency-search": "search", "fluency-taskview": "taskview", "fluency-notify": "notify" })
+
+    function states() {
+        const out = {}
+        for (const key in flyouts) out[key] = flyouts[key].open
+        return out
+    }
+
+    function toggle(name) {
+        if (!flyouts[name]) return console.log(`[taskbar] flyout=${name} result=refused reason=not_built`)
+        const next = Flyouts.toggle(states(), name)
+        for (const key in flyouts) flyouts[key].open = next[key]
+    }
 
     anchors { left: true; right: true; bottom: true }
     implicitHeight: Metrics.taskbarHeight
@@ -33,13 +48,13 @@ PanelWindow {
         objectName: "bar"
         anchors.fill: parent
         trayWidth: tray.width
-        startOpen: start.open
+        openName: Flyouts.shown(root.states())
         tasks: Tasks.arrange(Tasks.group(Windows.pinned, Tasks.visible(Windows.windows, root.screen.name, Windows.mode)), (Windows.orders[root.screen.name] ?? []))
         icon: appId => Windows.icon(appId)
         progress: appId => Windows.progress(appId)
         badge: appId => Windows.badge(appId)
         onRequested: action => Windows.run(action)
-        onActivated: name => { if (name === "start") start.open = !start.open }
+        onActivated: name => root.toggle(name)
         onJumpAsked: (key, x) => jump.show(key, x)
         onReordered: keys => Windows.arrange(keys, root.screen.name)
 
@@ -58,7 +73,7 @@ PanelWindow {
             onToggled: overflow.open = !overflow.open
             onPressed: (key, input, x, y) => TrayHost.press(key, input, root, tray.x + x, y)
             onScrolled: (key, delta) => TrayHost.scroll(key, delta)
-            onAsked: name => name === "status" ? quick.open = !quick.open : Windows.run({ action: name })
+            onAsked: name => name === "status" ? root.toggle("quick") : name === "clock" ? root.toggle("notify") : Windows.run({ action: name })
             onTurned: delta => Status.setVolume(Volume.wheel(Status.volume, delta))
             onHiddenChanged: if (hidden === 0) overflow.open = false
         }
@@ -114,10 +129,10 @@ PanelWindow {
         target: Hyprland
         function onRawEvent(event) {
             if (event.name !== "custom" || Hyprland.focusedMonitor?.name !== root.screen.name) return
-            if (event.data === "fluency-start") start.open = !start.open
+            if (root.events[event.data]) root.toggle(root.events[event.data])
             if (event.data === "fluency-sound") {
+                if (!quick.open) root.toggle("quick")
                 quick.panel.page = "sound"
-                quick.open = true
             }
         }
     }

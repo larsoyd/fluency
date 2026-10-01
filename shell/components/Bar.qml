@@ -10,7 +10,7 @@ Item {
     id: root
 
     property int trayWidth: 0
-    property bool startOpen: false
+    property string openName: ""
     property var tasks: []
     property var byKey: ({})
     property var drag: ({ from: -1, by: 0 })
@@ -110,7 +110,7 @@ Item {
             TaskbarButton {
                 required property var modelData
                 objectName: modelData.name
-                active: modelData.name === "start" && root.startOpen
+                active: modelData.name === root.openName
                 glyph: modelData.glyph ?? ""
                 source: modelData.source ?? ""
                 onClicked: root.activated(modelData.name)
