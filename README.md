@@ -110,7 +110,7 @@ cd fluency
 ./install.sh            # or ./install.sh --deps
 ```
 
-The installer checks everything first and writes nothing if a check fails:
+The installer checks everything first and writes nothing if a check fails, the recommended extras included:
 
 1. Hyprland and Quickshell versions.
 2. Fonts. It downloads Selawik (OFL) and Fluent System Icons (MIT) at pinned versions and checks their SHA-256.
@@ -127,16 +127,28 @@ Only after all of that passes does it write:
 | config modules | `~/.config/hypr/fluency/` |
 | one line appended to `hyprland.lua` | `require("fluency")` |
 
-Your `hyprland.lua` is backed up to `hyprland.lua.bak-<time>` before the require line is added. If you have no config yet, a small starter is written.
+Your `hyprland.lua` is backed up to `hyprland.lua.bak-<time>` before the require line is added. If it is a link, as with stow or home-manager, the link stays and the file it points to is the one changed and backed up. If you have no config yet, a small starter is written.
 
-Anything specific to your machine goes into `~/.config/hypr/fluency/local.lua`:
+What the installer finds for your machine goes into `~/.config/hypr/fluency/generated.lua`, written again on every run:
 
 - your terminal
 - the default browser, file manager and terminal, as the first pins. The folder handler counts as the file manager only when it is one, otherwise the first installed of Dolphin, Nautilus, Thunar, Nemo, PCManFM and Caja is used
 - your icon theme. One chosen in KDE comes first, then Papirus Dark when it is installed, then the GTK default
 - Bibata Ghost as the cursor when it is installed, and its Hyprcursor theme when that is there too, unless your own config or environment sets another
-- the NVIDIA video variables when an NVIDIA driver is loaded, otherwise the AMD ones (`radeonsi`) when `amdgpu` is loaded
+- with only an NVIDIA GPU, its GLX vendor, and its video variables when `nvidia_drv_video.so` (nvidia-vaapi-driver) is installed. With an Intel or AMD GPU beside it nothing is forced, so apps keep picking their GPU. With only `amdgpu` loaded, the AMD video variables (`radeonsi`)
 - a Qt platform theme, the first one installed of qt6ct, hyprqt6engine (also the one the installer built), KDE and GTK
+
+Your own settings go into `~/.config/hypr/fluency/local.lua`. The installer writes it once, empty, and never again, and a key in it wins over `generated.lua`:
+
+```lua
+return {
+    icon_theme = "Breeze",
+    env = { TERMINAL = "foot" },
+    binds = { search = false, ["alt-tab"] = "ALT + grave" },
+}
+```
+
+`binds` turns off a key of Fluency with `false` or moves it to another one, by the names in the Keys table. When your own config binds a key Fluency binds too, the installer names it (`stage=binds warn=also_bound`), since both would run.
 
 Running the installer again changes nothing unless something is new. If the shell is running, the installer reloads it. Otherwise it starts at your next login.
 
@@ -146,23 +158,27 @@ Other options:
 ./install.sh --dry-run      # check everything, write nothing
 ./install.sh --recommended  # also install Papirus, kitty, Dolphin and Bibata Ghost
 ./install.sh --no-plugins   # skip the title bar and minimize plugins
-./install.sh --uninstall    # remove fluency and the require line
+./install.sh --uninstall    # take away what the installer made
 ```
+
+`--uninstall` puts `hyprland.lua` back as it was before (a starter the installer wrote is removed) and removes what the installer made: the shell, plugins, fonts and config modules, and the Qt config, GTK settings and cursor themes it added. Packages stay. Your `local.lua` is kept as `~/.config/hypr/fluency-local.lua.bak-<time>`, and the `hyprland.lua.bak-<time>` backups stay too.
+
+Package installs go through `sudo` (or `pkexec`), which asks for your password in the terminal. Without a terminal the installer stops and asks you to run it in one.
 
 ## Keys
 
-| key | action |
-|---|---|
-| Super | Start |
-| Super + Up | maximize, or restore what Super + Down minimized |
-| Super + Down | minimize to the taskbar |
-| Super + Ctrl + V | volume mixer |
-| Super + S | search |
-| Super + Tab | task view, with new desktops that stay until closed |
-| Super + N | notifications and calendar |
-| Super + V | clipboard history |
-| Alt + Tab | switch windows while Alt is held, Shift goes back |
-| Alt + F4 | close the window |
+| key | name | action |
+|---|---|---|
+| Super | `start` | Start |
+| Super + Up | `maximize` | maximize, or restore what Super + Down minimized |
+| Super + Down | `minimize` | minimize to the taskbar |
+| Super + Ctrl + V | `sound` | volume mixer |
+| Super + S | `search` | search |
+| Super + Tab | `taskview` | task view, with new desktops that stay until closed |
+| Super + N | `notify` | notifications and calendar |
+| Super + V | `clipboard` | clipboard history |
+| Alt + Tab | `alt-tab`, `alt-shift-tab` | switch windows while Alt is held, Shift goes back. `alt-escape` cancels, `alt-release` picks |
+| Alt + F4 | `close` | close the window |
 
 ## Settings
 

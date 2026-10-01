@@ -9,6 +9,9 @@ lib=$HOME/.local/lib/fluency
 fonts=${XDG_DATA_HOME:-$HOME/.local/share}/fonts/fluency
 fontconf=${XDG_CONFIG_HOME:-$HOME/.config}/fontconfig/conf.d/50-fluency.conf
 sys=${FLUENCY_SYSROOT:-}
+state=${XDG_STATE_HOME:-$HOME/.local/state}/fluency
+manifest=$state/manifest
+block=$'\nrequire("fluency")\n'
 
 fluent_url=https://raw.githubusercontent.com/microsoft/fluentui-system-icons/a563cf9166f4f91aa617557ed272612b7f0a2f72/fonts/FluentSystemIcons-Regular.ttf
 fluent_sum=c5dab901c52362ecc94d3a1d2c88a5c060464eb9eb58bb5b0d64d17066af4d7f
@@ -45,6 +48,7 @@ for arg in "$@"; do
 done
 
 work=$(mktemp -d)
+chosen=()
 trap 'rm -rf "$work"' EXIT
 stamp=$(date +%Y%m%d-%H%M%S)
 
@@ -53,8 +57,42 @@ same_tree() { [ -e "$2" ] && diff -rq "$1" "$2" >/dev/null 2>&1; }
 
 backup() {
   [ -f "$1" ] || return 0
-  cp -p "$1" "$1.bak-$stamp"
-  say "stage=backup file=$1.bak-$stamp"
+  local target
+  target=$(readlink -f "$1")
+  cp -p "$target" "$target.bak-$stamp"
+  say "stage=backup file=$target.bak-$stamp"
+}
+
+# what this installer made, one line each, so uninstall takes away exactly that
+note() {
+  if [ ! -d "$state" ]; then
+    local d=$state missing=()
+    while [ ! -e "$d" ]; do missing=("$d" "${missing[@]}"); d=$(dirname "$d"); done
+    mkdir -p "$state"
+    for d in "${missing[@]}"; do echo "dir $d" >> "$manifest"; done
+  fi
+  grep -qxF -- "$*" "$manifest" 2>/dev/null || echo "$*" >> "$manifest"
+}
+
+# a path about to be made, with the parents it needs that are not there yet
+track() {
+  local dir parents=()
+  dir=$(dirname "$1")
+  while [ ! -e "$dir" ]; do parents=("$dir" "${parents[@]}"); dir=$(dirname "$dir"); done
+  for dir in "${parents[@]}"; do note "dir $dir"; done
+  [ -e "$1" ] || note "made $1"
+}
+
+# writes through a link so the dotfile it points at stays the file that changes
+write_entry() {
+  local target
+  target=$(readlink -f "$cfg/hyprland.lua")
+  if [ -L "$cfg/hyprland.lua" ]; then
+    cat "$1" > "$target"
+  else
+    cp "$1" "$cfg/.hyprland.lua.new"
+    mv "$cfg/.hyprland.lua.new" "$cfg/hyprland.lua"
+  fi
 }
 
 # swaps in place when mv can exchange, otherwise the old dir is gone for a moment
@@ -71,13 +109,39 @@ swap_dir() {
   fi
 }
 
+local_template=$'-- your own settings for this machine, kept when the installer runs again\n-- generated.lua holds what the installer found, a key here wins over it\nreturn {}\n'
+
 uninstall() {
-  if [ -f "$cfg/hyprland.lua" ] && grep -qx 'require("fluency")' "$cfg/hyprland.lua"; then
-    backup "$cfg/hyprland.lua"
-    grep -vx 'require("fluency")' "$cfg/hyprland.lua" > "$work/hyprland.lua" || true
-    mv "$work/hyprland.lua" "$cfg/hyprland.lua"
+  local lines=() line entry=$cfg/hyprland.lua target
+  [ -f "$manifest" ] && mapfile -t lines < "$manifest"
+  [ -f "$manifest" ] || say "stage=uninstall warn=no_manifest hint=only_the_known_dirs_are_removed"
+  if [ -f "$entry" ]; then
+    target=$(readlink -f "$entry")
+    if printf '%s\n' "${lines[@]}" | grep -qx "entry starter $(sha256sum < "$target" | cut -c1-64)"; then
+      rm -f "$entry"
+    elif grep -qx 'require("fluency")' "$target"; then
+      backup "$entry"
+      if tail -c ${#block} "$target" | cmp -s - <(printf '%s' "$block"); then
+        head -c -${#block} "$target" > "$work/hyprland.lua"
+      else
+        grep -vx 'require("fluency")' "$target" > "$work/hyprland.lua" || true
+      fi
+      cat "$work/hyprland.lua" > "$target"
+    fi
   fi
-  rm -rf "$cfg/fluency" "$share" "$lib" "$fonts" "$fontconf"
+  if [ -f "$cfg/fluency/local.lua" ] && ! cmp -s "$cfg/fluency/local.lua" <(printf '%s' "$local_template"); then
+    cp -p "$cfg/fluency/local.lua" "$cfg/fluency-local.lua.bak-$stamp"
+    say "stage=uninstall kept=$cfg/fluency-local.lua.bak-$stamp"
+  fi
+  rm -rf "$cfg/fluency" "$share" "$lib" "$fonts" "$fontconf" "$manifest"
+  for ((i = ${#lines[@]} - 1; i >= 0; i--)); do
+    line=${lines[i]}
+    case $line in
+      "made "*) rm -rf "${line#made }" ;;
+      "gsettings "*) timeout 5 gsettings reset org.gnome.desktop.interface "${line#gsettings }" 2>/dev/null || true ;;
+      "dir "*) rmdir "${line#dir }" 2>/dev/null || true ;;
+    esac
+  done
   command -v fc-cache >/dev/null && timeout 60 fc-cache -f >/dev/null 2>&1 || true
   say "stage=uninstall result=ok"
 }
@@ -135,14 +199,19 @@ manager() {
   echo unknown
 }
 
+# sudo asks on the terminal so it runs in the foreground, without one it may not ask
 install_packages() {
   local pm=$1; shift
-  local root=sudo
-  command -v sudo >/dev/null || root=pkexec
+  local root=(sudo)
+  command -v sudo >/dev/null || root=(pkexec)
+  if [ "${root[0]}" = sudo ] && [ ! -t 0 ]; then
+    root=(sudo -n)
+    timeout 10 sudo -n true 2>/dev/null || refuse "needs_password manager=$pm packages=\"$*\" hint=run_in_a_terminal"
+  fi
   case $pm in
-    pacman) timeout 600 "$root" pacman -S --needed --noconfirm "$@" ;;
-    dnf) timeout 600 "$root" dnf install -y "$@" ;;
-    apt) timeout 600 "$root" apt install -y "$@" ;;
+    pacman) timeout --foreground 1800 "${root[@]}" pacman -S --needed --noconfirm "$@" ;;
+    dnf) timeout --foreground 1800 "${root[@]}" dnf install -y "$@" ;;
+    apt) timeout --foreground 1800 "${root[@]}" apt update && timeout --foreground 1800 "${root[@]}" apt install -y "$@" ;;
     *) return 1 ;;
   esac
 }
@@ -345,8 +414,10 @@ build_engine() {
     || { tail -5 "$log"; engine_reason=install_failed; return 1; }
 }
 
-recommend() {
-  local missing=() chosen=() name answer
+# chooses the extras in preflight, nothing is installed until every check has passed
+recommend_plan() {
+  local missing=() name answer
+  chosen=()
   mapfile -t missing < <(recommended)
   [ ${#missing[@]} = 0 ] && { say "stage=recommend result=ok"; return; }
   case $extras in
@@ -364,31 +435,46 @@ recommend() {
       [ ${#chosen[@]} -gt 0 ] || { say "stage=recommend result=declined missing=\"${missing[*]}\""; return; }
       ;;
   esac
-  local pm pkgs=() tools=() fetched=() built=() converted=()
+  local pm kept=() packaged=()
+  pm=$(manager)
+  for name in "${chosen[@]}"; do
+    case $name in
+      bibata-ghost|hyprqt6engine|bibata-hyprcursor) kept+=("$name") ;;
+      *) if [ "$pm" = unknown ]; then packaged+=("$name"); else kept+=("$name"); fi ;;
+    esac
+  done
+  [ ${#packaged[@]} = 0 ] || say "stage=recommend result=skipped reason=no_package_manager names=\"${packaged[*]}\""
+  chosen=("${kept[@]}")
+  [ $dry = 1 ] && [ ${#chosen[@]} -gt 0 ] && say "stage=recommend result=dry_run would_add=\"${chosen[*]}\""
+  return 0
+}
+
+recommend_apply() {
+  [ ${#chosen[@]} -gt 0 ] || return 1
+  local pm pkgs=() tools=() fetched=() built=() converted=() name answer missing=()
   pm=$(manager)
   for name in "${chosen[@]}"; do
     case $name in
       bibata-ghost) fetched+=("$name"); continue ;;
       hyprqt6engine) built+=("$name"); continue ;;
       bibata-hyprcursor) converted+=("$name")
-        hyprcursor_tools || read -ra tools <<< "$(extra_packages hyprcursor-tools "$pm")"
+        hyprcursor_tools || [ "$pm" = unknown ] || read -ra tools <<< "$(extra_packages hyprcursor-tools "$pm")"
         continue ;;
     esac
     read -ra answer <<< "$(extra_packages "$name" "$pm")"
     pkgs+=("${answer[@]}")
   done
-  [ $dry = 1 ] && { say "stage=recommend result=dry_run would_install=\"${pkgs[*]}\" would_fetch=\"${fetched[*]}\" would_build=\"${built[*]}\" would_convert=\"${converted[*]}\" would_tools=\"${tools[*]}\""; return; }
   [ ${#fetched[@]} = 0 ] || fetch_cursor
   if [ ${#built[@]} -gt 0 ] && ! build_engine; then
     say "stage=qtengine result=fallback reason=$engine_reason packages=\"qt6ct kvantum\""
     built=()
-    for name in qt6ct kvantum; do pkgs+=("$(extra_packages "$name" "$pm")"); done
+    [ "$pm" = unknown ] || for name in qt6ct kvantum; do pkgs+=("$(extra_packages "$name" "$pm")"); done
   fi
   if [ ${#pkgs[@]} -gt 0 ]; then
     install_packages "$pm" "${pkgs[@]}" || refuse "recommended_install_failed manager=$pm packages=\"${pkgs[*]}\""
   fi
-  [ ${#fetched[@]} = 0 ] || swap_dir "$work/cursor/$cursor_name" "${XDG_DATA_HOME:-$HOME/.local/share}/icons/$cursor_name"
-  [ ${#built[@]} = 0 ] || swap_dir "$work/engine/stage$lib/qt6" "$lib/qt6"
+  [ ${#fetched[@]} = 0 ] || { track "${XDG_DATA_HOME:-$HOME/.local/share}/icons/$cursor_name"; swap_dir "$work/cursor/$cursor_name" "${XDG_DATA_HOME:-$HOME/.local/share}/icons/$cursor_name"; }
+  [ ${#built[@]} = 0 ] || { track "$lib/qt6"; swap_dir "$work/engine/stage$lib/qt6" "$lib/qt6"; }
   # the tools only make the theme, a distribution without them still gets the xcursor one
   if [ ${#tools[@]} -gt 0 ] && ! install_packages "$pm" "${tools[@]}"; then
     say "stage=hyprcursor result=skipped reason=tools_install_failed packages=\"${tools[*]}\""
@@ -396,6 +482,7 @@ recommend() {
   fi
   if [ ${#converted[@]} -gt 0 ]; then
     if convert_cursor "$work/hyprcursor"; then
+      track "${XDG_DATA_HOME:-$HOME/.local/share}/icons/$hyprcursor_name"
       swap_dir "$work/hyprcursor" "${XDG_DATA_HOME:-$HOME/.local/share}/icons/$hyprcursor_name"
     else
       say "stage=hyprcursor result=skipped reason=$hc_reason"
@@ -422,8 +509,14 @@ preflight() {
   fi
   [ ! -e "$share" ] || [ -f "$share/REVISION" ] || refuse "not_a_fluency_dir dir=$share"
   check_deps
-  recommend
-  local hv qv out status
+  recommend_plan
+  local hv qv out status absent=()
+  # a dry run before the packages exist can only say what it would check
+  if [ $dry = 1 ]; then
+    have Hyprland || absent+=(Hyprland)
+    have qs || absent+=(qs)
+    [ ${#absent[@]} = 0 ] || { say "stage=preflight result=dry_run would_check=\"${absent[*]}\""; hypr_version=""; return; }
+  fi
   probe Hyprland
   hv=$(sed -n '1s/^Hyprland \([0-9.]*\).*/\1/p' <<< "$out")
   [ -n "$hv" ] || refuse "no_hyprland_version status=$status"
@@ -439,7 +532,8 @@ preflight() {
 # the committed tree when this is a git checkout, so a stray edit never ships
 export_source() {
   mkdir -p "$work/src"
-  if git -C "$here" rev-parse --git-dir >/dev/null 2>&1; then
+  # a release unpacked inside another repo is no checkout of its own
+  if [ "$(git -C "$here" rev-parse --show-toplevel 2>/dev/null)" = "$(cd "$here" && pwd -P)" ]; then
     local dirty
     dirty=$(git -C "$here" status --porcelain -- shell hypr plugins native | cut -c4- | tr '\n' ',')
     [ -z "$dirty" ] || refuse "uncommitted_changes files=${dirty%,}"
@@ -454,6 +548,7 @@ export_source() {
 
 fetch_fonts() {
   mkdir -p "$work/dl" "$work/fonts"
+  [ $dry = 0 ] || { say "stage=fonts result=dry_run would_fetch=\"$fluent_url $selawik_url\""; return; }
   timeout 120 curl -fsSL -o "$work/dl/fluent.ttf" "$fluent_url" || refuse "font_download url=$fluent_url"
   timeout 120 curl -fsSL -o "$work/dl/selawik.zip" "$selawik_url" || refuse "font_download url=$selawik_url"
   local got
@@ -483,6 +578,7 @@ XML
 build_plugins() {
   mkdir -p "$work/lib"
   [ $plugins = 1 ] || { say "stage=plugins result=skipped"; return; }
+  [ $dry = 0 ] || { say "stage=plugins result=dry_run would_build=\"$(ls "$work/src/plugins" | grep -v '\.sh$' | tr '\n' ' ')clipboard\""; return; }
   local pc
   pc=$(pkg-config --modversion hyprland 2>/dev/null) || refuse "plugin_headers reason=no_hyprland_pc"
   [ "$pc" = "$hypr_version" ] || refuse "plugin_headers headers=$pc running=$hypr_version"
@@ -583,8 +679,16 @@ write_machine() {
   local env=()
   [ -n "$term" ] && env+=("TERMINAL=$term")
   [ ${#pins[@]} -gt 0 ] && env+=("FLUENCY_PINS=$(IFS=,; echo "${pins[*]}")")
+  # beside an integrated gpu the defaults pick per app, forcing nvidia would wake it always
   if [ -e "$sys/proc/driver/nvidia/version" ]; then
-    env+=("LIBVA_DRIVER_NAME=nvidia" "__GLX_VENDOR_LIBRARY_NAME=nvidia" "NVD_BACKEND=direct")
+    if [ -d "$sys/sys/module/i915" ] || [ -d "$sys/sys/module/xe" ] || [ -d "$sys/sys/module/amdgpu" ]; then
+      say "stage=machine note=hybrid_gpu nvidia_env=skipped"
+    else
+      env+=("__GLX_VENDOR_LIBRARY_NAME=nvidia")
+      if compgen -G "$sys/usr/lib*/dri/nvidia_drv_video.so" >/dev/null || compgen -G "$sys/usr/lib/*/dri/nvidia_drv_video.so" >/dev/null; then
+        env+=("LIBVA_DRIVER_NAME=nvidia" "NVD_BACKEND=direct")
+      fi
+    fi
   elif [ -d "$sys/sys/module/amdgpu" ]; then
     env+=("LIBVA_DRIVER_NAME=radeonsi" "VDPAU_DRIVER=radeonsi")
   fi
@@ -625,6 +729,28 @@ build_shell() {
   grep -qx "//@ pragma IconTheme $icon" "$work/share/shell/shell.qml" || refuse "no_icon_pragma file=shell.qml"
 }
 
+# keys the user's own files bind that fluency binds too, both would fire on them
+doubled_binds() {
+  local line name combo files=() mods user=() found=() own
+  mapfile -t files < <(find "$work/cand" -name '*.lua' -not -path "$work/cand/fluency/*" 2>/dev/null)
+  [ ${#files[@]} -gt 0 ] || return 0
+  mods=$(grep -hoE 'local mainMod *= *"[^"]+"' "${files[@]}" | head -1 | sed -E 's/.*"([^"]+)"/\1/' || true)
+  while IFS= read -r line; do
+    line=${line#*hl.bind(}
+    line=$(sed -E "s/^ *mainMod *\.\. *\"/\"${mods:-SUPER}/" <<< "$line")
+    user+=("$(tr -d ' "' <<< "${line^^}")")
+  done < <(grep -hoE 'hl\.bind\( *("[^"]+"|mainMod *\.\. *"[^"]+")' "${files[@]}" || true)
+  own=$(cat "$work/cand/fluency/local.lua" 2>/dev/null || true)
+  while IFS= read -r line; do
+    name=$(sed -E 's/^ *\[?"?([a-z-]+)"?\]? *=.*/\1/' <<< "$line")
+    combo=$(sed -E 's/.*= *"([^"]+)".*/\1/' <<< "$line")
+    grep -qE "(^|[^a-z-])\"?$name\"?\]? *= *false" <<< "$own" && continue
+    [[ " ${user[*]} " == *" $(tr -d ' ' <<< "${combo^^}") "* ]] && found+=("$combo")
+  done < <(sed -n '/^local defaults = {/,/^}/p' "$work/src/hypr/fluency/binds.lua" | grep '= "')
+  [ ${#found[@]} = 0 ] || say "stage=binds warn=also_bound combos=\"$(IFS=,; echo "${found[*]}")\" hint=turn_one_off_in_fluency/local.lua"
+  return 0
+}
+
 starter() {
   cat <<'LUA'
 hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "auto" })
@@ -641,17 +767,35 @@ LUA
 }
 
 build_config() {
+  rm -rf "$work/cand"
   mkdir -p "$work/cand"
   [ -d "$cfg" ] && cp -a "$cfg/." "$work/cand/"
+  if [ -L "$cfg/hyprland.lua" ]; then
+    local target
+    target=$(readlink -m "$cfg/hyprland.lua")
+    [ -e "$target" ] || refuse "dangling_config file=$cfg/hyprland.lua target=$target"
+    grep -qx 'require("fluency")' "$target" || [ -w "$target" ] || refuse "read_only_config file=$target"
+    rm "$work/cand/hyprland.lua"
+    cp "$target" "$work/cand/hyprland.lua"
+  fi
   rm -rf "$work/cand/fluency"
   cp -r "$work/src/hypr/fluency" "$work/cand/fluency"
-  write_machine "$work/cand/fluency/local.lua"
+  write_machine "$work/cand/fluency/generated.lua"
+  # an install from before generated.lua wrote local.lua itself, that one moves aside
+  if [ -f "$cfg/fluency/local.lua" ] && [ -f "$cfg/fluency/generated.lua" ]; then
+    cp -p "$cfg/fluency/local.lua" "$work/cand/fluency/local.lua"
+  else
+    [ -f "$cfg/fluency/local.lua" ] && cp -p "$cfg/fluency/local.lua" "$work/cand/fluency/local.lua.bak-$stamp"
+    printf '%s' "$local_template" > "$work/cand/fluency/local.lua"
+  fi
   if [ -f "$work/cand/hyprland.lua" ]; then
-    grep -qx 'require("fluency")' "$work/cand/hyprland.lua" || printf '\nrequire("fluency")\n' >> "$work/cand/hyprland.lua"
+    grep -qx 'require("fluency")' "$work/cand/hyprland.lua" || printf '%s' "$block" >> "$work/cand/hyprland.lua"
   else
     starter > "$work/cand/hyprland.lua"
   fi
+  doubled_binds
   local out
+  if [ $dry = 1 ] && ! have Hyprland; then say "stage=verify result=dry_run would_check=Hyprland"; return; fi
   out=$(timeout 30 Hyprland --verify-config -c "$work/cand/hyprland.lua" 2>&1) || {
     echo "$out" | sed -n '/Config parsing result/,$p' | tail -n +2 | head -20
     refuse "verify_failed config=$cfg/hyprland.lua"
@@ -662,7 +806,9 @@ build_config() {
 # selawik covers latin only, noto takes the rest
 apply_fonts() {
   if same_tree "$work/fonts" "$fonts" && cmp -s "$work/fontconf" "$fontconf"; then say "stage=fonts result=same"; return; fi
+  track "$fonts"
   swap_dir "$work/fonts" "$fonts"
+  track "$fontconf"
   mkdir -p "$(dirname "$fontconf")"
   cp "$work/fontconf" "$fontconf"
   timeout 60 fc-cache -f "$fonts" >/dev/null 2>&1 || say "stage=fonts warn=fc_cache_failed"
@@ -671,6 +817,7 @@ apply_fonts() {
 
 apply_plugins() {
   [ $plugins = 1 ] || return 0
+  track "$lib"
   mkdir -p "$lib"
   local so
   for so in "$work/lib"/*.so; do
@@ -686,6 +833,7 @@ apply_plugins() {
 
 apply_shell() {
   if same_tree "$work/share" "$share"; then say "stage=shell result=same"; return; fi
+  track "$share"
   swap_dir "$work/share" "$share"
   say "stage=shell result=installed dir=$share revision=$revision"
 }
@@ -696,11 +844,17 @@ apply_config() {
     return
   fi
   # modules first, the entry that requires them last
+  track "$cfg/fluency"
   swap_dir "$work/cand/fluency" "$cfg/fluency"
-  if ! cmp -s "$work/cand/hyprland.lua" "$cfg/hyprland.lua"; then
+  if [ ! -e "$cfg/hyprland.lua" ]; then
+    track "$cfg/hyprland.lua"
+    sed -i '/^made .*\/hyprland\.lua$/d' "$manifest"
+    write_entry "$work/cand/hyprland.lua"
+    note "entry starter $(sha256sum < "$cfg/hyprland.lua" | cut -c1-64)"
+  elif ! cmp -s "$work/cand/hyprland.lua" "$cfg/hyprland.lua"; then
     backup "$cfg/hyprland.lua"
-    cp "$work/cand/hyprland.lua" "$cfg/.hyprland.lua.new"
-    mv "$cfg/.hyprland.lua.new" "$cfg/hyprland.lua"
+    write_entry "$work/cand/hyprland.lua"
+    note "entry appended"
   fi
   say "stage=config result=installed dir=$cfg"
 }
@@ -714,6 +868,9 @@ apply_qt() {
     *) return 0 ;;
   esac
   [ ! -e "$conf" ] || { say "stage=qttheme result=kept file=$conf"; return; }
+  [ "$qt_engine" != hyprqt6engine ] || [ -f "$sys$breeze_dark" ] || { say "stage=qttheme result=skipped reason=no_breeze_dark"; return; }
+  [ "$qt_engine" != qt6ct ] || qt_plugin libkvantum.so styles || { say "stage=qttheme result=skipped reason=no_kvantum"; return; }
+  track "$conf"
   mkdir -p "$(dirname "$conf")"
   if [ "$qt_engine" = hyprqt6engine ]; then
     [ -f "$sys$breeze_dark" ] || { say "stage=qttheme result=skipped reason=no_breeze_dark"; return; }
@@ -740,7 +897,7 @@ apply_gtk() {
   for pair in "${pairs[@]}"; do
     key=${pair%%=*}
     if [ -n "$(timeout 5 dconf read "/org/gnome/desktop/interface/$key" 2>/dev/null)" ]; then kept+=("$key"); continue; fi
-    if timeout 5 gsettings set org.gnome.desktop.interface "$key" "${pair#*=}"; then set+=("$key"); else say "stage=gtk warn=set_failed key=$key"; fi
+    if timeout 5 gsettings set org.gnome.desktop.interface "$key" "${pair#*=}"; then set+=("$key"); note "gsettings $key"; else say "stage=gtk warn=set_failed key=$key"; fi
   done
   say "stage=gtk result=ok set=\"${set[*]}\" kept=\"${kept[*]}\""
 }
@@ -752,8 +909,8 @@ reload() {
   [ -z "$errors" ] || say "stage=reload warn=config_errors first=\"$(echo "$errors" | head -1)\""
   if [ $plugins = 1 ]; then
     # an older config loaded them itself, this reload unloads those so the loader can load them again
-    timeout 10 hyprctl reload > /dev/null 2>&1
-    if timeout 300 "$lib/plugins/fluency-plugins.sh" load "$lib" > "$work/load.log" 2>&1; then say "stage=plugins result=loaded"
+    timeout 10 hyprctl reload > /dev/null 2>&1 || say "stage=reload warn=reload_failed hint=hyprland_instance_signature_may_be_stale"
+    if timeout 300 "$lib/plugins/fluency-plugins.sh" load --no-wait "$lib" > "$work/load.log" 2>&1; then say "stage=plugins result=loaded"
     else say "stage=plugins warn=not_loaded last=\"$(tail -1 "$work/load.log")\""; fi
   fi
   # a running daemon keeps its history and runs the new build from the next login
@@ -776,6 +933,11 @@ build_shell
 if [ $dry = 1 ]; then
   say "stage=apply result=dry_run fonts=$fonts lib=$lib shell=$share config=$cfg"
   exit 0
+fi
+# what the extras add is found again, so the machine file and the shell see it
+if recommend_apply; then
+  build_config
+  build_shell
 fi
 apply_fonts
 apply_plugins
