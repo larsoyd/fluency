@@ -17,7 +17,9 @@ header_abi() {
   prefix=$(pkg-config --variable=prefix hyprland 2>/dev/null) || return 1
   [ -f "$prefix/hyprland/src/version.h" ] || return 1
   while read -r key value; do v[$key]=$value; done < <(sed -nE 's/^#define ([A-Z_]+) +"([^"]*)".*/\1 \2/p' "$prefix/hyprland/src/version.h")
-  [ -n "${v[GIT_COMMIT_HASH]:-}" ] || return 1
+  for key in GIT_COMMIT_HASH AQUAMARINE_VERSION HYPRUTILS_VERSION HYPRGRAPHICS_VERSION HYPRCURSOR_VERSION HYPRLANG_VERSION; do
+    [ -n "${v[$key]:-}" ] || return 1
+  done
   echo "${v[GIT_COMMIT_HASH]}_aq_${v[AQUAMARINE_VERSION]%.*}_hu_${v[HYPRUTILS_VERSION]%.*}_hg_${v[HYPRGRAPHICS_VERSION]%.*}_hc_${v[HYPRCURSOR_VERSION]%.*}_hlg_${v[HYPRLANG_VERSION]%.*}"
 }
 
