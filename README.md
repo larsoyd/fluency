@@ -13,7 +13,7 @@ Fluency is built for the version of **Hyprland** that Arch Linux, Debian sid and
 
 ![Fluency at 1920x1080 with the Start menu open](media/desktop.png)
 
-<sub>Shown with the [Papirus Dark](https://github.com/PapirusDevelopmentTeam/papirus-icon-theme) icons and the Bibata Ghost cursor from [Bibata Translucent](https://github.com/Silicasandwhich/Bibata_Cursor_Translucent).</sub>
+<sub>Shown with the [Papirus Dark](https://github.com/PapirusDevelopmentTeam/papirus-icon-theme) app icons and the Bibata Ghost cursor from [Bibata Translucent](https://github.com/Silicasandwhich/Bibata_Cursor_Translucent).</sub>
 
 ## Features
 
@@ -59,7 +59,11 @@ Fluency is built for the version of **Hyprland** that Arch Linux, Debian sid and
 
 **Desktop**
 - Icons for the files on your desktop, with selection, drag, rename, open, cut, copy, paste and trash
-- Context menus for the desktop and for items, a wallpaper of its own
+- Context menus for the desktop and for items, and the Fluent building night wallpaper of the [Fluent GTK theme](https://github.com/vinceliuice/Fluent-gtk-theme) in 4K
+
+**Icons**
+- The shell draws its own icons (tray, menus, flyouts, the shortcut arrow on desktop icons) from the [Fluent icon theme](https://github.com/vinceliuice/Fluent-icon-theme), tinted to the shell's colours. The buttons beside Start and the pins use [Fluent System Icons](https://github.com/microsoft/fluentui-system-icons)
+- The volume icon has a step for muted, each third of the range and past full
 
 **Windows chrome** (plugins)
 - Title bars with minimize, maximize and close
@@ -85,7 +89,8 @@ Recommended, not required:
 | Bibata Ghost, the cursor | it is missing | none, see below |
 | Bibata Ghost as a Hyprcursor theme | it is missing | the tools that make it, `hyprcursor` and `xcur2png`, on Debian and Ubuntu `hyprcursor-util` and `xcur2png` (on Fedora `xcur2png` comes from the sdegler/hyprland COPR) |
 | hyprqt6engine, the Qt theme engine | you have no Qt engine (qt6ct, hyprqt6engine or KDE's) | none, see below |
-| Breeze for GTK | you have no GTK theme besides the stock ones (Adwaita, HighContrast) | `breeze-gtk`, on Debian and Ubuntu `breeze-gtk-theme`, on Fedora `breeze-gtk-gtk3` and `breeze-gtk-gtk4` |
+| Fluent Dark for GTK | Fluent-Dark is missing | none, see below |
+| Firefox, the browser | you have no web browser | `firefox` |
 | Noto fonts | Noto Sans is missing | Noto Sans, Noto Sans CJK and Noto Color Emoji, named per distribution |
 
 When one of them is offered, the installer asks whether to install it. `--recommended` installs them all without asking, and `--no-recommended` skips them. Without a terminal to ask on, it only names them.
@@ -94,11 +99,13 @@ No distribution packages the cursor, so the installer downloads the Bibata Trans
 
 Hyprland loads Hyprcursor themes natively, so the installer also converts Bibata Ghost into `~/.local/share/icons/Bibata_Ghost_Hyprcursor` with `hyprcursor-util` and `xcur2png`. The artwork keeps every size and frame, and the original theme stays for apps that draw their own cursor. It installs the two tools from your distribution when they are missing and keeps them. If the distribution has no package for one, the installer says so and keeps plain Bibata Ghost.
 
+The Fluent GTK theme is not packaged either, so the installer downloads a pinned commit of [Fluent-gtk-theme](https://github.com/vinceliuice/Fluent-gtk-theme), checks its SHA-256 and builds the dark variant without blur into `~/.local/share/themes/Fluent-Dark`. The same download holds its Firefox theme: when the installer installs Firefox, it starts it once headless so it makes its profile, then puts the Fluent dark theme in the profile's `chrome` folder and a `user.js` that turns on the theme, the dark variant and the file chooser of your desktop portal. A profile that already has a `chrome` folder or a `user.js` is left alone. `--uninstall` removes the theme folder, the `chrome` folder and the `user.js`, Firefox stays.
+
 hyprqt6engine is not packaged either, so the installer builds it from a pinned commit of its GitHub repository into `~/.local/lib/fluency/qt6`, for your user only. The build needs `cmake`, a C++ compiler, the hyprlang and hyprutils headers, Qt 6.9 or newer with its private headers, the KF6 Config, ColorScheme and IconThemes headers, and Breeze for its colours. When any of that is missing or the build fails, the installer installs qt6ct and Kvantum from your repository instead.
 
 The engine gets a dark look, but only when it has no config yet: hyprqt6engine gets Breeze Dark in `~/.config/hypr/hyprqt6engine.conf`, and qt6ct gets the dark Kvantum style in `~/.config/qt6ct/qt6ct.conf`. A config you already have is never changed.
 
-GTK apps follow the same dark look through gsettings: the Breeze Dark theme when it is installed, the dark colour scheme, your icon theme and Bibata Ghost. Only settings you never changed yourself are set, anything you chose stays.
+GTK apps follow the same dark look through gsettings: the Fluent Dark theme when it is installed (Breeze Dark otherwise), the dark colour scheme, your icon theme and Bibata Ghost. Only settings you never changed yourself are set, anything you chose stays.
 
 [Hind](https://fonts.google.com/specimen/Hind) covers Latin and Devanagari. A fontconfig file in `~/.config/fontconfig/conf.d/50-fluency.conf` makes Noto Sans, Noto Sans CJK and Noto Color Emoji the fallback for everything else. `--uninstall` removes it.
 
@@ -156,7 +163,7 @@ Other options:
 
 ```bash
 ./install.sh --dry-run      # check everything, write nothing
-./install.sh --recommended  # also install Papirus, kitty, Dolphin and Bibata Ghost
+./install.sh --recommended  # also install Papirus, kitty, Dolphin, Bibata Ghost, Fluent Dark and Firefox
 ./install.sh --no-plugins   # skip the title bar and minimize plugins
 ./install.sh --uninstall    # take away what the installer made
 ```
@@ -192,7 +199,7 @@ These environment variables change the defaults:
 
 ## Licenses
 
-Fluency is under the MIT license, see `LICENSE`. The title bar plugin is based on hyprbars by Vaxry (BSD 3-clause, `plugins/titlebar/LICENSE`). Hind is under the SIL Open Font License. Fluent System Icons is under the MIT license. Both fonts are downloaded at install time and are not part of this repository. Bibata Translucent is under the GPL 3.0 and hyprqt6engine is under the BSD 3-clause license. Both are only downloaded when you choose them.
+Fluency is under the MIT license, see `LICENSE`. The title bar plugin is based on hyprbars by Vaxry (BSD 3-clause, `plugins/titlebar/LICENSE`). Hind is under the SIL Open Font License. Fluent System Icons is under the MIT license. Both fonts are downloaded at install time and are not part of this repository. Bibata Translucent is under the GPL 3.0 and hyprqt6engine is under the BSD 3-clause license. Both are only downloaded when you choose them, as is the Fluent GTK theme by vinceliuice (GPL 3.0). The wallpaper in `shell/assets/wallpaper.png` comes from that theme, and the icons in `shell/logic/fluenticons.mjs` come from the [Fluent icon theme](https://github.com/vinceliuice/Fluent-icon-theme) by vinceliuice. Both are under the GPL 3.0.
 
 ## Contribution
 
