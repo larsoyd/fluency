@@ -35,12 +35,13 @@ jobs:
             debian) apt-get update && apt-get install -y git ca-certificates ;;
             fedora) dnf install -y git-core ;;
           esac
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           path: fluency
+          persist-credentials: false
       - name: install, verify, reinstall, extras, uninstall
         run: fluency/ci/distro.sh ${{ matrix.distro }} fluency out
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
           name: ${{ matrix.distro }}
