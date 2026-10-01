@@ -197,6 +197,22 @@ QtObject {
     readonly property int calendarWeekRow: 32
     readonly property int calendarBottom: 8
 
+    // task view, the element tree has no numbers so these are chosen to line up
+    readonly property int taskViewMargin: 48
+    readonly property int taskViewGap: 24
+    readonly property int taskViewTitle: 32
+    readonly property real taskViewMost: 0.5
+    readonly property int taskViewStrip: 200
+    readonly property int taskViewIcon: 16
+    readonly property int taskViewClose: 28
+    readonly property int taskViewRing: 2
+    readonly property real taskViewScaleFrom: 0.94
+    readonly property int taskViewRise: 24
+    readonly property int deskTileWidth: 192
+    readonly property int deskTileHeight: 108
+    readonly property int deskGap: 16
+    readonly property int deskNameHeight: 28
+
     // measured at 150% from the capture of build 22533 in the announcement
     readonly property int osdWidth: 170
     readonly property int osdHeight: 45

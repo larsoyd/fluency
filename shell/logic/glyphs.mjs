@@ -29,6 +29,7 @@ const icons = {
     open: ["open_20", 0xf582],
     paste: ["clipboard_paste_20", 0xf2d5],
     pin: ["pin_20", 0xf601],
+    plus: ["add_20", 0xf109],
     power: ["power_20", 0xf60e],
     refresh: ["arrow_clockwise_20", 0xf13d],
     rename: ["rename_20", 0xf669],

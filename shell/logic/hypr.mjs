@@ -71,3 +71,8 @@ export function answered(launched, appId, now) {
 
 // the class of an openwindow event, address,workspace,class,title
 export const opened = data => data.split(",")[2] ?? ""
+
+export function workspace(id) {
+    if (!Number.isInteger(id) || id < 1) throw new Error(`refused: bad workspace ${JSON.stringify(id)}`)
+    return [`hl.dsp.focus({ workspace = ${id} })`]
+}
