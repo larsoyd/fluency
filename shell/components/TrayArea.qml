@@ -10,6 +10,8 @@ Item {
     property bool open: false
     property bool quickOpen: false
     property bool notifyOpen: false
+    property int waiting: 0
+    property bool dnd: false
     property var glyphs: []
     property string time: ""
     property string date: ""
@@ -69,6 +71,8 @@ Item {
             time: root.time
             date: root.date
             checked: root.notifyOpen
+            count: root.waiting
+            dnd: root.dnd
             onClicked: root.asked("clock")
         }
 

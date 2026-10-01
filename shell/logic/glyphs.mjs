@@ -3,6 +3,8 @@ const icons = {
     add: ["add_circle_20", 0xf10c],
     back: ["arrow_left_20", 0xf15b],
     bell: ["alert_20", 0xf114],
+    bellQuiet: ["alert_snooze_20", 0xf11c],
+    bellWaiting: ["alert_badge_20", 0xe018],
     bullet: ["circle_small_20", 0xe33e],
     check: ["checkmark_20", 0xf294],
     close: ["dismiss_16", 0xf368],

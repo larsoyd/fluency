@@ -1,7 +1,7 @@
 import QtQuick
 import qs.tokens
+import "../logic/notify.mjs" as Notify
 import "../logic/tray.mjs" as Tray
-import "../logic/glyphs.mjs" as Glyphs
 
 TrayButton {
     id: root
@@ -9,6 +9,9 @@ TrayButton {
     property string time: ""
     property string date: ""
     property bool bell: true
+    property int count: 0
+    property bool dnd: false
+    readonly property var ring: Notify.bell(count, dnd)
     readonly property int textWidth: Math.ceil(Math.max(first.implicitWidth, second.implicitWidth))
     readonly property var places: Tray.omni([{ width: textWidth + Metrics.clockMargin[2] }].concat(bell ? [{ width: Metrics.badgeMinWidth, bare: true }] : []), Metrics)
 
@@ -51,8 +54,8 @@ TrayButton {
         Text {
             objectName: "glyph"
             anchors.centerIn: parent
-            text: Glyphs.glyph("bell")
-            color: root.foreground
+            text: root.ring.glyph
+            color: root.ring.filled ? Colors.accentLight2 : root.foreground
             font.family: Type.iconFamily
             font.pixelSize: Metrics.trayGlyphSize
         }

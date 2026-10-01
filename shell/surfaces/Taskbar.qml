@@ -68,6 +68,8 @@ PanelWindow {
             hidden: root.icons.hidden.length
             open: overflow.open
             quickOpen: quick.open
+            waiting: Notifications.history.length
+            dnd: Notifications.dnd
             glyphs: Tray.glyphs(Status)
             time: root.lines[0]
             date: root.lines[1]
