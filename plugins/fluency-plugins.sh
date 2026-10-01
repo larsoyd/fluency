@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# usage: fluency-plugins.sh abi|build <dest>|load <lib>   load rebuilds first when hyprland changed
+# usage: fluency-plugins.sh abi|build <dest>|load [--no-wait] <lib>
+# load rebuilds first when hyprland changed
 set -uo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
-usage='fluency-plugins.sh abi|build <dest>|load <lib>'
+usage='fluency-plugins.sh abi|build <dest>|load [--no-wait] <lib>'
 title="Updating plugins"
-toasts=0 note_id="" tmp=""
+toasts=0 note_id="" tmp="" wait=1
 
 say() { echo "[plugins] $*"; }
 refuse() { say "refused: $1"; exit "${2:-1}"; }
@@ -97,10 +98,15 @@ failed() {
   local choice
   for _ in $(seq 50); do owner && break; sleep 0.2; done
   owner || { say "toast=skipped reason=no_notification_server"; exit 1; }
+  # the installer runs this too and cannot wait for an answer
+  if [ $wait = 0 ]; then
+    notify dialog-error -u critical "Couldn't update title bars" "Windows still work, but without title bars and minimize. The log is $lib/build.log." > /dev/null
+    exit 1
+  fi
   choice=$(wait_for=3600 notify dialog-error -u critical -A "retry=Try again" -A "details=Show details" -w \
     "Couldn't update title bars" "Windows still work, but without title bars and minimize. Show details tells what went wrong.")
   case $choice in
-    retry) exec bash "$here/fluency-plugins.sh" load "$lib" ;;
+    retry) rm -rf "${tmp:-/nonexistent}"; exec bash "$here/fluency-plugins.sh" load "$lib" ;;
     details) timeout 10 xdg-open "$lib/build.log" ;;
   esac
   exit 1
@@ -109,9 +115,15 @@ failed() {
 load() {
   lib=$1
   [ -d "$lib" ] || refuse "no_lib dir=$lib"
-  exec 9> "${XDG_RUNTIME_DIR:-/tmp}/fluency-plugins.lock"
+  # a shared dir is only used under a name of this user, made by this user
+  local lock=${XDG_RUNTIME_DIR:-}/fluency-plugins.lock
+  if [ -z "${XDG_RUNTIME_DIR:-}" ]; then
+    lock=${TMPDIR:-/tmp}/fluency-plugins-$(id -u).lock
+    [ ! -e "$lock" ] || [ -O "$lock" ] || refuse "foreign_lock path=$lock"
+  fi
+  exec 9> "$lock"
   flock -n 9 || refuse busy
-  local json running version built headers so name loaded fails=0
+  local json running version built headers so name loaded sum fails=0
   json=$(timeout 5 hyprctl version -j 2>/dev/null)
   running=$(sed -nE 's/.*"abiHash": *"([^"]*)".*/\1/p' <<< "$json")
   version=$(sed -nE 's/.*"version": *"([^"]*)".*/\1/p' <<< "$json")
@@ -137,8 +149,14 @@ load() {
   loaded=$(timeout 5 hyprctl plugin list -j 2>/dev/null)
   for so in "$lib"/lib*.so; do
     name=$(basename "$so" .so) name=${name#lib}
-    if grep -q "\"name\": *\"$name\"" <<< "$loaded"; then say "stage=load name=$name result=already"; continue; fi
-    if [ "$(timeout 10 hyprctl plugin load "$so" 2>&1)" = ok ]; then say "stage=load name=$name result=ok"
+    sum=$(sha256sum < "$so" | cut -c1-64)
+    if grep -q "\"name\": *\"$name\"" <<< "$loaded"; then
+      # the build hyprland holds is the one this file was when it loaded, a reinstall swaps it
+      if [ "$(cat "$lib/.loaded-$name" 2>/dev/null)" = "$sum" ]; then say "stage=load name=$name result=already"; continue; fi
+      [ "$(timeout 10 hyprctl plugin unload "$so" 2>&1)" = ok ] || { say "stage=unload name=$name result=fail"; fails=$((fails + 1)); continue; }
+      say "stage=unload name=$name result=ok reason=new_build"
+    fi
+    if [ "$(timeout 10 hyprctl plugin load "$so" 2>&1)" = ok ]; then say "stage=load name=$name result=ok"; echo "$sum" > "$lib/.loaded-$name"
     else say "stage=load name=$name result=fail"; fails=$((fails + 1)); fi
   done
   [ $fails = 0 ] || failed
@@ -149,6 +167,9 @@ load() {
 case ${1:-} in
   abi) [ $# = 1 ] || refuse "bad_args usage=\"$usage\"" 2; header_abi || refuse no_headers ;;
   build) [ $# = 2 ] || refuse "bad_args usage=\"$usage\"" 2; build "$2" ;;
-  load) [ $# = 2 ] || refuse "bad_args usage=\"$usage\"" 2; load "$2" ;;
+  load)
+    [ "${2:-}" = --no-wait ] && { wait=0; set -- "$1" "${@:3}"; }
+    [ $# = 2 ] || refuse "bad_args usage=\"$usage\"" 2
+    load "$2" ;;
   *) refuse "bad_args usage=\"$usage\"" 2 ;;
 esac
