@@ -24,6 +24,8 @@ PanelWindow {
     property alias quick: quick
     property alias jump: jump
     property alias clipboard: clipboard
+    property alias preview: preview
+    property alias peek: peek
     readonly property var icons: Tray.split(TrayHost.items)
     readonly property var lines: Pictures.lines(Clock.now, Clock.pictures)
     readonly property var flyouts: ({ start, clipboard, search, taskview, notify, quick })
@@ -60,6 +62,7 @@ PanelWindow {
         onActivated: name => root.toggle(name)
         onJumpAsked: (key, x) => jump.show(key, x)
         onReordered: keys => Windows.arrange(keys, root.screen.name)
+        onTaskPressed: peek.dismiss()
 
         TrayArea {
             id: tray
@@ -137,6 +140,20 @@ PanelWindow {
         task: bar.byKey[key] ?? null
     }
 
+    PreviewHover {
+        id: peek
+        hoveredKey: bar.hoveredKey
+        panelHovered: preview.hovered
+        onKeyChanged: if (key) preview.anchorX = bar.centerOfTask(key)
+    }
+
+    TaskPreview {
+        id: preview
+        screen: root.screen
+        task: bar.byKey[peek.key] ?? null
+        onDone: peek.dismiss()
+    }
+
     // x is inside the window that asked, the overflow sits away from the screen edge
     Connections {
         target: TrayHost
@@ -169,6 +186,7 @@ PanelWindow {
         function onLockedChanged() {
             if (!Session.locked) return
             const shut = Object.keys(root.flyouts).filter(key => root.flyouts[key].open)
+            peek.dismiss()
             for (const key of shut) root.flyouts[key].open = false
             console.log(`[taskbar] screen=${root.screen.name} locked=true closed=${shut.join(",")}`)
         }
