@@ -83,28 +83,24 @@ Item {
                      : area.containsMouse || root.highlight === row.index ? Colors.menuItemHover : "transparent"
             }
 
-            Text {
+            FluentIcon {
                 objectName: "mark:" + row.index
                 visible: row.item && !!row.modelData.checked
                 x: Context.columns.markX
                 anchors.verticalCenter: parent.verticalCenter
-                text: row.modelData.mark === "bullet" ? Glyphs.glyph("bullet") : Glyphs.glyph("check")
+                name: row.modelData.mark === "bullet" ? Glyphs.glyph("bullet") : Glyphs.glyph("check")
                 color: row.enabled ? Colors.textPrimary : Colors.textDisabled
-                font.family: Type.iconFamily
-                font.pixelSize: root.m.glyph
-                renderType: Text.NativeRendering
+                size: root.m.glyph
             }
 
-            Text {
+            FluentIcon {
                 objectName: "glyph:" + row.index
                 visible: row.item && !!row.modelData.glyph
                 x: root.marks ? Context.columns.markedGlyphX : Context.columns.glyphX
                 anchors.verticalCenter: parent.verticalCenter
-                text: row.modelData.glyph ?? ""
+                name: row.modelData.glyph ?? ""
                 color: row.enabled ? Colors.textPrimary : Colors.textDisabled
-                font.family: Type.iconFamily
-                font.pixelSize: root.m.glyph
-                renderType: Text.NativeRendering
+                size: root.m.glyph
             }
 
             Image {
@@ -143,17 +139,15 @@ Item {
                 renderType: Text.NativeRendering
             }
 
-            Text {
+            FluentIcon {
                 objectName: "more:" + row.index
                 visible: row.item && !!row.modelData.more
                 anchors.right: parent.right
                 anchors.rightMargin: Context.columns.endPad
                 anchors.verticalCenter: parent.verticalCenter
-                text: Glyphs.glyph("more")
+                name: Glyphs.glyph("more")
                 color: Colors.textSecondary
-                font.family: Type.iconFamily
-                font.pixelSize: Type.caption.size
-                renderType: Text.NativeRendering
+                size: Type.caption.size
             }
 
             MouseArea {
@@ -190,14 +184,12 @@ Item {
                                  : press.containsMouse ? Colors.menuItemHover : "transparent"
                         }
 
-                        Text {
+                        FluentIcon {
                             objectName: "buttonglyph:" + button.index
                             anchors.centerIn: parent
-                            text: button.modelData.glyph
+                            name: button.modelData.glyph
                             color: button.modelData.enabled ? Colors.textPrimary : Colors.textDisabled
-                            font.family: Type.iconFamily
-                            font.pixelSize: root.m.glyph
-                            renderType: Text.NativeRendering
+                            size: root.m.glyph
                         }
 
                         MouseArea {

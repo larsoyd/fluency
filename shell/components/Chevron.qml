@@ -28,13 +28,12 @@ TrayButton {
             }
         }
 
-        Text {
+        FluentIcon {
             objectName: "glyph"
             anchors.centerIn: parent
-            text: Glyphs.glyph("up")
+            name: Glyphs.glyph("up")
             color: root.foreground
-            font.family: Type.iconFamily
-            font.pixelSize: Metrics.trayGlyphSize
+            size: Metrics.trayGlyphSize
         }
     }
 }

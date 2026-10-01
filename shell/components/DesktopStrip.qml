@@ -76,12 +76,11 @@ Item {
             color: shut.containsMouse ? Colors.menuItemPressed : Colors.flyoutTint
             onClicked: tile.closeClicked()
 
-            Text {
+            FluentIcon {
                 anchors.centerIn: parent
-                text: Glyphs.glyph("close")
+                name: Glyphs.glyph("close")
                 color: Colors.textPrimary
-                font.family: Type.iconFamily
-                font.pixelSize: Type.caption.size
+                size: Type.caption.size
             }
 
             MouseArea {
@@ -156,12 +155,11 @@ Item {
             name: "New desktop"
             onClicked: root.created()
 
-            Text {
+            FluentIcon {
                 anchors.centerIn: parent
-                text: Glyphs.glyph("plus")
+                name: Glyphs.glyph("plus")
                 color: Colors.textPrimary
-                font.family: Type.iconFamily
-                font.pixelSize: Metrics.trayGlyphSize
+                size: Metrics.trayGlyphSize
             }
         }
     }

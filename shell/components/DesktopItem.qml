@@ -70,25 +70,13 @@ Item {
         opacity: root.cut ? 0.5 : 1
         asynchronous: true
 
-        // no measurement behind the arrow, it follows the look of the shortcut overlay
-        Rectangle {
+        // the badge of the icon theme brings its own colours
+        FluentIcon {
             objectName: "arrow"
             visible: root.link
-            width: Math.round(root.m.icon / 3)
-            height: width
             y: parent.height - height
-            radius: 2
-            color: "white"
-            border.width: 1
-            border.color: "#40000000"
-
-            Text {
-                anchors.centerIn: parent
-                text: Glyphs.glyph("shortcut")
-                color: Colors.desktopArrow
-                font.family: Type.iconFamily
-                font.pixelSize: parent.width - 4
-            }
+            name: Glyphs.glyph("shortcut")
+            size: Math.max(16, Math.round(root.m.icon / 3))
         }
     }
 

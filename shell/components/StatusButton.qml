@@ -10,11 +10,10 @@ TrayButton {
 
     width: places.width
 
-    component Glyph: Text {
+    component Glyph: FluentIcon {
         anchors.centerIn: parent
         color: root.foreground
-        font.family: Type.iconFamily
-        font.pixelSize: Metrics.trayGlyphSize
+        size: Metrics.trayGlyphSize
     }
 
     Repeater {
@@ -31,14 +30,14 @@ TrayButton {
 
             Glyph {
                 objectName: "underlay"
-                visible: text !== ""
-                text: modelData.underlay ?? ""
+                visible: name !== ""
+                name: modelData.underlay ?? ""
                 opacity: Metrics.trayUnderlayOpacity
             }
 
             Glyph {
                 objectName: "base"
-                text: modelData.base
+                name: modelData.base
             }
         }
     }

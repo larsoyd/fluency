@@ -1,3 +1,5 @@
+import { icons as themed } from "./fluenticons.mjs"
+
 // fluent system icons regular, each name with its icon in the font and the codepoint
 const icons = {
     add: ["add_circle_20", 0xf10c],
@@ -57,8 +59,25 @@ const icons = {
     zip: ["folder_zip_20", 0xf435],
 }
 
+export function names() {
+    return [...new Set([...Object.keys(themed), ...Object.keys(icons)])]
+}
+
+// a name stands for its icon, drawn from the icon theme or else from the font
 export function glyph(name) {
+    if (!themed[name] && !icons[name]) throw new Error("refused: no glyph named " + name)
+    return name
+}
+
+export function char(name) {
     const icon = icons[name]
-    if (!icon) throw new Error("refused: no glyph named " + name)
-    return String.fromCharCode(icon[1])
+    return icon ? String.fromCharCode(icon[1]) : ""
+}
+
+const hex = color => "#" + [color.r, color.g, color.b].map(v => Math.round(v * 255).toString(16).padStart(2, "0")).join("")
+
+// the theme draws in one grey that gives way to the colour asked for, its alpha is left to the item
+export function source(name, color) {
+    const svg = themed[name]
+    return svg ? "data:image/svg+xml;utf8," + encodeURIComponent(svg.split("#363636").join(hex(color))) : ""
 }

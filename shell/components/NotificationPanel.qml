@@ -110,13 +110,12 @@ Item {
             checked: root.dnd
             onClicked: root.dndToggled()
 
-            Text {
+            FluentIcon {
                 objectName: "glyph"
                 anchors.centerIn: parent
-                text: Notify.bell(0, root.dnd).glyph
+                name: Notify.bell(0, root.dnd).glyph
                 color: Colors.textPrimary
-                font.family: Type.iconFamily
-                font.pixelSize: Metrics.trayGlyphSize
+                size: Metrics.trayGlyphSize
             }
         }
     }
@@ -181,12 +180,11 @@ Item {
                             width: height
                             onClicked: root.clearedApp(group.modelData.app)
 
-                            Text {
+                            FluentIcon {
                                 anchors.centerIn: parent
-                                text: Glyphs.glyph("close")
+                                name: Glyphs.glyph("close")
                                 color: Colors.textSecondary
-                                font.family: Type.iconFamily
-                                font.pixelSize: Type.caption.size
+                                size: Type.caption.size
                             }
                         }
                     }

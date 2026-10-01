@@ -82,7 +82,6 @@ QtObject {
     readonly property color desktopIdleFill: "#52D9D9D9"
     readonly property color desktopLabel: "#FFFFFF"
     readonly property color desktopShadow: "#000000"
-    readonly property color desktopArrow: "#0067C0"
     readonly property color marqueeFill: "#460066CC"
     readonly property color marqueeStroke: "#0078D7"
 }

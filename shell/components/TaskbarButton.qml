@@ -1,5 +1,6 @@
 import QtQuick
 import qs.tokens
+import "../logic/glyphs.mjs" as Glyphs
 import "../logic/bounce.mjs" as Bounce
 import "../logic/curve.mjs" as Curve
 import "../logic/layout.mjs" as Layout
@@ -152,7 +153,7 @@ Item {
             objectName: "glyph"
             anchors.centerIn: parent
             visible: root.glyph !== ""
-            text: root.glyph
+            text: Glyphs.char(root.glyph)
             color: Colors.textPrimary
             font.family: Type.iconFamily
             font.pixelSize: Metrics.iconSize

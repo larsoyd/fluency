@@ -77,16 +77,14 @@ Item {
                     sourceSize: Qt.size(width, height)
                 }
 
-                Text {
-                    renderType: Text.NativeRendering
+                FluentIcon {
                     objectName: "glyph:" + row.index
                     visible: !!row.modelData.glyph
                     x: Metrics.jumpIconX - Metrics.flyoutBorder + (Metrics.jumpIconSize - width) / 2
                     anchors.verticalCenter: parent.verticalCenter
-                    text: row.modelData.glyph ?? ""
+                    name: row.modelData.glyph ?? ""
                     color: row.ink
-                    font.family: Type.iconFamily
-                    font.pixelSize: Metrics.jumpIconSize
+                    size: Metrics.jumpIconSize
                 }
 
                 Text {

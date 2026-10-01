@@ -51,13 +51,12 @@ TrayButton {
         width: Metrics.badgeMinWidth
         height: parent.height
 
-        Text {
+        FluentIcon {
             objectName: "glyph"
             anchors.centerIn: parent
-            text: root.ring.glyph
+            name: root.ring.glyph
             color: root.ring.filled ? Colors.accentLight2 : root.foreground
-            font.family: Type.iconFamily
-            font.pixelSize: Metrics.trayGlyphSize
+            size: Metrics.trayGlyphSize
         }
     }
 }
