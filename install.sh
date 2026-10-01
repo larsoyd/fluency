@@ -174,6 +174,8 @@ package() {
     wayland-scanner:*|wayland-client.pc:*) echo wayland-devel ;;
     wayland-protocols.pc:dnf) echo wayland-protocols-devel ;;
     wayland-protocols.pc:*) echo wayland-protocols ;;
+    hyprland-protocols.pc:dnf) echo hyprland-protocols-devel ;;
+    hyprland-protocols.pc:*) echo hyprland-protocols ;;
     hyprland.pc:*) echo hyprland-devel ;;
     QtQuick.Shapes:apt) echo qml6-module-qtquick-shapes ;;
     QtQuick.Effects:apt) echo qml6-module-qtquick-effects ;;
@@ -243,7 +245,7 @@ check_deps() {
   local missing=() bin
   for bin in "${need[@]}"; do have "$bin" || missing+=("$bin"); done
   local pc
-  [ $plugins = 1 ] && for pc in hyprland.pc wayland-client.pc wayland-protocols.pc; do have "$pc" || missing+=("$pc"); done
+  [ $plugins = 1 ] && for pc in hyprland.pc wayland-client.pc wayland-protocols.pc hyprland-protocols.pc; do have "$pc" || missing+=("$pc"); done
   [ ${#missing[@]} = 0 ] && { say "stage=deps result=ok"; return; }
   local pm pkgs=() manual=()
   pm=$(manager)
@@ -642,7 +644,7 @@ XML
 build_plugins() {
   mkdir -p "$work/lib"
   [ $plugins = 1 ] || { say "stage=plugins result=skipped"; return; }
-  [ $dry = 0 ] || { say "stage=plugins result=dry_run would_build=\"$(ls "$work/src/plugins" | grep -v '\.sh$' | tr '\n' ' ')clipboard\""; return; }
+  [ $dry = 0 ] || { say "stage=plugins result=dry_run would_build=\"$(ls "$work/src/plugins" | grep -v '\.sh$' | tr '\n' ' ')clipboard session\""; return; }
   local pc
   pc=$(pkg-config --modversion hyprland 2>/dev/null) || refuse "plugin_headers reason=no_hyprland_pc"
   [ "$pc" = "$hypr_version" ] || refuse "plugin_headers headers=$pc running=$hypr_version"
@@ -652,6 +654,9 @@ build_plugins() {
   "$work/src/native/clipboard/build.sh" "$work/clipd" > "$work/build-clipd.log" 2>&1 \
     || { tail -10 "$work/build-clipd.log"; refuse "clipboard_build"; }
   say "stage=clipboard result=built"
+  "$work/src/native/session/build.sh" "$work/sessiond" > "$work/build-sessiond.log" 2>&1 \
+    || { tail -10 "$work/build-sessiond.log"; refuse "session_build"; }
+  say "stage=session result=built"
 }
 
 icon_theme_exists() {
@@ -893,6 +898,7 @@ apply_plugins() {
   swap_dir "$work/src/plugins" "$lib/plugins"
   cp "$work/lib/abi" "$lib/.abi.new" && mv -f "$lib/.abi.new" "$lib/abi"
   cp "$work/clipd/fluency-clipd" "$lib/.fluency-clipd.new" && mv -f "$lib/.fluency-clipd.new" "$lib/fluency-clipd"
+  cp "$work/sessiond/fluency-sessiond" "$lib/.fluency-sessiond.new" && mv -f "$lib/.fluency-sessiond.new" "$lib/fluency-sessiond"
   say "stage=plugins result=installed dir=$lib"
 }
 
@@ -982,6 +988,9 @@ reload() {
   # a running daemon keeps its history and runs the new build from the next login
   if [ $plugins = 1 ] && ! timeout 5 "$lib/fluency-clipd" ctl list >/dev/null 2>&1; then
     timeout 5 hyprctl dispatch "hl.dsp.exec_cmd('$lib/fluency-clipd')" >/dev/null 2>&1 && say "stage=clipboard result=started"
+  fi
+  if [ $plugins = 1 ] && ! timeout 5 "$lib/fluency-sessiond" ctl state >/dev/null 2>&1; then
+    timeout 5 hyprctl dispatch "hl.dsp.exec_cmd('$lib/fluency-sessiond')" >/dev/null 2>&1 && say "stage=session result=started"
   fi
   if timeout 5 qs ipc -p "$share/shell" call fluency reload >/dev/null 2>&1; then
     say "stage=reload result=ok"

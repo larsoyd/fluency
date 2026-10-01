@@ -8,6 +8,7 @@ require("fluency.shell")
 require("fluency.titlebar")
 require("fluency.startkey")
 require("fluency.clipboard")
+require("fluency.session")
 require("fluency.keys")
 require("fluency.autostart")
 
