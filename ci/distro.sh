@@ -52,7 +52,7 @@ else diff <(echo "$before") <(echo "$after") | head -10; step idempotent fail; f
 as_ci "cd fluency && timeout 2400 ./install.sh --recommended < /dev/null" > "$out/recommended.log" 2>&1
 hc=$(grep -o 'stage=hyprcursor result=[a-z]*.*' "$out/recommended.log" | tail -1)
 if grep -qx '\[install\] result=ok' "$out/recommended.log" && [ "$hc" = "stage=hyprcursor result=ok shapes=49 aliases=85" ] \
-  && as_ci "grep -q 'HYPRCURSOR_THEME = \"Bibata_Ghost_Hyprcursor\"' .config/hypr/fluency/local.lua"; then
+  && as_ci "grep -q 'HYPRCURSOR_THEME = \"Bibata_Ghost_Hyprcursor\"' .config/hypr/fluency/generated.lua"; then
   step recommended ok
 else
   tail -20 "$out/recommended.log"; step recommended fail "hyprcursor=\"$hc\""
