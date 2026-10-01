@@ -48,7 +48,9 @@ and is removed a few months after the Hyprland release that has the change reach
 
 - A feature lands on `main` first and is cherry-picked onto `canary`.
 - A fix for an API change in Hyprland `main` goes onto both branches behind the temporary compatibility above, so `main` keeps building against the release.
-- When the distributions ship a new Hyprland release, `canary` is merged into `main` once the distribution CI is green on it, and `main`'s README names the new version.
+- When the distributions ship a new Hyprland release, then any changes not already merged in `canary` which are compatible with it are merged into `main` once the distribution CI is green on it, and `main`'s README names the new version. `canary` itself as a branch stays consistent and isn’t merged wholesale.
+
+  
 
 ## Installing it
 
