@@ -332,6 +332,16 @@ qt_engine_exists() {
   qt_plugin libqt6ct.so || qt_plugin '*hyprqt6engine*.so' || [ -f "$engine_plugin" ] || qt_plugin KDEPlasmaPlatformTheme6.so
 }
 
+portals=$sys/usr/share/xdg-desktop-portal/portals
+has_portal() { grep -qsE "^Interfaces=(.*;)?org\.freedesktop\.impl\.portal\.$2(;|\$)" "$portals/$1.portal"; }
+
+# the backend that picks files, a kde one shows the dialog kde users know
+file_chooser() {
+  local name
+  for name in kde gtk gnome lxqt; do has_portal "$name" FileChooser && { echo "$name"; return; }; done
+  return 0
+}
+
 # extras the shell looks best with, all optional
 recommended() {
   icon_theme_exists Papirus-Dark || own_icons || echo papirus
@@ -343,6 +353,8 @@ recommended() {
   gtk_theme_exists "$gtk_name" || echo fluent-gtk
   has_browser || echo firefox
   has_noto || echo noto
+  [ -f "$portals/hyprland.portal" ] || echo xdg-desktop-portal-hyprland
+  [ -n "$(file_chooser)" ] || echo xdg-desktop-portal-gtk
 }
 
 # no distribution packages this cursor, so it comes from its release at a pinned checksum
@@ -974,6 +986,24 @@ apply_gtk() {
   say "stage=gtk result=ok set=\"${set[*]}\" kept=\"${kept[*]}\""
 }
 
+# names the backends that are there, hyprland first, never over a config the user wrote
+apply_portal() {
+  local conf=${XDG_CONFIG_HOME:-$HOME/.config}/xdg-desktop-portal/hyprland-portals.conf chooser order=()
+  chooser=$(file_chooser)
+  [ -f "$portals/hyprland.portal" ] && order+=(hyprland)
+  if [ -f "$portals/gtk.portal" ]; then order+=(gtk); elif [ -n "$chooser" ]; then order+=("$chooser"); fi
+  [ ${#order[@]} -gt 0 ] || { say "stage=portal result=skipped reason=no_backend"; return; }
+  if [ -e "$conf" ] && ! grep -qxF "made $conf" "$manifest" 2>/dev/null; then say "stage=portal result=kept file=$conf"; return; fi
+  local want
+  want=$(printf '[preferred]\ndefault=%s\n' "$(IFS=';'; echo "${order[*]}")")
+  [ -z "$chooser" ] || want+=$'\n'"org.freedesktop.impl.portal.FileChooser=$chooser"
+  [ "$(cat "$conf" 2>/dev/null)" != "$want" ] || { say "stage=portal result=ok file=$conf chooser=${chooser:-none}"; return; }
+  track "$conf"
+  mkdir -p "$(dirname "$conf")"
+  printf '%s\n' "$want" > "$conf"
+  say "stage=portal result=written file=$conf chooser=${chooser:-none} hint=a_running_portal_reads_it_at_the_next_login"
+}
+
 reload() {
   [ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ] || { say "stage=start result=next_login"; return; }
   local errors
@@ -1020,5 +1050,6 @@ apply_shell
 apply_config
 apply_qt
 apply_gtk
+apply_portal
 reload
 say "result=ok"
