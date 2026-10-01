@@ -19,11 +19,12 @@ PanelWindow {
     property alias trayMenu: trayMenu
     property alias start: start
     property alias search: search
+    property alias notify: notify
     property alias quick: quick
     property alias jump: jump
     readonly property var icons: Tray.split(TrayHost.items)
     readonly property var lines: Pictures.lines(Clock.now, Clock.pictures)
-    readonly property var flyouts: ({ start, search, quick })
+    readonly property var flyouts: ({ start, search, notify, quick })
     readonly property var events: ({ "fluency-start": "start", "fluency-search": "search", "fluency-taskview": "taskview", "fluency-notify": "notify" })
 
     function states() {
@@ -68,6 +69,7 @@ PanelWindow {
             hidden: root.icons.hidden.length
             open: overflow.open
             quickOpen: quick.open
+            notifyOpen: notify.open
             waiting: Notifications.history.length
             dnd: Notifications.dnd
             glyphs: Tray.glyphs(Status)
@@ -103,6 +105,11 @@ PanelWindow {
 
     SearchPane {
         id: search
+        screen: root.screen
+    }
+
+    NotificationCenter {
+        id: notify
         screen: root.screen
     }
 
@@ -155,6 +162,12 @@ PanelWindow {
         windows: [root, search]
         active: search.open
         onCleared: search.open = false
+    }
+
+    HyprlandFocusGrab {
+        windows: [root, notify]
+        active: notify.open
+        onCleared: notify.open = false
     }
 
     HyprlandFocusGrab {

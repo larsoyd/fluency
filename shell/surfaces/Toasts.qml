@@ -100,12 +100,7 @@ PanelWindow {
                     x: slot.slide * (Metrics.toastWidth + Metrics.toastGap)
                     opacity: slot.entry?.leaving ? 1 - slot.slide : 1
                     app: slot.words.app
-                    icon: {
-                        const name = slot.entry.n.appIcon || slot.entry.n.image || "application-x-executable"
-                        return name.startsWith("/") ? "file://" + name
-                            : name.startsWith("file:") || name.startsWith("image:") ? name
-                            : Quickshell.iconPath(name, "application-x-executable")
-                    }
+                    icon: Logic.source(slot.entry.n, name => Quickshell.iconPath(name, "application-x-executable"))
                     title: slot.words.title
                     body: slot.words.body
                     enabled: !slot.entry?.leaving

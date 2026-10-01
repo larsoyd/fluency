@@ -185,6 +185,18 @@ QtObject {
     readonly property int searchPreviewIcon: 64
     readonly property int searchPreviewPad: 16
 
+    // notification center and calendar, no source for the sizes, the width is the toast's
+    readonly property int notifyWidth: 364
+    readonly property int notifyHeader: 48
+    readonly property int notifyInset: 8
+    readonly property int notifyEmpty: 64
+    readonly property int notifyGroup: 32
+    readonly property int calendarCell: 48
+    readonly property int calendarDot: 32
+    readonly property int calendarMonthRow: 40
+    readonly property int calendarWeekRow: 32
+    readonly property int calendarBottom: 8
+
     // measured at 150% from the capture of build 22533 in the announcement
     readonly property int osdWidth: 170
     readonly property int osdHeight: 45

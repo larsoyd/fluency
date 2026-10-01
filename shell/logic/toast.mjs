@@ -23,3 +23,10 @@ export function order(have, want) {
     })
     return { keys, leaving }
 }
+
+// a path or url stands for itself, a name goes through the icon theme
+export function source(n, themed) {
+    const name = n.appIcon || n.image || "application-x-executable"
+    if (name.startsWith("/")) return "file://" + name
+    return name.startsWith("file:") || name.startsWith("image:") ? name : themed(name)
+}

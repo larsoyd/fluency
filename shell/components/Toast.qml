@@ -10,6 +10,7 @@ Item {
     property url icon: ""
     property string title: ""
     property string body: ""
+    property bool card: false
     readonly property var fill: Acrylic.fill({
         tint: [Colors.flyoutTint.r, Colors.flyoutTint.g, Colors.flyoutTint.b],
         luminosityOpacity: Colors.flyoutLuminosityOpacity,
@@ -25,9 +26,9 @@ Item {
         objectName: "backdrop"
         anchors.fill: parent
         radius: Metrics.flyoutRadius
-        color: Qt.rgba(root.fill.color[0], root.fill.color[1], root.fill.color[2], root.fill.alpha)
+        color: root.card ? Colors.cardFill : Qt.rgba(root.fill.color[0], root.fill.color[1], root.fill.color[2], root.fill.alpha)
         border.width: Metrics.flyoutBorder
-        border.color: Colors.flyoutStroke
+        border.color: root.card ? Colors.cardStroke : Colors.flyoutStroke
     }
 
     MouseArea {

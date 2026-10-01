@@ -10,6 +10,7 @@ local surfaces = {
     { name = "fluency-jump", ignore_alpha = 0.5, no_anim = true },
     -- the menu fades out whole, a low threshold keeps its blur until the last frame
     { name = "fluency-context", ignore_alpha = 0.02, no_anim = true },
+    { name = "fluency-notify", ignore_alpha = 0.02, no_anim = true },
 }
 
 for _, surface in ipairs(surfaces) do
