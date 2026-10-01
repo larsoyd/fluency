@@ -96,6 +96,12 @@ package() {
     qs:*) echo "" ;;
     hyprctl:*|Hyprland:*|hyprland.pc:pacman) echo hyprland ;;
     hyprland.pc:apt) echo hyprland-dev ;;
+    wayland-scanner:apt) echo libwayland-bin ;;
+    wayland-client.pc:apt) echo libwayland-dev ;;
+    wayland-scanner:pacman|wayland-client.pc:pacman) echo wayland ;;
+    wayland-scanner:*|wayland-client.pc:*) echo wayland-devel ;;
+    wayland-protocols.pc:dnf) echo wayland-protocols-devel ;;
+    wayland-protocols.pc:*) echo wayland-protocols ;;
     hyprland.pc:*) echo hyprland-devel ;;
     QtQuick.Shapes:apt) echo qml6-module-qtquick-shapes ;;
     QtQuick.Effects:apt) echo qml6-module-qtquick-effects ;;
@@ -143,7 +149,7 @@ install_packages() {
 
 have() {
   case $1 in
-    hyprland.pc) pkg-config --exists hyprland 2>/dev/null ;;
+    *.pc) pkg-config --exists "${1%.pc}" 2>/dev/null ;;
     Qt*.*) qml_module "$1" ;;
     *) command -v "$1" >/dev/null ;;
   esac
@@ -156,10 +162,11 @@ qml_module() {
 
 check_deps() {
   local need=(Hyprland hyprctl qs wl-copy gio gdbus xdg-open xdg-settings xdg-mime busctl systemctl zip unzip curl sha256sum fc-cache cmp diff QtQuick.Shapes QtQuick.Effects Qt.labs.folderlistmodel)
-  [ $plugins = 1 ] && need+=(cmake make pkg-config c++ notify-send flock)
+  [ $plugins = 1 ] && need+=(cmake make pkg-config c++ notify-send flock wayland-scanner)
   local missing=() bin
   for bin in "${need[@]}"; do have "$bin" || missing+=("$bin"); done
-  [ $plugins = 1 ] && ! have hyprland.pc && missing+=(hyprland.pc)
+  local pc
+  [ $plugins = 1 ] && for pc in hyprland.pc wayland-client.pc wayland-protocols.pc; do have "$pc" || missing+=("$pc"); done
   [ ${#missing[@]} = 0 ] && { say "stage=deps result=ok"; return; }
   local pm pkgs=() manual=()
   pm=$(manager)
@@ -434,13 +441,13 @@ export_source() {
   mkdir -p "$work/src"
   if git -C "$here" rev-parse --git-dir >/dev/null 2>&1; then
     local dirty
-    dirty=$(git -C "$here" status --porcelain -- shell hypr plugins | cut -c4- | tr '\n' ',')
+    dirty=$(git -C "$here" status --porcelain -- shell hypr plugins native | cut -c4- | tr '\n' ',')
     [ -z "$dirty" ] || refuse "uncommitted_changes files=${dirty%,}"
     revision=$(git -C "$here" rev-parse --short HEAD)
-    git -C "$here" archive HEAD shell hypr plugins | tar -x -C "$work/src"
+    git -C "$here" archive HEAD shell hypr plugins native | tar -x -C "$work/src"
   else
     revision=archive
-    cp -r "$here/shell" "$here/hypr" "$here/plugins" "$work/src/"
+    cp -r "$here/shell" "$here/hypr" "$here/plugins" "$here/native" "$work/src/"
   fi
   say "stage=source result=ok revision=$revision"
 }
@@ -482,6 +489,9 @@ build_plugins() {
   "$work/src/plugins/fluency-plugins.sh" build "$work/lib" > "$work/build-plugins.log" 2>&1 \
     || { tail -20 "$work/lib/build.log" 2>/dev/null; tail -5 "$work/build-plugins.log"; refuse "plugin_build"; }
   say "stage=plugins result=built files=$(ls "$work/lib"/*.so | wc -l)"
+  "$work/src/native/clipboard/build.sh" "$work/clipd" > "$work/build-clipd.log" 2>&1 \
+    || { tail -10 "$work/build-clipd.log"; refuse "clipboard_build"; }
+  say "stage=clipboard result=built"
 }
 
 icon_theme_exists() {
@@ -670,6 +680,7 @@ apply_plugins() {
   # the loader rebuilds from these at login when hyprland changed
   swap_dir "$work/src/plugins" "$lib/plugins"
   cp "$work/lib/abi" "$lib/.abi.new" && mv -f "$lib/.abi.new" "$lib/abi"
+  cp "$work/clipd/fluency-clipd" "$lib/.fluency-clipd.new" && mv -f "$lib/.fluency-clipd.new" "$lib/fluency-clipd"
   say "stage=plugins result=installed dir=$lib"
 }
 
@@ -744,6 +755,10 @@ reload() {
     timeout 10 hyprctl reload > /dev/null 2>&1
     if timeout 300 "$lib/plugins/fluency-plugins.sh" load "$lib" > "$work/load.log" 2>&1; then say "stage=plugins result=loaded"
     else say "stage=plugins warn=not_loaded last=\"$(tail -1 "$work/load.log")\""; fi
+  fi
+  # a running daemon keeps its history and runs the new build from the next login
+  if [ $plugins = 1 ] && ! timeout 5 "$lib/fluency-clipd" ctl list >/dev/null 2>&1; then
+    timeout 5 hyprctl dispatch "hl.dsp.exec_cmd('$lib/fluency-clipd')" >/dev/null 2>&1 && say "stage=clipboard result=started"
   fi
   if timeout 5 qs ipc -p "$share/shell" call fluency reload >/dev/null 2>&1; then
     say "stage=reload result=ok"
