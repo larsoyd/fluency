@@ -411,6 +411,12 @@ Item {
         }
     }
 
+    WheelGlide {
+        view: list
+        anchors.fill: list
+        enabled: list.visible
+    }
+
     Label {
         objectName: "noResults"
         visible: !root.home && !root.results.length
