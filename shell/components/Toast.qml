@@ -60,6 +60,7 @@ Item {
             Text {
                 id: appName
                 objectName: "app"
+                renderType: Text.NativeRendering
                 x: 24
                 width: parent.width - x
                 anchors.verticalCenter: parent.verticalCenter
@@ -73,6 +74,7 @@ Item {
 
         Text {
             objectName: "title"
+            renderType: Text.NativeRendering
             width: parent.width
             text: root.title
             elide: Text.ElideRight
@@ -84,6 +86,7 @@ Item {
 
         Text {
             objectName: "body"
+            renderType: Text.NativeRendering
             width: parent.width
             text: root.body
             textFormat: Text.PlainText
