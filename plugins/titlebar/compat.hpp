@@ -163,3 +163,30 @@ namespace compat {
     }
 }
 #endif
+
+#if __has_include(<hyprland/src/workspace/presentation/WorkspacePresentable.hpp>)
+#include <hyprland/src/workspace/presentation/WorkspacePresentable.hpp>
+
+#define COMPAT_PRESENTABLE 1
+
+namespace compat {
+    using Presentation = SP<Workspace::CWorkspacePresentable>;
+    inline Presentation presentation(const PHLWINDOW& w) {
+        return dynamicPointerCast<Workspace::CWorkspacePresentable>(w->m_workspace);
+    }
+}
+#else
+// TODO: temporary compat maintained for a few months after release then removed
+namespace compat {
+    using Presentation = PHLWORKSPACE;
+    inline Presentation presentation(const PHLWINDOW& w) {
+        return w->m_workspace;
+    }
+}
+#endif
+
+namespace compat {
+    inline Vector2D renderOffset(const PHLWINDOW& w, const Presentation& p) {
+        return p && !pinned(w) ? p->m_renderOffset->value() : Vector2D();
+    }
+}

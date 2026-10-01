@@ -1,13 +1,15 @@
 #pragma once
 #include <hyprland/src/render/pass/PassElement.hpp>
+#include "compat.hpp"
 
 class CHyprBar;
 
 class CBarPassElement : public IPassElement {
   public:
     struct SBarData {
-        CHyprBar* deco = nullptr;
-        float     a    = 1.F;
+        CHyprBar*            deco = nullptr;
+        float                a    = 1.F;
+        compat::Presentation presentation;
     };
 
     CBarPassElement(const SBarData& data_);

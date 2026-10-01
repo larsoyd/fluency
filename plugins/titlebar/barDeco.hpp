@@ -12,6 +12,7 @@
 #include <hyprland/src/helpers/time/Time.hpp>
 #include <hyprland/src/helpers/signal/Signal.hpp>
 #include "globals.hpp"
+#include "compat.hpp"
 
 #define private public
 #include <hyprland/src/managers/input/InputManager.hpp>
@@ -30,7 +31,13 @@ class CHyprBar : public IHyprWindowDecoration {
 
     virtual void                       onPositioningReply(const SDecorationPositioningReply& reply);
 
-    virtual void                       draw(PHLMONITOR, float const& a);
+    virtual void                       draw(PHLMONITOR, float const& a, const compat::Presentation& presentation);
+#ifndef COMPAT_PRESENTABLE
+    // TODO: temporary compat maintained for a few months after release then removed
+    virtual void draw(PHLMONITOR pMonitor, float const& a) {
+        draw(pMonitor, a, compat::presentation(m_pWindow.lock()));
+    }
+#endif
 
     virtual eDecorationType            getDecorationType();
 
@@ -81,7 +88,7 @@ class CHyprBar : public IHyprWindowDecoration {
 
     Vector2D                   cursorRelativeToBar();
 
-    void                       renderPass(PHLMONITOR, float const& a);
+    void                       renderPass(PHLMONITOR, float const& a, const compat::Presentation& presentation);
     void                       renderBarTitle(const Vector2D& bufferSize, const float scale);
     void renderBarButtons(CBox* barBox, const float scale, const float a);
     void renderBarButtonsText(CBox* barBox, const float scale, const float a);

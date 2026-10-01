@@ -10,7 +10,7 @@ CBarPassElement::CBarPassElement(const CBarPassElement::SBarData& data_) : data(
 }
 
 std::vector<UP<IPassElement>> CBarPassElement::draw() {
-    data.deco->renderPass(g_pHyprRenderer->m_renderData.pMonitor.lock(), data.a);
+    data.deco->renderPass(g_pHyprRenderer->m_renderData.pMonitor.lock(), data.a, data.presentation);
     return {};
 }
 

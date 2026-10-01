@@ -448,7 +448,7 @@ void CHyprBar::renderBarButtonsText(CBox* barBox, const float scale, const float
     }
 }
 
-void CHyprBar::draw(PHLMONITOR pMonitor, const float& a) {
+void CHyprBar::draw(PHLMONITOR pMonitor, const float& a, const compat::Presentation& presentation) {
     const auto ENABLED = g_pGlobalState->config.enabled->value();
 
     if (m_bLastEnabledState != ENABLED) {
@@ -464,11 +464,11 @@ void CHyprBar::draw(PHLMONITOR pMonitor, const float& a) {
     if (!PWINDOW->m_ruleApplicator->decorate().valueOrDefault())
         return;
 
-    auto data = CBarPassElement::SBarData{this, a};
+    auto data = CBarPassElement::SBarData{this, a, presentation};
     g_pHyprRenderer->m_renderPass.add(makeUnique<CBarPassElement>(data));
 }
 
-void CHyprBar::renderPass(PHLMONITOR pMonitor, const float& a) {
+void CHyprBar::renderPass(PHLMONITOR pMonitor, const float& a, const compat::Presentation& presentation) {
     const auto  PWINDOW = m_pWindow.lock();
 
     static auto PENABLEBLURGLOBAL = CConfigValue<Config::BOOL>("decoration:blur:enabled");
@@ -503,8 +503,7 @@ void CHyprBar::renderPass(PHLMONITOR pMonitor, const float& a) {
         return;
     }
 
-    const auto PWORKSPACE      = PWINDOW->m_workspace;
-    const auto WORKSPACEOFFSET = PWORKSPACE && !compat::pinned(PWINDOW) ? PWORKSPACE->m_renderOffset->value() : Vector2D();
+    const auto WORKSPACEOFFSET = compat::renderOffset(PWINDOW, presentation);
 
     const auto ROUNDING = compat::rounding(PWINDOW) + (PRECEDENCE ? 0 : compat::borderSize(PWINDOW));
 
@@ -678,10 +677,7 @@ CBox CHyprBar::assignedBoxGlobal() {
     CBox box = m_bAssignedBox;
     box.translate(g_pDecorationPositioner->getEdgeDefinedPoint(DECORATION_EDGE_TOP, m_pWindow.lock()));
 
-    const auto PWORKSPACE      = m_pWindow->m_workspace;
-    const auto WORKSPACEOFFSET = PWORKSPACE && !compat::pinned(m_pWindow.lock()) ? PWORKSPACE->m_renderOffset->value() : Vector2D();
-
-    return box.translate(WORKSPACEOFFSET);
+    return box.translate(compat::renderOffset(m_pWindow.lock(), compat::presentation(m_pWindow.lock())));
 }
 
 PHLWINDOW CHyprBar::getOwner() {
