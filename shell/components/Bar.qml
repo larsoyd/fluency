@@ -29,6 +29,7 @@ Item {
     })
     readonly property var system: [
         { name: "start", source: Qt.resolvedUrl("../assets/start.svg") },
+        { name: "clipboard", glyph: Glyphs.glyph("clipboard") },
         { name: "search", glyph: Glyphs.glyph("search") },
         { name: "taskview", glyph: Glyphs.glyph("taskView") },
     ]
@@ -40,6 +41,11 @@ Item {
 
     function ask(action) {
         if (action.action !== "none") requested(action)
+    }
+
+    function centerOf(name) {
+        const button = system.itemAt(system.model.findIndex(item => item.name === name))
+        return button ? button.mapToItem(root, button.width / 2, 0).x : 0
     }
 
     function keys() {
@@ -105,6 +111,7 @@ Item {
         height: parent.height
 
         Repeater {
+            id: system
             model: root.system
 
             TaskbarButton {

@@ -266,6 +266,19 @@ QtObject {
     readonly property int quickPaddingTop: 12
     readonly property int quickRow: 48
     readonly property int quickButton: 40
+    // the clipboard flyout and its cards, measured at 100 percent
+    readonly property int clipWidth: 360
+    readonly property int clipHeader: 48
+    readonly property int clipInset: 12
+    readonly property int clipGap: 8
+    readonly property int clipCard: 78
+    readonly property int clipPad: 12
+    readonly property int clipButton: 28
+    readonly property int clipLines: 3
+    readonly property int clipThumb: 64
+    readonly property int clipSource: 16
+    readonly property int clipSearch: 32
+    readonly property int clipEmpty: 120
     // x, y, opacity of each copy, a dark core one down and right fading out around it
     readonly property var desktopShadow: [[0, 0, 0.5], [1, 1, 1], [1, 0, 0.5], [0, 1, 0.5], [2, 1, 0.35], [1, 2, 0.35], [2, 2, 0.3], [-1, 0, 0.15], [0, -1, 0.15]]
     // desktop context menu, measured at 125 percent
