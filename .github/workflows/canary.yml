@@ -1,0 +1,41 @@
+name: canary
+
+# a schedule runs from the default branch, so this file sits on both and always tests the canary branch
+on:
+  push:
+    branches: [canary]
+  schedule:
+    - cron: "41 5 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  hyprland-main:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: canary
+          path: fluency
+      - uses: cachix/install-nix-action@v31
+        with:
+          extra_nix_config: |
+            extra-substituters = https://hyprland.cachix.org
+            extra-trusted-public-keys = hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=
+      - name: plugins and config against hyprland main
+        run: |
+          timeout 4800 nix develop ./fluency/ci/canary --no-write-lock-file -c fluency/ci/canary.sh fluency 2>&1 | tee canary.log
+          exit "${PIPESTATUS[0]}"
+      - name: report
+        if: failure() && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          body=$(grep -E '^\[canary\]|error:' canary.log | head -40)
+          open=$(gh issue list -R "${{ github.repository }}" --state open --search "canary failed in:title" --json number --jq '.[0].number // empty')
+          if [ -n "$open" ]; then gh issue comment "$open" -R "${{ github.repository }}" --body "$body"
+          else gh issue create -R "${{ github.repository }}" --title "canary failed on hyprland main $(date +%F)" --body "$body"; fi
