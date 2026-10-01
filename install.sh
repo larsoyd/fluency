@@ -98,6 +98,7 @@ package() {
     hyprland.pc:apt) echo hyprland-dev ;;
     hyprland.pc:*) echo hyprland-devel ;;
     QtQuick.Shapes:apt) echo qml6-module-qtquick-shapes ;;
+    QtQuick.Effects:apt) echo qml6-module-qtquick-effects ;;
     Qt.labs.folderlistmodel:apt) echo qml6-module-qt-labs-folderlistmodel ;;
     Qt*:pacman) echo qt6-declarative ;;
     Qt*:*) echo qt6-qtdeclarative ;;
@@ -151,7 +152,7 @@ qml_module() {
 }
 
 check_deps() {
-  local need=(Hyprland hyprctl qs wl-copy gio gdbus xdg-open xdg-settings xdg-mime busctl systemctl zip unzip curl sha256sum fc-cache cmp diff QtQuick.Shapes Qt.labs.folderlistmodel)
+  local need=(Hyprland hyprctl qs wl-copy gio gdbus xdg-open xdg-settings xdg-mime busctl systemctl zip unzip curl sha256sum fc-cache cmp diff QtQuick.Shapes QtQuick.Effects Qt.labs.folderlistmodel)
   [ $plugins = 1 ] && need+=(cmake make pkg-config c++)
   local missing=() bin
   for bin in "${need[@]}"; do have "$bin" || missing+=("$bin"); done
