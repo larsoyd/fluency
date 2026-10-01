@@ -38,6 +38,15 @@ Fluency is built for the version of **Hyprland** that Arch Linux, Debian sid and
 - Do not disturb, and a bell in the tray that shows when something waits
 - A calendar card under the notifications that folds away
 
+**Clipboard**
+- Clipboard history from its taskbar button beside Start, or Super + V
+- A copy stays after the app that made it closes
+- Text, rich text, pictures and files keep every format they were copied in
+- Pin what you use often, delete one item, or clear all but the pinned
+- Type to filter, arrow keys and Enter to pick, and paste as plain text
+- Each item names the app it came from. Copies marked by password managers stay out
+- The history lives in memory, only pinned items are written to disk
+
 **Windows and desktops**
 - Task view with live pictures of your windows, centred in rows
 - Desktops strip: switch, add and close desktops. A new desktop stays until you close it
@@ -60,7 +69,7 @@ Fluency is built for the version of **Hyprland** that Arch Linux, Debian sid and
 
 - Hyprland 0.56 or newer, with a Lua config (`~/.config/hypr/hyprland.lua`). A hyprlang `hyprland.conf` is refused.
 - Quickshell 0.3 or newer.
-- For the title bar and minimize plugins: `cmake`, `pkg-config`, a C++23 compiler, and Hyprland's headers for the version that is running.
+- For the title bar and minimize plugins and the clipboard: `cmake`, `pkg-config`, a C++23 compiler, Hyprland's headers for the version that is running, `wayland-scanner`, the Wayland client headers and `wayland-protocols`.
 - Runtime tools: `wl-clipboard`, `glib2` (`gio`, `gdbus`), `xdg-utils`, `systemd`, `zip`, `unzip`, `curl`, `fontconfig`.
 - The QML modules QtQuick.Shapes, QtQuick.Effects and Qt.labs.folderlistmodel. Debian ships them apart from Qt Quick, as `qml6-module-qtquick-shapes`, `qml6-module-qtquick-effects` and `qml6-module-qt-labs-folderlistmodel`.
 
@@ -151,6 +160,7 @@ Other options:
 | Super + S | search |
 | Super + Tab | task view, with new desktops that stay until closed |
 | Super + N | notifications and calendar |
+| Super + V | clipboard history |
 | Alt + Tab | switch windows while Alt is held, Shift goes back |
 | Alt + F4 | close the window |
 
