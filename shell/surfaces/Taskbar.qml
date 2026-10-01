@@ -27,7 +27,6 @@ PanelWindow {
     readonly property var icons: Tray.split(TrayHost.items)
     readonly property var lines: Pictures.lines(Clock.now, Clock.pictures)
     readonly property var flyouts: ({ start, clipboard, search, taskview, notify, quick })
-    readonly property var events: ({ "fluency-start": "start", "fluency-search": "search", "fluency-taskview": "taskview", "fluency-notify": "notify", "fluency-clipboard": "clipboard" })
 
     function states() {
         const out = {}
@@ -153,16 +152,14 @@ PanelWindow {
         onCleared: overflow.open = false
     }
 
-    // hyprland posts it on a lone super tap, the bar of the focused monitor answers
+    // every bar hears the key, the one on the focused monitor answers
     Connections {
-        target: Hyprland
-        function onRawEvent(event) {
-            if (event.name !== "custom" || Hyprland.focusedMonitor?.name !== root.screen.name) return
-            if (root.events[event.data]) root.toggle(root.events[event.data])
-            if (event.data === "fluency-sound") {
-                if (!quick.open) root.toggle("quick")
-                quick.panel.page = "sound"
-            }
+        target: Shortcuts
+        function onFired(name) {
+            if (Hyprland.focusedMonitor?.name !== root.screen.name) return
+            if (name !== "sound") return root.toggle(name)
+            if (!quick.open) root.toggle("quick")
+            quick.panel.page = "sound"
         }
     }
 
