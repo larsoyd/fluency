@@ -222,6 +222,11 @@ QtObject {
     readonly property int switcherThumb: 180
     readonly property int switcherPad: 16
     readonly property int switcherEdge: 64
+    // taskbar previews, the box of the old 200 px thumbnails set by eye
+    readonly property int previewWidth: 200
+    readonly property int previewHeight: 120
+    readonly property int previewPad: 16
+    readonly property int previewGap: 24
 
     // measured at 150% from the capture of build 22533 in the announcement
     readonly property int osdWidth: 170

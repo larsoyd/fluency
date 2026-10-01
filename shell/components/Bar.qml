@@ -18,6 +18,7 @@ Item {
     property string settling: ""
     property real settleBy: 0
     property bool settleAnimated: false
+    property string hoveredKey: ""
     readonly property int dragTo: drag.from < 0 ? -1 : Tasks.slot(drag.from, drag.by, Metrics.buttonExtent, slots.count)
     property var icon: appId => ""
     property var progress: appId => -1
@@ -38,6 +39,7 @@ Item {
     signal requested(var action)
     signal reordered(var keys)
     signal jumpAsked(string key, real x)
+    signal taskPressed()
 
     function ask(action) {
         if (action.action !== "none") requested(action)
@@ -45,6 +47,11 @@ Item {
 
     function centerOf(name) {
         const button = system.itemAt(system.model.findIndex(item => item.name === name))
+        return button ? button.mapToItem(root, button.width / 2, 0).x : 0
+    }
+
+    function centerOfTask(key) {
+        const at = keys().indexOf(key), button = at < 0 ? null : buttons.itemAt(at)
         return button ? button.mapToItem(root, button.width / 2, 0).x : 0
     }
 
@@ -83,6 +90,7 @@ Item {
         const found = {}
         for (const task of tasks) found[task.key] = task
         byKey = found
+        if (!found[hoveredKey]) hoveredKey = ""
         for (const step of steps) {
             if (step.op === "insert") slots.insert(step.at, { key: step.key })
             if (step.op === "move") slots.move(step.from, step.to, 1)
@@ -134,6 +142,7 @@ Item {
                 readonly property var task: root.byKey[key]
                 readonly property bool grabbed: index === root.drag.from
                 readonly property bool dropping: key === root.settling
+                readonly property bool resting: hovered && task.windows.length > 0
                 objectName: "task:" + key
                 source: root.icon(task.appId)
                 windows: task.windows.length
@@ -150,6 +159,11 @@ Item {
                 onScrolled: steps => root.ask(Tasks.scroll(task, steps))
                 onDragged: dx => root.pull(index, dx)
                 onDropped: root.drop()
+                onRestingChanged: {
+                    if (resting) root.hoveredKey = key
+                    else if (root.hoveredKey === key) root.hoveredKey = ""
+                }
+                onPressedChanged: if (pressed) root.taskPressed()
             }
         }
     }

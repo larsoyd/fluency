@@ -43,6 +43,9 @@ QtObject {
     // a quick alt tab switches before the switcher shows
     readonly property int switcherDelay: 100
     readonly property int switcherFade: 83
+    // the system hover time before taskbar previews show, the wait before they go is set by eye
+    readonly property int previewDelay: 400
+    readonly property int previewLinger: 300
     readonly property int menuOpen: 250
     readonly property int menuFade: 83
     // direct exit of the fluent motion table, a blur cannot fade so the menu folds instead
@@ -75,5 +78,5 @@ QtObject {
     ]
 
     // measured from 30 or 50 fps captures or guessed, replace when a 120 fps capture exists
-    readonly property var provisional: ["indicatorResize", "curveIndicator", "flyoutOpen", "flyoutClose", "reflow", "iconMinimize", "iconRestore", "toastShown", "toastIn", "toastOut", "startOpen", "startClose", "curveStartClose", "osdShown", "pageSlide", "searchOpen", "searchClose", "calendarFold", "notifyOpen", "notifyClose", "taskViewOpen", "taskViewClose", "taskViewZoom", "switcherDelay"]
+    readonly property var provisional: ["indicatorResize", "curveIndicator", "flyoutOpen", "flyoutClose", "reflow", "iconMinimize", "iconRestore", "toastShown", "toastIn", "toastOut", "startOpen", "startClose", "curveStartClose", "osdShown", "pageSlide", "searchOpen", "searchClose", "calendarFold", "notifyOpen", "notifyClose", "taskViewOpen", "taskViewClose", "taskViewZoom", "switcherDelay", "previewDelay", "previewLinger"]
 }
