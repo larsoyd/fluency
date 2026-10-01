@@ -36,7 +36,7 @@ nix develop ./ci/canary --no-write-lock-file -c ci/canary.sh .
 
 ## Temporary compatibility
 
-When Hyprland `main` changes an API the plugins use, the fix goes onto both branches, so `canary` and `main` build the same plugin sources. Each plugin has a `compat.hpp` that checks for a header only the newer Hyprland has, uses the new API when that header is there and falls back to the old code when it is not. Every fallback sits under the comment
+When Hyprland `main` changes an API like plugins use or anything else, the fix goes onto both branches, so `canary` and `main` build the same plugin sources. Each affected source gets a special compatibility layer like `compat.hpp` for one example that checks for a header only the newer Hyprland has, uses the new API or any other changes when that header is there and falls back to the old code when it is not. Every fallback sits under the comment
 
 ```cpp
 // TODO: temporary compat maintained for a few months after release then removed
