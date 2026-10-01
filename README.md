@@ -1,6 +1,6 @@
 # Fluency canary
 
-[![canary](https://img.shields.io/github/actions/workflow/status/larsoyd/fluency/canary.yml?branch=canary&label=Hyprland%20main&logo=githubactions&logoColor=white)](https://github.com/larsoyd/fluency/actions/workflows/canary.yml)
+[![Hyprland main](https://github.com/larsoyd/fluency/actions/workflows/canary.yml/badge.svg?branch=canary)](https://github.com/larsoyd/fluency/actions/workflows/canary.yml)
 
 Follows Hyprland `main` at [e826317](https://github.com/hyprwm/Hyprland/commit/e82631720b5d585d7ca09f567cb321063b7c7ab2), built on 2026-10-01.
 
