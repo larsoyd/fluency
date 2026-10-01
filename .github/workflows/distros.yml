@@ -1,0 +1,48 @@
+name: distros
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "23 4 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  install:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { distro: arch, image: "archlinux:latest" }
+          - { distro: debian, image: "debian:sid" }
+          - { distro: fedora, image: "fedora:44" }
+    name: ${{ matrix.distro }}
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ matrix.image }}
+      options: --cap-add=SYS_NICE
+    timeout-minutes: 60
+    steps:
+      - name: git for checkout
+        run: |
+          case "${{ matrix.distro }}" in
+            arch) sed -i '/^\[options\]/a DisableSandbox' /etc/pacman.conf && pacman -Sy --noconfirm --needed git ;;
+            debian) apt-get update && apt-get install -y git ca-certificates ;;
+            fedora) dnf install -y git-core ;;
+          esac
+      - uses: actions/checkout@v5
+        with:
+          path: fluency
+      - name: install, verify, reinstall, extras, uninstall
+        run: fluency/ci/distro.sh ${{ matrix.distro }} fluency out
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ${{ matrix.distro }}
+          path: out
+          retention-days: 14
