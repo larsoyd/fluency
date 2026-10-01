@@ -115,7 +115,7 @@ Item {
         text: root.label
         color: Colors.desktopLabel
         font.family: Type.family
-        font.pixelSize: 12
+        font.pixelSize: Type.caption.size
         horizontalAlignment: Text.AlignHCenter
         wrapMode: Text.WrapAtWordBoundaryOrAnywhere
         maximumLineCount: root.whole ? 100 : 2

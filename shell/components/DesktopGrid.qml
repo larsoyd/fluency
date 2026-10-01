@@ -308,7 +308,7 @@ Item {
             selectionColor: Colors.accent
             selectedTextColor: "white"
             font.family: Type.family
-            font.pixelSize: 12
+            font.pixelSize: Type.caption.size
             horizontalAlignment: TextEdit.AlignHCenter
             wrapMode: TextEdit.WrapAtWordBoundaryOrAnywhere
             Keys.onPressed: event => {

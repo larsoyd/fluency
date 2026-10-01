@@ -1,5 +1,6 @@
 import QtQuick
 import qs.tokens
+import "../logic/fonts.mjs" as Fonts
 import "../logic/acrylic.mjs" as Acrylic
 import "../logic/context.mjs" as Context
 import "../logic/icons.mjs" as Icons
@@ -28,7 +29,7 @@ Item {
     FontMetrics { id: caption; font.family: Type.family; font.pixelSize: Type.caption.size }
 
     function widest(metrics, key) {
-        return Math.ceil(rows.reduce((most, row) => row.kind === "item" && row[key] ? Math.max(most, metrics.advanceWidth(row[key])) : most, 0))
+        return Fonts.drawnWidth(rows.reduce((most, row) => row.kind === "item" && row[key] ? Math.max(most, metrics.advanceWidth(row[key])) : most, 0))
     }
 
     width: Context.width(widest(body, "text"), widest(caption, "accel"), marks, m)
