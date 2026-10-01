@@ -395,7 +395,7 @@ convert_cursor() {
   say "stage=hyprcursor result=ok shapes=$shapes aliases=$aliases"
 }
 
-# no distribution packages the fluent theme, its archive also holds the firefox look
+# no distribution packages the fluent theme
 fetch_theme() {
   mkdir -p "$work/dl" "$work/fluent"
   timeout 120 curl -fsSL -o "$work/dl/theme.tar.gz" "$theme_url" || refuse "fluent_download url=$theme_url"
@@ -424,9 +424,9 @@ firefox_profile() {
   return 0
 }
 
-# a firefox installed here gets the fluent look in dark, and the portal picks its files
-theme_firefox() {
-  local profile prefs=$work/user.js
+# a firefox installed here picks its files through the desktop portal
+set_firefox() {
+  local profile
   command -v firefox > /dev/null || { say "stage=firefox result=skipped reason=no_firefox"; return; }
   profile=$(firefox_profile)
   if [ -z "$profile" ]; then
@@ -434,14 +434,10 @@ theme_firefox() {
     profile=$(firefox_profile)
   fi
   [ -n "$profile" ] || { say "stage=firefox result=skipped reason=no_profile"; return; }
-  if [ -e "$profile/chrome" ] || [ -e "$profile/user.js" ]; then say "stage=firefox result=kept profile=$profile"; return; fi
-  grep '^user_pref' "$work/fluent/src/firefox/configuration/user.js" > "$prefs"
-  printf 'user_pref("%s", %s);\n' widget.use-xdg-desktop-portal.file-picker 1 ui.systemUsesDarkTheme 1 >> "$prefs"
-  track "$profile/chrome"
-  cp -r "$work/fluent/src/firefox/chrome" "$profile/chrome"
+  [ ! -e "$profile/user.js" ] || { say "stage=firefox result=kept profile=$profile"; return; }
   track "$profile/user.js"
-  cp "$prefs" "$profile/user.js"
-  say "stage=firefox result=themed profile=$profile"
+  echo 'user_pref("widget.use-xdg-desktop-portal.file-picker", 1);' > "$profile/user.js"
+  say "stage=firefox result=set profile=$profile"
 }
 
 extra_packages() {
@@ -528,8 +524,7 @@ recommend_apply() {
   local pm name missing=()
   pm=$(manager)
   picked bibata-ghost && fetch_cursor
-  if picked fluent-gtk || picked firefox; then fetch_theme; fi
-  picked fluent-gtk && build_theme
+  picked fluent-gtk && { fetch_theme; build_theme; }
   if [ ${#built[@]} -gt 0 ] && ! build_engine; then
     say "stage=qtengine result=fallback reason=$engine_reason packages=\"qt6ct kvantum\""
     built=()
@@ -540,7 +535,7 @@ recommend_apply() {
   fi
   picked bibata-ghost && { track "${XDG_DATA_HOME:-$HOME/.local/share}/icons/$cursor_name"; swap_dir "$work/cursor/$cursor_name" "${XDG_DATA_HOME:-$HOME/.local/share}/icons/$cursor_name"; }
   picked fluent-gtk && { track "$themes/$gtk_name"; swap_dir "$work/gtk/$gtk_name" "$themes/$gtk_name"; }
-  picked firefox && theme_firefox
+  picked firefox && set_firefox
   [ ${#built[@]} = 0 ] || { track "$lib/qt6"; swap_dir "$work/engine/stage$lib/qt6" "$lib/qt6"; }
   # the tools only make the theme, a distribution without them still gets the xcursor one
   if [ ${#tools[@]} -gt 0 ] && ! install_packages "$pm" "${tools[@]}"; then
