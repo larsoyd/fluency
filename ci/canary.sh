@@ -11,6 +11,11 @@ step() { echo "[canary] stage=$1 result=$2 ${3:-}"; [ "$2" = ok ] || fails=$((fa
 version=$(timeout 10 Hyprland --version 2>&1 | head -1)
 step version "$([ -n "$version" ] && echo ok || echo fail)" "hyprland=\"$version\" headers=$(pkg-config --modversion hyprland 2>&1)"
 
+# the login loader compares this stamp with the running hyprland, so it names the built commit
+abi=$("$src/plugins/fluency-plugins.sh" abi 2>&1)
+built=$(grep -oE 'at commit [0-9a-f]{40}' <<< "$version" | cut -c11-)
+step abi "$([ -n "$built" ] && [ "${abi%%_*}" = "$built" ] && echo ok || echo fail)" "abi=$abi"
+
 for dir in "$src"/plugins/*/; do
   name=$(basename "$dir")
   if timeout 300 cmake -S "$dir" -B "$work/$name" -DCMAKE_BUILD_TYPE=Release > "$work/$name.log" 2>&1 \
