@@ -24,6 +24,7 @@ TrayButton {
         height: Type.caption.lineHeight
         horizontalAlignment: Text.AlignRight
         verticalAlignment: Text.AlignVCenter
+        renderType: Text.NativeRendering
         color: root.foreground
         font.family: Type.family
         font.pixelSize: Type.caption.size
