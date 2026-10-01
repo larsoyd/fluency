@@ -29,6 +29,10 @@ engine_url=https://github.com/hyprwm/hyprqt6engine/archive/d0ce29ca5471f406c7155
 engine_sum=a6f113357277246002e56d844b0ff94699c4822ebf78f7748c395752b3bab42b
 engine_plugin=$lib/qt6/plugins/platformthemes/libhyprqt6engine.so
 breeze_dark=/usr/share/color-schemes/BreezeDark.colors
+theme_url=https://github.com/vinceliuice/Fluent-gtk-theme/archive/7a49a464b0188c340101c52965c18190b1c694cf.tar.gz
+theme_sum=5d78245fee456dd2d2992c4186a8188b59f87839e7bd5905c56bea00c2446dd4
+gtk_name=Fluent-Dark
+themes=${XDG_DATA_HOME:-$HOME/.local/share}/themes
 
 say() { echo "[install] $*"; }
 refuse() { echo "[install] refused: $*"; exit 1; }
@@ -306,6 +310,16 @@ gtk_theme_exists() {
   return 1
 }
 
+# any app that says it browses the web counts
+has_browser() {
+  local dirs=() dir
+  IFS=: read -ra dirs <<< "${XDG_DATA_HOME:-$HOME/.local/share}:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+  for dir in "${dirs[@]/%//applications}"; do
+    grep -qsE '^Categories=(.*;)?WebBrowser(;|$)' "$dir"/*.desktop && return 0
+  done
+  return 1
+}
+
 has_noto() {
   local families
   families=$(timeout 30 fc-list : family 2>/dev/null)
@@ -316,7 +330,7 @@ qt_engine_exists() {
   qt_plugin libqt6ct.so || qt_plugin '*hyprqt6engine*.so' || [ -f "$engine_plugin" ] || qt_plugin KDEPlasmaPlatformTheme6.so
 }
 
-# icons, terminal, file manager, cursor and qt engine the shell looks best with, all optional
+# extras the shell looks best with, all optional
 recommended() {
   icon_theme_exists Papirus-Dark || own_icons || echo papirus
   has_entry kitty || echo kitty
@@ -324,7 +338,8 @@ recommended() {
   cursor_exists || echo bibata-ghost
   hyprcursor_exists || echo bibata-hyprcursor
   qt_engine_exists || echo hyprqt6engine
-  gtk_theme_exists || echo breeze-gtk
+  gtk_theme_exists "$gtk_name" || echo fluent-gtk
+  has_browser || echo firefox
   has_noto || echo noto
 }
 
@@ -380,13 +395,60 @@ convert_cursor() {
   say "stage=hyprcursor result=ok shapes=$shapes aliases=$aliases"
 }
 
+# no distribution packages the fluent theme, its archive also holds the firefox look
+fetch_theme() {
+  mkdir -p "$work/dl" "$work/fluent"
+  timeout 120 curl -fsSL -o "$work/dl/theme.tar.gz" "$theme_url" || refuse "fluent_download url=$theme_url"
+  local got
+  got=$(sha256sum "$work/dl/theme.tar.gz" | cut -d' ' -f1)
+  [ "$got" = "$theme_sum" ] || refuse "fluent_checksum got=$got want=$theme_sum"
+  timeout 60 tar -xzf "$work/dl/theme.tar.gz" -C "$work/fluent" --strip-components=1 || refuse "fluent_unpack"
+}
+
+# the plain dark variant, the blur one only suits a compositor that blurs gtk
+build_theme() {
+  local log=$work/fluent-gtk.log
+  mkdir -p "$work/gtk"
+  (cd "$work/fluent" && timeout 300 ./install.sh -d "$work/gtk" -c dark -s standard) > "$log" 2>&1 || { tail -5 "$log"; refuse "fluent_build"; }
+  [ -f "$work/gtk/$gtk_name/gtk-3.0/gtk.css" ] || refuse "fluent_build reason=no_$gtk_name"
+}
+
+# the profile a firefox install made for itself, newer ones keep it under the config dir
+firefox_profile() {
+  local root path
+  for root in "${XDG_CONFIG_HOME:-$HOME/.config}/mozilla/firefox" "$HOME/.mozilla/firefox"; do
+    [ -f "$root/installs.ini" ] || continue
+    path=$(sed -n 's/^Default=//p' "$root/installs.ini" | head -1)
+    [ -n "$path" ] && [ -d "$root/$path" ] && { echo "$root/$path"; return; }
+  done
+  return 0
+}
+
+# a firefox installed here gets the fluent look in dark, and the portal picks its files
+theme_firefox() {
+  local profile prefs=$work/user.js
+  command -v firefox > /dev/null || { say "stage=firefox result=skipped reason=no_firefox"; return; }
+  profile=$(firefox_profile)
+  if [ -z "$profile" ]; then
+    timeout 60 firefox --headless --screenshot "$work/firefox.png" about:blank > "$work/firefox.log" 2>&1 || true
+    profile=$(firefox_profile)
+  fi
+  [ -n "$profile" ] || { say "stage=firefox result=skipped reason=no_profile"; return; }
+  if [ -e "$profile/chrome" ] || [ -e "$profile/user.js" ]; then say "stage=firefox result=kept profile=$profile"; return; fi
+  grep '^user_pref' "$work/fluent/src/firefox/configuration/user.js" > "$prefs"
+  printf 'user_pref("%s", %s);\n' widget.use-xdg-desktop-portal.file-picker 1 ui.systemUsesDarkTheme 1 >> "$prefs"
+  track "$profile/chrome"
+  cp -r "$work/fluent/src/firefox/chrome" "$profile/chrome"
+  track "$profile/user.js"
+  cp "$prefs" "$profile/user.js"
+  say "stage=firefox result=themed profile=$profile"
+}
+
 extra_packages() {
   case $1:$2 in
     papirus:dnf) echo papirus-icon-theme papirus-icon-theme-dark ;;
     papirus:*) echo papirus-icon-theme ;;
     kvantum:apt) echo qt6-style-kvantum ;;
-    breeze-gtk:apt) echo breeze-gtk-theme ;;
-    breeze-gtk:dnf) echo breeze-gtk-gtk3 breeze-gtk-gtk4 ;;
     noto:pacman) echo noto-fonts noto-fonts-cjk noto-fonts-emoji ;;
     noto:dnf) echo google-noto-sans-vf-fonts google-noto-sans-cjk-vf-fonts google-noto-color-emoji-fonts ;;
     noto:apt) echo fonts-noto-core fonts-noto-cjk fonts-noto-color-emoji ;;
@@ -443,7 +505,7 @@ recommend_plan() {
   pm=$(manager)
   for name in "${chosen[@]}"; do
     case $name in
-      bibata-ghost) fetched+=("$name") ;;
+      bibata-ghost|fluent-gtk) fetched+=("$name") ;;
       hyprqt6engine) built+=("$name") ;;
       bibata-hyprcursor) converted+=("$name")
         hyprcursor_tools || [ "$pm" = unknown ] || read -ra tools <<< "$(extra_packages hyprcursor-tools "$pm")" ;;
@@ -459,11 +521,15 @@ recommend_plan() {
   return 0
 }
 
+picked() { [[ " ${chosen[*]} " == *" $1 "* ]]; }
+
 recommend_apply() {
   [ ${#chosen[@]} -gt 0 ] || return 1
   local pm name missing=()
   pm=$(manager)
-  [ ${#fetched[@]} = 0 ] || fetch_cursor
+  picked bibata-ghost && fetch_cursor
+  if picked fluent-gtk || picked firefox; then fetch_theme; fi
+  picked fluent-gtk && build_theme
   if [ ${#built[@]} -gt 0 ] && ! build_engine; then
     say "stage=qtengine result=fallback reason=$engine_reason packages=\"qt6ct kvantum\""
     built=()
@@ -472,7 +538,9 @@ recommend_apply() {
   if [ ${#pkgs[@]} -gt 0 ]; then
     install_packages "$pm" "${pkgs[@]}" || refuse "recommended_install_failed manager=$pm packages=\"${pkgs[*]}\""
   fi
-  [ ${#fetched[@]} = 0 ] || { track "${XDG_DATA_HOME:-$HOME/.local/share}/icons/$cursor_name"; swap_dir "$work/cursor/$cursor_name" "${XDG_DATA_HOME:-$HOME/.local/share}/icons/$cursor_name"; }
+  picked bibata-ghost && { track "${XDG_DATA_HOME:-$HOME/.local/share}/icons/$cursor_name"; swap_dir "$work/cursor/$cursor_name" "${XDG_DATA_HOME:-$HOME/.local/share}/icons/$cursor_name"; }
+  picked fluent-gtk && { track "$themes/$gtk_name"; swap_dir "$work/gtk/$gtk_name" "$themes/$gtk_name"; }
+  picked firefox && theme_firefox
   [ ${#built[@]} = 0 ] || { track "$lib/qt6"; swap_dir "$work/engine/stage$lib/qt6" "$lib/qt6"; }
   # the tools only make the theme, a distribution without them still gets the xcursor one
   if [ ${#tools[@]} -gt 0 ] && ! install_packages "$pm" "${tools[@]}"; then
@@ -893,7 +961,8 @@ apply_gtk() {
     return
   fi
   local pairs=() set=() kept=() pair key
-  gtk_theme_exists Breeze-Dark && pairs+=("gtk-theme=Breeze-Dark")
+  if gtk_theme_exists "$gtk_name"; then pairs+=("gtk-theme=$gtk_name")
+  elif gtk_theme_exists Breeze-Dark; then pairs+=("gtk-theme=Breeze-Dark"); fi
   pairs+=("color-scheme=prefer-dark" "icon-theme=$icon")
   cursor_exists && pairs+=("cursor-theme=$cursor_name")
   for pair in "${pairs[@]}"; do
