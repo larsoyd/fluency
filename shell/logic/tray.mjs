@@ -89,11 +89,13 @@ export function screen(screens, wanted) {
     return pick?.name ?? ""
 }
 
+// a frame per third of the range and one past full, as the icon theme draws them
 export function volume(level, muted) {
     const percent = Math.round(level * 100)
     if (muted) return glyph("mute")
     if (percent <= 0) return glyph("volume0")
-    return percent < 50 ? glyph("volume1") : glyph("volume2")
+    if (percent > 100) return glyph("volume4")
+    return glyph(percent <= 33 ? "volume1" : percent <= 66 ? "volume2" : "volume3")
 }
 
 export function network(kind) {
@@ -108,11 +110,11 @@ export function clockTop(height, line, margin) {
     return (height - (2 * line + top + bottom)) / 2 + top
 }
 
-const loudest = glyph("volume2")
+const loudest = glyph("volume3")
 
 // the level is drawn over a faint full speaker, as the text icons of the tray do
 export function glyphs({ network: kind, volume: level, muted }) {
     const base = volume(level, muted), sound = { name: "volume", base }
-    if (!muted && base !== loudest) sound.underlay = loudest
+    if (!muted && base !== loudest && base !== glyph("volume4")) sound.underlay = loudest
     return [{ name: "network", base: network(kind) }, sound]
 }
