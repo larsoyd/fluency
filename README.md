@@ -1,10 +1,64 @@
 # Fluency
 
-A desktop shell for Hyprland with elements inspired by the [Fluent design language](https://en.wikipedia.org/wiki/Fluent_Design_System). It includes a taskbar with a Start menu, a system tray, quick settings, toasts, desktop icons, jump lists, title bars with caption buttons, and minimize to the taskbar. It is built with Quickshell and Hyprland's Lua config.
+[![Arch, Debian and Fedora](https://img.shields.io/github/actions/workflow/status/larsoyd/fluency/distros.yml?branch=main&label=Arch%2C%20Debian%2C%20Fedora&logo=githubactions&logoColor=white)](https://github.com/larsoyd/fluency/actions/workflows/distros.yml)
+[![Hyprland 0.56.2](https://img.shields.io/badge/Hyprland-0.56.2-58E1FF?logo=hyprland&logoColor=white)](https://hypr.land)
+[![Quickshell 0.3](https://img.shields.io/badge/Quickshell-0.3-41CD52?logo=qt&logoColor=white)](https://quickshell.org)
+[![Arch Linux](https://img.shields.io/badge/Arch%20Linux-1793D1?logo=arch-linux&logoColor=fff)](#install)
+[![Debian](https://img.shields.io/badge/Debian-A81D33?logo=debian&logoColor=fff)](#install)
+[![Fedora](https://img.shields.io/badge/Fedora-51A2DA?logo=fedora&logoColor=fff)](#install)
+[![QML](https://img.shields.io/badge/QML-41CD52?logo=qt&logoColor=fff)](shell)
+[![Lua](https://img.shields.io/badge/Lua-%232C2D72.svg?logo=lua&logoColor=white)](hypr/fluency)
+[![C++](https://img.shields.io/badge/C++-%2300599C.svg?logo=c%2B%2B&logoColor=white)](plugins)
+[![MIT License](https://img.shields.io/badge/MIT%20License-FFFFFF)](LICENSE)
+
+A desktop shell for Hyprland with elements inspired by the [Fluent design language](https://en.wikipedia.org/wiki/Fluent_Design_System), built with Quickshell and Hyprland's Lua config.
 
 ![Fluency at 1920x1080 with the Start menu open](media/desktop.png)
 
 <sub>Shown with the [Papirus Dark](https://github.com/PapirusDevelopmentTeam/papirus-icon-theme) icons and the Bibata Ghost cursor from [Bibata Translucent](https://github.com/Silicasandwhich/Bibata_Cursor_Translucent).</sub>
+
+Fluency is built for **Hyprland 0.56.2**, the version Arch Linux, Debian sid and Fedora ship. Every push and a weekly run install it on all three with their own packages.
+
+## Features
+
+**Taskbar**
+- Pinned apps and open windows on one row, centred, with a running, active and attention indicator per button
+- Drag to reorder, scroll to cycle a group's windows, middle click to open another
+- Jump lists on right click, with the app's own actions, pin and close
+- A short bounce when a window minimizes or comes back
+
+**Start**
+- Pinned apps in a grid, and every app in an A to Z list
+- Type to search, arrow keys and Enter to launch
+- Pin and unpin from Start or the taskbar, power and sign out menus
+
+**Search**
+- A pane of its own: top apps, recent apps and quick links to your folders
+- Results with a best match and a preview with Open and pin actions, filtered by All, Apps or Folders
+
+**Notifications**
+- Toasts that slide in, with app icon, title and body
+- A notification center from the clock: grouped by app, clear one, a group or all
+- Do not disturb, and a bell in the tray that shows when something waits
+- A calendar card under the notifications that folds away
+
+**Windows and desktops**
+- Task view with live pictures of your windows, centred in rows
+- Desktops strip: switch, add and close desktops. A new desktop stays until you close it
+- Alt + Tab: hold Alt, Tab to move, let go to switch. A quick tap goes back to the last window
+
+**Tray and quick settings**
+- Tray icons with menus, an overflow flyout for the rest
+- Network and volume in one button, quick settings with a volume slider and a mixer per app
+- A volume pill when the volume changes, the clock and date, and show desktop at the far right
+
+**Desktop**
+- Icons for the files on your desktop, with selection, drag, rename, open, cut, copy, paste and trash
+- Context menus for the desktop and for items, a wallpaper of its own
+
+**Windows chrome** (plugins)
+- Title bars with minimize, maximize and close
+- Minimize to the taskbar, so a window comes back from where it went
 
 ## Requirements
 
@@ -12,7 +66,7 @@ A desktop shell for Hyprland with elements inspired by the [Fluent design langua
 - Quickshell 0.3 or newer.
 - For the title bar and minimize plugins: `cmake`, `pkg-config`, a C++23 compiler, and Hyprland's headers for the version that is running.
 - Runtime tools: `wl-clipboard`, `glib2` (`gio`, `gdbus`), `xdg-utils`, `systemd`, `zip`, `unzip`, `curl`, `fontconfig`.
-- The QML modules QtQuick.Shapes and Qt.labs.folderlistmodel. Debian ships them apart from Qt Quick, as `qml6-module-qtquick-shapes` and `qml6-module-qt-labs-folderlistmodel`.
+- The QML modules QtQuick.Shapes, QtQuick.Effects and Qt.labs.folderlistmodel. Debian ships them apart from Qt Quick, as `qml6-module-qtquick-shapes`, `qml6-module-qtquick-effects` and `qml6-module-qt-labs-folderlistmodel`.
 
 The installer checks for all of these. Run it with `--deps` and it installs what is missing through `pacman`, `dnf` or `apt`, using `sudo` or `pkexec`.
 
@@ -42,15 +96,6 @@ The engine gets a dark look, but only when it has no config yet: hyprqt6engine g
 GTK apps follow the same dark look through gsettings: the Breeze Dark theme when it is installed, the dark colour scheme, your icon theme and Bibata Ghost. Only settings you never changed yourself are set, anything you chose stays.
 
 Selawik only covers Latin scripts. A fontconfig file in `~/.config/fontconfig/conf.d/50-fluency.conf` makes Noto Sans, Noto Sans CJK and Noto Color Emoji the fallback for everything else. `--uninstall` removes it.
-
-## Versions
-
-| branch | built for |
-|---|---|
-| `main` | Hyprland 0.56.2, the version Arch Linux ships |
-| `canary` | Hyprland `main`, last built against e826317 on 2026-09-30 |
-
-Install from `main`. `canary` follows Hyprland's development branch and gets fixes for it before a release reaches Arch.
 
 ## Install
 
