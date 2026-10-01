@@ -114,7 +114,7 @@ Item {
             z: chosen ? 1 : 0
             scale: chosen ? 1 : Metrics.taskViewScaleFrom + (1 - Metrics.taskViewScaleFrom) * root.reveal
             zoom: chosen ? root.zoomed : 0
-            live: loader.status === Loader.Ready && (loader.item.ready ?? true)
+            live: loader.status === Loader.Ready && !!loader.item && (loader.item.ready ?? true)
             opacity: chosen ? 1 : root.reveal * (1 - root.zoomed)
             onClicked: root.pick(index)
             onMiddleClicked: root.closeAsked(modelData.address)
