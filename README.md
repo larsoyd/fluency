@@ -1,5 +1,6 @@
 # Fluency canary
 
+[![Canary](https://github.com/larsoyd/fluency/actions/workflows/canary.yml/badge.svg?branch=canary)](https://github.com/larsoyd/fluency/actions/workflows/canary.yml)
 [![Hyprland main](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Flarsoyd%2Ffluency%2Fbadges%2Fcanary.json)](https://github.com/larsoyd/fluency/actions/workflows/canary.yml)
 
 The badge shows the Hyprland `main` commit of the last canary run and the day it ran, green when everything built and red when something failed.
