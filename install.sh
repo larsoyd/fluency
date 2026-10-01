@@ -103,6 +103,9 @@ package() {
     Qt*:pacman) echo qt6-declarative ;;
     Qt*:*) echo qt6-qtdeclarative ;;
     wl-copy:*) echo wl-clipboard ;;
+    notify-send:apt) echo libnotify-bin ;;
+    notify-send:*) echo libnotify ;;
+    flock:*) echo util-linux ;;
     gio:apt|gdbus:apt) echo libglib2.0-bin ;;
     gio:*|gdbus:*) echo glib2 ;;
     xdg-open:*|xdg-settings:*|xdg-mime:*) echo xdg-utils ;;
@@ -153,7 +156,7 @@ qml_module() {
 
 check_deps() {
   local need=(Hyprland hyprctl qs wl-copy gio gdbus xdg-open xdg-settings xdg-mime busctl systemctl zip unzip curl sha256sum fc-cache cmp diff QtQuick.Shapes QtQuick.Effects Qt.labs.folderlistmodel)
-  [ $plugins = 1 ] && need+=(cmake make pkg-config c++)
+  [ $plugins = 1 ] && need+=(cmake make pkg-config c++ notify-send flock)
   local missing=() bin
   for bin in "${need[@]}"; do have "$bin" || missing+=("$bin"); done
   [ $plugins = 1 ] && ! have hyprland.pc && missing+=(hyprland.pc)
@@ -476,16 +479,9 @@ build_plugins() {
   local pc
   pc=$(pkg-config --modversion hyprland 2>/dev/null) || refuse "plugin_headers reason=no_hyprland_pc"
   [ "$pc" = "$hypr_version" ] || refuse "plugin_headers headers=$pc running=$hypr_version"
-  local dir name
-  for dir in "$work/src/plugins"/*/; do
-    name=$(basename "$dir")
-    timeout 120 cmake -S "$dir" -B "$work/build/$name" -DCMAKE_BUILD_TYPE=Release >"$work/build-$name.log" 2>&1 \
-      || { tail -20 "$work/build-$name.log"; refuse "plugin_configure name=$name"; }
-    timeout 900 cmake --build "$work/build/$name" -j"$(nproc)" >>"$work/build-$name.log" 2>&1 \
-      || { tail -20 "$work/build-$name.log"; refuse "plugin_build name=$name"; }
-    cp "$(find "$work/build/$name" -maxdepth 1 -name 'lib*.so' | head -1)" "$work/lib/" || refuse "plugin_output name=$name"
-  done
-  say "stage=plugins result=built files=$(ls "$work/lib" | wc -l)"
+  "$work/src/plugins/fluency-plugins.sh" build "$work/lib" > "$work/build-plugins.log" 2>&1 \
+    || { tail -20 "$work/lib/build.log" 2>/dev/null; tail -5 "$work/build-plugins.log"; refuse "plugin_build"; }
+  say "stage=plugins result=built files=$(ls "$work/lib"/*.so | wc -l)"
 }
 
 icon_theme_exists() {
@@ -671,6 +667,9 @@ apply_plugins() {
     cp "$so" "$lib/.$(basename "$so").new"
     mv -f "$lib/.$(basename "$so").new" "$lib/$(basename "$so")"
   done
+  # the loader rebuilds from these at login when hyprland changed
+  swap_dir "$work/src/plugins" "$lib/plugins"
+  cp "$work/lib/abi" "$lib/.abi.new" && mv -f "$lib/.abi.new" "$lib/abi"
   say "stage=plugins result=installed dir=$lib"
 }
 
@@ -740,6 +739,12 @@ reload() {
   local errors
   errors=$(timeout 5 hyprctl configerrors 2>/dev/null | grep -v '^$' || true)
   [ -z "$errors" ] || say "stage=reload warn=config_errors first=\"$(echo "$errors" | head -1)\""
+  if [ $plugins = 1 ]; then
+    # an older config loaded them itself, this reload unloads those so the loader can load them again
+    timeout 10 hyprctl reload > /dev/null 2>&1
+    if timeout 300 "$lib/plugins/fluency-plugins.sh" load "$lib" > "$work/load.log" 2>&1; then say "stage=plugins result=loaded"
+    else say "stage=plugins warn=not_loaded last=\"$(tail -1 "$work/load.log")\""; fi
+  fi
   if timeout 5 qs ipc -p "$share/shell" call fluency reload >/dev/null 2>&1; then
     say "stage=reload result=ok"
   else

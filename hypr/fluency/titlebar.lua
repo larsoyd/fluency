@@ -4,8 +4,11 @@ local machine = require("fluency.machine")
 
 -- tests point this at a fresh build
 local lib = os.getenv("FLUENCY_PLUGIN_DIR") or (os.getenv("HOME") .. "/.local/lib/fluency")
-hl.plugin.load(lib .. "/libfluencyminimize.so")
-hl.plugin.load(lib .. "/libfluencytitlebar.so")
+
+-- a plugin built for another hyprland refuses to load, so the loader rebuilds it first
+hl.on("hyprland.start", function()
+    hl.exec_cmd("'" .. lib .. "/plugins/fluency-plugins.sh' load '" .. lib .. "'")
+end)
 
 local maximize = [[hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" })]]
 
