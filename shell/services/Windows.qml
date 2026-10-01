@@ -18,6 +18,7 @@ Singleton {
     property var orders: ({})
     property var cleared: []
     property var launched: ({})
+    property var recent: []
     readonly property var windows: ToplevelManager.toplevels.values.map(toplevel => {
         const hypr = toplevel.HyprlandToplevel, ipc = hypr.handle?.lastIpcObject ?? {}
         return {
@@ -30,7 +31,7 @@ Singleton {
             workspace: hypr.handle?.workspace?.name ?? "",
             at: ipc.at ?? [0, 0],
             size: ipc.size ?? [0, 0],
-            focus: ipc.focusHistoryID ?? -1,
+            focus: Hypr.rank(root.recent, "0x" + hypr.address, ipc.focusHistoryID ?? -1),
         }
     })
 
@@ -194,6 +195,8 @@ Singleton {
         target: Hyprland
         function onRawEvent(event) {
             if (event.name === "urgent") root.answer("0x" + event.data)
+            else if (event.name === "activewindowv2") root.recent = Hypr.focused(root.recent, event.data)
+            else if (event.name === "closewindow") root.recent = root.recent.filter(address => address !== "0x" + event.data)
             else if (event.name === "openwindow") {
                 delete root.launched[Hypr.opened(event.data).toLowerCase()]
                 Hyprland.refreshToplevels()

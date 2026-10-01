@@ -78,6 +78,7 @@ PanelWindow {
         onCloseAsked: address => Windows.run({ action: "close", address })
         onDismissed: root.open = false
         onSwitched: id => root.run({ action: "workspace", workspace: id })
-        onCreated: root.run({ action: "workspace", workspace: TaskView.fresh(root.spaces) })
+        onCreated: Desktops.make(root.screen.name)
+        onDeskClosed: id => Desktops.close(id, root.screen.name, body.desktops)
     }
 }

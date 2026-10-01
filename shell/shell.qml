@@ -10,6 +10,8 @@ import qs.surfaces
 ShellRoot {
     // deploys swap the directory and reload over ipc
     settings.watchFiles: false
+    // a singleton is made on first use, the desktops must be back before anyone asks
+    Component.onCompleted: Desktops.apply()
 
     Variants {
         model: Quickshell.screens

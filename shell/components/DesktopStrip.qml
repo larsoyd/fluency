@@ -13,6 +13,7 @@ Item {
 
     signal switched(int id)
     signal created()
+    signal closed(int id)
 
     height: Metrics.taskViewStrip
 
@@ -20,9 +21,12 @@ Item {
         id: tile
         property string name: ""
         property bool pressed: area.pressed
-        property bool hovered: area.containsMouse
+        property bool hovered: hover.hovered
+        property bool closable: false
+        property alias close: close
         default property alias content: face.data
         signal clicked()
+        signal closeClicked()
         width: Metrics.deskTileWidth
         height: Metrics.deskNameHeight + Metrics.deskTileHeight
 
@@ -52,11 +56,40 @@ Item {
             clip: true
         }
 
+        HoverHandler { id: hover }
+
         MouseArea {
             id: area
             anchors.fill: parent
-            hoverEnabled: true
             onClicked: tile.clicked()
+        }
+
+        Rectangle {
+            id: close
+            signal clicked()
+            visible: tile.closable && tile.hovered
+            x: face.width - width - Metrics.notifyInset / 2
+            y: face.y + Metrics.notifyInset / 2
+            width: Metrics.taskViewClose
+            height: Metrics.taskViewClose
+            radius: Metrics.buttonRadius
+            color: shut.containsMouse ? Colors.menuItemPressed : Colors.flyoutTint
+            onClicked: tile.closeClicked()
+
+            Text {
+                anchors.centerIn: parent
+                text: Glyphs.glyph("close")
+                color: Colors.textPrimary
+                font.family: Type.iconFamily
+                font.pixelSize: Type.caption.size
+            }
+
+            MouseArea {
+                id: shut
+                anchors.fill: parent
+                hoverEnabled: true
+                onClicked: close.clicked()
+            }
         }
     }
 
@@ -73,7 +106,10 @@ Item {
                 required property var modelData
                 objectName: `desk:${modelData.id}`
                 name: modelData.name
+                closable: root.desktops.length > 1
+                close.objectName: `deskClose:${modelData.id}`
                 onClicked: root.switched(modelData.id)
+                onCloseClicked: root.closed(modelData.id)
 
                 Image {
                     anchors.fill: parent
