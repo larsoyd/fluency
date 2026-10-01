@@ -22,6 +22,20 @@ Singleton {
         else n.dismiss()
     }
 
+    function invoke(n: var, id: string): void {
+        const action = n.actions.find(a => a.identifier === id)
+        console.log(`[notify] action=invoke app="${n.appName}" id=${id} found=${!!action} resident=${n.resident}`)
+        if (action) action.invoke()
+        else n.dismiss()
+    }
+
+    // a notification that says something new comes back up, like a replaced toast on windows
+    function again(n: var): void {
+        if (dnd || centerOpen || toasts.includes(n)) return
+        toasts = Toast.stack(toasts, n, Metrics.toastsShown)
+        console.log(`[notify] again app="${n.appName}" summary="${n.summary}" shown=${toasts.length}`)
+    }
+
     function dismiss(n: var): void {
         console.log(`[notify] action=dismiss app="${n.appName}"`)
         n.dismiss()
@@ -72,6 +86,8 @@ Singleton {
         keepOnReload: false
         onNotification: n => {
             n.tracked = true
+            n.summaryChanged.connect(() => again(n))
+            n.bodyChanged.connect(() => again(n))
             n.closed.connect(() => {
                 toasts = toasts.filter(t => t !== n)
                 history = Notify.remove(history, n)

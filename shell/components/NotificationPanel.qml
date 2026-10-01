@@ -19,6 +19,7 @@ Item {
 
     signal activated(var n)
     signal dismissed(var n)
+    signal invoked(var n, string id)
     signal cleared()
     signal clearedApp(string app)
     signal dndToggled()
@@ -196,6 +197,7 @@ Item {
                         Toast {
                             required property var modelData
                             readonly property var words: Words.text(modelData)
+                            readonly property var bar: Words.progress(modelData)
                             objectName: `card:${modelData.id}`
                             width: parent.width
                             card: true
@@ -203,8 +205,13 @@ Item {
                             icon: root.iconOf(modelData)
                             title: words.title
                             body: words.body
+                            progress: bar ? bar.value : -1
+                            status: bar ? bar.status : ""
+                            valueText: bar ? bar.text : ""
+                            buttons: Words.buttons(modelData)
                             onActivated: root.activated(modelData)
                             onDismissed: root.dismissed(modelData)
+                            onInvoked: id => root.invoked(modelData, id)
                         }
                     }
                 }

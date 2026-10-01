@@ -11,6 +11,10 @@ Item {
     property string title: ""
     property string body: ""
     property bool card: false
+    property real progress: -1
+    property string status: ""
+    property string valueText: ""
+    property var buttons: []
     readonly property var fill: Acrylic.fill({
         tint: [Colors.flyoutTint.r, Colors.flyoutTint.g, Colors.flyoutTint.b],
         luminosityOpacity: Colors.flyoutLuminosityOpacity,
@@ -18,9 +22,10 @@ Item {
 
     signal activated()
     signal dismissed()
+    signal invoked(string id)
 
     width: Metrics.toastWidth
-    height: column.height + 2 * Metrics.toastPadding
+    height: column.height + 2 * Metrics.toastPadding + (actions.visible ? Metrics.toastSectionGap + actions.height : 0)
 
     Rectangle {
         objectName: "backdrop"
@@ -96,6 +101,100 @@ Item {
             color: Colors.textSecondary
             font.family: Type.family
             font.pixelSize: Type.body.size
+        }
+
+        // the column's own spacing is part of the gap above the bar
+        Item {
+            objectName: "progress"
+            visible: root.progress >= 0
+            width: parent.width
+            height: Metrics.toastSectionGap - column.spacing + Metrics.toastProgressHeight + 4 + statusText.height
+
+            Rectangle {
+                objectName: "track"
+                y: Metrics.toastSectionGap - column.spacing + (Metrics.toastProgressHeight - height) / 2
+                width: parent.width
+                height: Metrics.toastProgressTrack
+                color: Colors.toastProgressTrack
+            }
+
+            Rectangle {
+                objectName: "fill"
+                y: Metrics.toastSectionGap - column.spacing
+                width: parent.width * Math.min(1, Math.max(0, root.progress))
+                height: Metrics.toastProgressHeight
+                radius: height / 2
+                color: Colors.toastProgressFill
+            }
+
+            Text {
+                id: statusText
+                objectName: "status"
+                renderType: Text.NativeRendering
+                y: Metrics.toastSectionGap - column.spacing + Metrics.toastProgressHeight + 4
+                width: parent.width - valueLabel.width - 8
+                text: root.status
+                elide: Text.ElideRight
+                color: Colors.textSecondary
+                font.family: Type.family
+                font.pixelSize: Type.caption.size
+            }
+
+            Text {
+                id: valueLabel
+                objectName: "value"
+                renderType: Text.NativeRendering
+                anchors.right: parent.right
+                y: statusText.y
+                text: root.valueText
+                color: Colors.textSecondary
+                font.family: Type.family
+                font.pixelSize: Type.caption.size
+            }
+        }
+    }
+
+    Row {
+        id: actions
+        objectName: "buttons"
+        visible: root.buttons.length > 0
+        x: Metrics.toastPadding
+        y: column.y + column.height + Metrics.toastSectionGap
+        width: root.width - 2 * Metrics.toastPadding
+        spacing: Metrics.toastButtonGap
+
+        Repeater {
+            model: root.buttons
+
+            Rectangle {
+                required property var modelData
+                objectName: "button:" + modelData.id
+                width: (actions.width - actions.spacing * (root.buttons.length - 1)) / root.buttons.length
+                height: Metrics.toastButtonHeight
+                radius: Metrics.controlRadius
+                color: press.pressed ? Colors.controlFillPressed : press.containsMouse ? Colors.controlFillHover : Colors.controlFill
+                border.width: 1
+                border.color: Colors.controlStroke
+
+                Text {
+                    objectName: "label"
+                    renderType: Text.NativeRendering
+                    anchors.centerIn: parent
+                    width: Math.min(implicitWidth, parent.width - 16)
+                    text: parent.modelData.text
+                    elide: Text.ElideRight
+                    color: press.pressed ? Colors.textSecondary : Colors.textPrimary
+                    font.family: Type.family
+                    font.pixelSize: Type.body.size
+                }
+
+                MouseArea {
+                    id: press
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    onClicked: root.invoked(parent.modelData.id)
+                }
+            }
         }
     }
 

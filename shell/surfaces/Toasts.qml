@@ -71,7 +71,7 @@ PanelWindow {
                 required property string key
                 required property int index
                 readonly property var entry: root.byKey[key]
-                readonly property var words: Logic.text(entry.n)
+                property var view: Logic.view(entry.n, name => Quickshell.iconPath(name, "application-x-executable"))
                 property real slide: 1
                 property alias sliding: sliding
                 objectName: "toast:" + index
@@ -80,7 +80,9 @@ PanelWindow {
 
                 Component.onCompleted: slide = 0
                 // set before the slide starts, a binding on leaving could still hold the way in
+                // the closed notification is destroyed while it slides out, so the toast keeps what it shows
                 onEntryChanged: if (entry?.leaving) {
+                    view = view
                     sliding.duration = Motion.calmed(Motion.toastOut)
                     slide = 1
                 }
@@ -99,16 +101,29 @@ PanelWindow {
                     objectName: "card"
                     x: slot.slide * (Metrics.toastWidth + Metrics.toastGap)
                     opacity: slot.entry?.leaving ? 1 - slot.slide : 1
-                    app: slot.words.app
-                    icon: Logic.source(slot.entry.n, name => Quickshell.iconPath(name, "application-x-executable"))
-                    title: slot.words.title
-                    body: slot.words.body
+                    app: slot.view.app
+                    icon: slot.view.icon
+                    title: slot.view.title
+                    body: slot.view.body
+                    progress: slot.view.bar ? slot.view.bar.value : -1
+                    status: slot.view.bar ? slot.view.bar.status : ""
+                    valueText: slot.view.bar ? slot.view.bar.text : ""
+                    buttons: slot.view.buttons
                     enabled: !slot.entry?.leaving
                     onActivated: Notifications.activate(slot.entry.n)
                     onDismissed: Notifications.dismiss(slot.entry.n)
+                    onInvoked: id => Notifications.invoke(slot.entry.n, id)
+                }
+
+                // new words on a shown toast are a new message, a new value on its bar is not
+                Connections {
+                    target: slot.entry.n
+                    function onSummaryChanged() { shown.restart() }
+                    function onBodyChanged() { shown.restart() }
                 }
 
                 Timer {
+                    id: shown
                     running: !slot.entry?.leaving
                     interval: Logic.shown(slot.entry.n.expireTimeout, Motion.toastShown)
                     onTriggered: Notifications.expire(slot.entry.n)

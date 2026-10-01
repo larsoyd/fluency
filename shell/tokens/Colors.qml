@@ -26,6 +26,8 @@ QtObject {
     readonly property color indicatorAttention: "#FF99A4"
     readonly property color progressFill: "#8BFFFFFF"
     readonly property color progressTrack: "#0BFFFFFF"
+    readonly property color toastProgressFill: accentLight2
+    readonly property color toastProgressTrack: "#8BFFFFFF"
     readonly property color badgeFill: accentLight2
     readonly property color badgeText: "#FFFFFF"
 
