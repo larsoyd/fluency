@@ -48,7 +48,7 @@ for arg in "$@"; do
 done
 
 work=$(mktemp -d)
-chosen=()
+chosen=() pkgs=() tools=() fetched=() built=() converted=()
 trap 'rm -rf "$work"' EXIT
 stamp=$(date +%Y%m%d-%H%M%S)
 
@@ -435,35 +435,30 @@ recommend_plan() {
       [ ${#chosen[@]} -gt 0 ] || { say "stage=recommend result=declined missing=\"${missing[*]}\""; return; }
       ;;
   esac
-  local pm kept=() packaged=()
+  local pm kept=() skipped=()
   pm=$(manager)
   for name in "${chosen[@]}"; do
     case $name in
-      bibata-ghost|hyprqt6engine|bibata-hyprcursor) kept+=("$name") ;;
-      *) if [ "$pm" = unknown ]; then packaged+=("$name"); else kept+=("$name"); fi ;;
+      bibata-ghost) fetched+=("$name") ;;
+      hyprqt6engine) built+=("$name") ;;
+      bibata-hyprcursor) converted+=("$name")
+        hyprcursor_tools || [ "$pm" = unknown ] || read -ra tools <<< "$(extra_packages hyprcursor-tools "$pm")" ;;
+      *) if [ "$pm" = unknown ]; then skipped+=("$name"); continue; fi
+        read -ra answer <<< "$(extra_packages "$name" "$pm")"
+        pkgs+=("${answer[@]}") ;;
     esac
+    kept+=("$name")
   done
-  [ ${#packaged[@]} = 0 ] || say "stage=recommend result=skipped reason=no_package_manager names=\"${packaged[*]}\""
+  [ ${#skipped[@]} = 0 ] || say "stage=recommend result=skipped reason=no_package_manager names=\"${skipped[*]}\""
   chosen=("${kept[@]}")
-  [ $dry = 1 ] && [ ${#chosen[@]} -gt 0 ] && say "stage=recommend result=dry_run would_add=\"${chosen[*]}\""
+  [ $dry = 1 ] && say "stage=recommend result=dry_run would_install=\"${pkgs[*]}\" would_fetch=\"${fetched[*]}\" would_build=\"${built[*]}\" would_convert=\"${converted[*]}\" would_tools=\"${tools[*]}\""
   return 0
 }
 
 recommend_apply() {
   [ ${#chosen[@]} -gt 0 ] || return 1
-  local pm pkgs=() tools=() fetched=() built=() converted=() name answer missing=()
+  local pm name missing=()
   pm=$(manager)
-  for name in "${chosen[@]}"; do
-    case $name in
-      bibata-ghost) fetched+=("$name"); continue ;;
-      hyprqt6engine) built+=("$name"); continue ;;
-      bibata-hyprcursor) converted+=("$name")
-        hyprcursor_tools || [ "$pm" = unknown ] || read -ra tools <<< "$(extra_packages hyprcursor-tools "$pm")"
-        continue ;;
-    esac
-    read -ra answer <<< "$(extra_packages "$name" "$pm")"
-    pkgs+=("${answer[@]}")
-  done
   [ ${#fetched[@]} = 0 ] || fetch_cursor
   if [ ${#built[@]} -gt 0 ] && ! build_engine; then
     say "stage=qtengine result=fallback reason=$engine_reason packages=\"qt6ct kvantum\""
@@ -722,6 +717,7 @@ write_machine() {
 }
 
 build_shell() {
+  rm -rf "$work/share"
   mkdir -p "$work/share"
   cp -r "$work/src/shell" "$work/share/shell"
   echo "$revision" > "$work/share/REVISION"
