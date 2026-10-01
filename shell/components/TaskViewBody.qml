@@ -87,7 +87,6 @@ Item {
         visible: !root.items.length
         anchors.centerIn: parent
         anchors.verticalCenterOffset: -Metrics.taskViewStrip / 2
-        opacity: root.reveal
         renderType: Text.NativeRendering
         text: "No open windows"
         color: Colors.textSecondary
@@ -115,7 +114,7 @@ Item {
             scale: chosen ? 1 : Metrics.taskViewScaleFrom + (1 - Metrics.taskViewScaleFrom) * root.reveal
             zoom: chosen ? root.zoomed : 0
             live: loader.status === Loader.Ready && !!loader.item && (loader.item.ready ?? true)
-            opacity: chosen ? 1 : root.reveal * (1 - root.zoomed)
+            opacity: chosen ? 1 : 1 - root.zoomed
             onClicked: root.pick(index)
             onMiddleClicked: root.closeAsked(modelData.address)
             onCloseClicked: root.closeAsked(modelData.address)
@@ -137,7 +136,7 @@ Item {
         objectName: "strip"
         y: root.height - height + Metrics.taskViewRise * (1 - root.reveal)
         width: root.width
-        opacity: root.reveal * (1 - root.zoomed)
+        opacity: 1 - root.zoomed
         desktops: root.desktops
         wallpaper: root.wallpaper
         onSwitched: id => root.switched(id)

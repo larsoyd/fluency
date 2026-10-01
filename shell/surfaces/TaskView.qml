@@ -34,6 +34,8 @@ PanelWindow {
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "fluency-taskview"
     WlrLayershell.keyboardFocus: open ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+    // the compositor fades the whole surface so the blur under it fades too
+    HyprlandWindow.opacity: body.reveal
 
     // hyprland reports sizes and focus order only when asked
     onOpenChanged: {
@@ -49,7 +51,6 @@ PanelWindow {
         objectName: "dim"
         anchors.fill: parent
         color: Colors.taskViewDim
-        opacity: body.reveal
     }
 
     TaskViewBody {
