@@ -4,6 +4,7 @@ local surfaces = {
     { name = "fluency-toast", ignore_alpha = 0.5, no_anim = true },
     { name = "fluency-menu", ignore_alpha = 0.5, no_anim = true },
     { name = "fluency-start", ignore_alpha = 0.5, no_anim = true },
+    { name = "fluency-search", ignore_alpha = 0.5, no_anim = true },
     { name = "fluency-osd", ignore_alpha = 0.5, no_anim = true },
     { name = "fluency-quick", ignore_alpha = 0.5, no_anim = true },
     { name = "fluency-jump", ignore_alpha = 0.5, no_anim = true },

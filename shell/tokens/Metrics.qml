@@ -151,6 +151,39 @@ QtObject {
     readonly property int startMoreTextGap: 10
     readonly property int startMoreGlyph: 10
 
+    // search pane measured from a capture at scale 0.895
+    readonly property int searchWidth: 760
+    readonly property int searchHeight: 550
+    readonly property int searchInset: 24
+    readonly property int searchTop: 32
+    readonly property int searchBox: 36
+    readonly property int searchBoxIconX: 14
+    readonly property int searchBoxTextX: 40
+    readonly property int searchUnderline: 2
+    readonly property int searchTabsY: 88
+    readonly property int searchTabHeight: 32
+    readonly property int searchTabGap: 20
+    readonly property int searchPillWidth: 16
+    readonly property int searchPillHeight: 3
+    readonly property int searchHeaderY: 146
+    readonly property int searchTilesY: 180
+    readonly property int searchTile: 90
+    readonly property int searchTileGap: 8
+    readonly property int searchTiles: 5
+    readonly property int searchTileIconY: 16
+    readonly property int searchTileTextY: 56
+    readonly property int searchListsY: 292
+    readonly property int searchRow: 50
+    readonly property int searchRows: 4
+    readonly property int searchRowIconX: 12
+    readonly property int searchRowTextX: 48
+    readonly property int searchResultsY: 136
+    readonly property int searchBest: 64
+    readonly property int searchResult: 40
+    readonly property int searchSection: 14
+    readonly property int searchPreviewIcon: 64
+    readonly property int searchPreviewPad: 16
+
     // measured at 150% from the capture of build 22533 in the announcement
     readonly property int osdWidth: 170
     readonly property int osdHeight: 45

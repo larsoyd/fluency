@@ -31,6 +31,9 @@ QtObject {
     readonly property int startOpen: 217
     readonly property int startClose: 150
     readonly property var curveStartClose: [0.9, 0.1, 1, 0.2]
+    // the real capture settles in 4 to 5 frames at 30 fps, the render in 194 ms, close as start
+    readonly property int searchOpen: 167
+    readonly property int searchClose: 150
     readonly property int menuOpen: 250
     readonly property int menuFade: 83
     // direct exit of the fluent motion table, a blur cannot fade so the menu folds instead
@@ -62,5 +65,5 @@ QtObject {
     ]
 
     // measured from 30 or 50 fps captures or guessed, replace when a 120 fps capture exists
-    readonly property var provisional: ["indicatorResize", "curveIndicator", "flyoutOpen", "flyoutClose", "reflow", "iconMinimize", "iconRestore", "toastShown", "toastIn", "toastOut", "startOpen", "startClose", "curveStartClose", "osdShown", "pageSlide"]
+    readonly property var provisional: ["indicatorResize", "curveIndicator", "flyoutOpen", "flyoutClose", "reflow", "iconMinimize", "iconRestore", "toastShown", "toastIn", "toastOut", "startOpen", "startClose", "curveStartClose", "osdShown", "pageSlide", "searchOpen", "searchClose"]
 }
