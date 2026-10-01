@@ -212,6 +212,9 @@ QtObject {
     readonly property int deskTileHeight: 108
     readonly property int deskGap: 16
     readonly property int deskNameHeight: 28
+    readonly property int switcherThumb: 180
+    readonly property int switcherPad: 16
+    readonly property int switcherEdge: 64
 
     // measured at 150% from the capture of build 22533 in the announcement
     readonly property int osdWidth: 170

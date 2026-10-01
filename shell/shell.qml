@@ -54,6 +54,11 @@ ShellRoot {
         quiet: bars.instances.some(bar => bar.quick.open)
     }
 
+    Switcher {
+        id: switcher
+        screen: Quickshell.screens.find(screen => screen.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0]
+    }
+
     // the installer swaps the directory and reloads without a restart
     IpcHandler {
         target: "fluency"

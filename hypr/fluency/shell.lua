@@ -13,6 +13,7 @@ local surfaces = {
     { name = "fluency-notify", ignore_alpha = 0.02, no_anim = true },
     -- the dim fades in, a low threshold blurs the desktop behind it from the first frame
     { name = "fluency-taskview", ignore_alpha = 0.02, no_anim = true },
+    { name = "fluency-switch", ignore_alpha = 0.02, no_anim = true },
 }
 
 for _, surface in ipairs(surfaces) do

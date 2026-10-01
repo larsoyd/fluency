@@ -62,12 +62,15 @@ export function nearest(rects, from, dir) {
 }
 
 // the window in front first, a window hyprland has not ranked yet last
-export function items(windows, monitor, workspace) {
+export function byFocus(windows) {
     const rank = win => win.focus >= 0 ? win.focus : Infinity
     return windows.map((win, index) => ({ win, index }))
-        .filter(({ win }) => win.monitor === monitor && (win.workspace === workspace || win.workspace === place(monitor)))
         .sort((a, b) => rank(a.win) - rank(b.win) || a.index - b.index)
         .map(({ win }) => win)
+}
+
+export function items(windows, monitor, workspace) {
+    return byFocus(windows.filter(win => win.monitor === monitor && (win.workspace === workspace || win.workspace === place(monitor))))
 }
 
 export function desktops(workspaces, monitor, active) {
