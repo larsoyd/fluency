@@ -9,19 +9,26 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  issues: write
+  contents: read
+
+concurrency:
+  group: canary
+  cancel-in-progress: false
 
 jobs:
+  # unpinned hyprland main builds here, so this job holds no token that can write
   hyprland-main:
     runs-on: ubuntu-latest
     timeout-minutes: 90
+    permissions:
+      contents: read
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           ref: canary
           path: fluency
-      - uses: cachix/install-nix-action@v31
+          persist-credentials: false
+      - uses: cachix/install-nix-action@13d8dd58da0234aa297dedd986986ccb8e7f3e24 # v31
         with:
           extra_nix_config: |
             extra-substituters = https://hyprland.cachix.org
@@ -32,9 +39,32 @@ jobs:
         run: |
           timeout 4800 nix develop ./fluency/ci/canary --no-write-lock-file -c fluency/ci/canary.sh fluency 2>&1 | tee canary.log
           exit "${PIPESTATUS[0]}"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: canary
+          path: |
+            canary.log
+            canary.json
+          if-no-files-found: ignore
+          retention-days: 14
+
+  # writes the badge and the issue from the files the build left, it runs none of their code
+  publish:
+    needs: hyprland-main
+    if: always() && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+      issues: write
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: canary
+        continue-on-error: true
       # the readme badge reads this file, one commit on a branch of its own replaced each run
       - name: badge
-        if: always() && github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -45,11 +75,15 @@ jobs:
           git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" badges
           echo "[badge] result=ok $(cat canary.json)"
       - name: report
-        if: failure() && github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
+          BUILD: ${{ needs.hyprland-main.result }}
         run: |
-          body=$(grep -E '^\[canary\]|error:' canary.log | head -40)
-          open=$(gh issue list -R "${{ github.repository }}" --state open --search "canary failed in:title" --json number --jq '.[0].number // empty')
-          if [ -n "$open" ]; then gh issue comment "$open" -R "${{ github.repository }}" --body "$body"
-          else gh issue create -R "${{ github.repository }}" --title "canary failed on hyprland main $(date +%F)" --body "$body"; fi
+          open=$(gh issue list -R "${{ github.repository }}" --state open --search '"canary failed" in:title' --json number --jq '.[0].number // empty')
+          if [ "$BUILD" = success ]; then
+            [ -z "$open" ] || gh issue close "$open" -R "${{ github.repository }}" --comment "Green again on $(date +%F)."
+            exit 0
+          fi
+          body=$(grep -E '^\[canary\]|error:' canary.log 2>/dev/null | head -40)
+          if [ -n "$open" ]; then gh issue comment "$open" -R "${{ github.repository }}" --body "${body:-the build left no log, result $BUILD}"
+          else gh issue create -R "${{ github.repository }}" --title "canary failed on hyprland main $(date +%F)" --body "${body:-the build left no log, result $BUILD}"; fi
