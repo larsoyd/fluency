@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
   issues: write
 
 jobs:
@@ -27,9 +27,23 @@ jobs:
             extra-substituters = https://hyprland.cachix.org
             extra-trusted-public-keys = hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc=
       - name: plugins and config against hyprland main
+        env:
+          CANARY_BADGE: ${{ github.workspace }}/canary.json
         run: |
           timeout 4800 nix develop ./fluency/ci/canary --no-write-lock-file -c fluency/ci/canary.sh fluency 2>&1 | tee canary.log
           exit "${PIPESTATUS[0]}"
+      # the readme badge reads this file, one commit on a branch of its own replaced each run
+      - name: badge
+        if: always() && github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          [ -f canary.json ] || { echo "[badge] result=skipped reason=no_badge_file"; exit 0; }
+          mkdir badge && mv canary.json badge/ && cd badge
+          git init -q -b badges && git add canary.json
+          git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -q -m "Badge of the last canary run"
+          git push -q -f "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" badges
+          echo "[badge] result=ok $(cat canary.json)"
       - name: report
         if: failure() && github.event_name != 'pull_request'
         env:
