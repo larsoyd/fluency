@@ -102,6 +102,7 @@ QtObject {
     readonly property int toastPadding: 16
     readonly property int toastGap: 12
     readonly property int toastsShown: 3
+    readonly property int notifyKept: 50
     readonly property int toastCloseSize: 32
 
     readonly property int startCellWidth: 96
