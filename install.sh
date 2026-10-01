@@ -239,7 +239,7 @@ recommended() {
   has_entry kitty || echo kitty
   [ -n "$(file_manager)" ] || echo dolphin
   cursor_exists || echo bibata-ghost
-  hyprcursor_exists || ! hyprcursor_tools || echo bibata-hyprcursor
+  hyprcursor_exists || echo bibata-hyprcursor
   qt_engine_exists || echo hyprqt6engine
   gtk_theme_exists || echo breeze-gtk
   has_noto || echo noto
@@ -307,6 +307,8 @@ extra_packages() {
     noto:pacman) echo noto-fonts noto-fonts-cjk noto-fonts-emoji ;;
     noto:dnf) echo google-noto-sans-vf-fonts google-noto-sans-cjk-vf-fonts google-noto-color-emoji-fonts ;;
     noto:apt) echo fonts-noto-core fonts-noto-cjk fonts-noto-color-emoji ;;
+    hyprcursor-tools:apt) echo hyprcursor-util xcur2png ;;
+    hyprcursor-tools:*) echo hyprcursor xcur2png ;;
     *) echo "$1" ;;
   esac
 }
@@ -352,19 +354,20 @@ recommend() {
       [ ${#chosen[@]} -gt 0 ] || { say "stage=recommend result=declined missing=\"${missing[*]}\""; return; }
       ;;
   esac
-  hyprcursor_exists || hyprcursor_tools || say "stage=hyprcursor result=skipped reason=$hc_reason"
-  local pm pkgs=() fetched=() built=() converted=()
+  local pm pkgs=() tools=() fetched=() built=() converted=()
   pm=$(manager)
   for name in "${chosen[@]}"; do
     case $name in
       bibata-ghost) fetched+=("$name"); continue ;;
       hyprqt6engine) built+=("$name"); continue ;;
-      bibata-hyprcursor) converted+=("$name"); continue ;;
+      bibata-hyprcursor) converted+=("$name")
+        hyprcursor_tools || read -ra tools <<< "$(extra_packages hyprcursor-tools "$pm")"
+        continue ;;
     esac
     read -ra answer <<< "$(extra_packages "$name" "$pm")"
     pkgs+=("${answer[@]}")
   done
-  [ $dry = 1 ] && { say "stage=recommend result=dry_run would_install=\"${pkgs[*]}\" would_fetch=\"${fetched[*]}\" would_build=\"${built[*]}\" would_convert=\"${converted[*]}\""; return; }
+  [ $dry = 1 ] && { say "stage=recommend result=dry_run would_install=\"${pkgs[*]}\" would_fetch=\"${fetched[*]}\" would_build=\"${built[*]}\" would_convert=\"${converted[*]}\" would_tools=\"${tools[*]}\""; return; }
   [ ${#fetched[@]} = 0 ] || fetch_cursor
   if [ ${#built[@]} -gt 0 ] && ! build_engine; then
     say "stage=qtengine result=fallback reason=$engine_reason packages=\"qt6ct kvantum\""
@@ -376,6 +379,11 @@ recommend() {
   fi
   [ ${#fetched[@]} = 0 ] || swap_dir "$work/cursor/$cursor_name" "${XDG_DATA_HOME:-$HOME/.local/share}/icons/$cursor_name"
   [ ${#built[@]} = 0 ] || swap_dir "$work/engine/stage$lib/qt6" "$lib/qt6"
+  # the tools only make the theme, a distribution without them still gets the xcursor one
+  if [ ${#tools[@]} -gt 0 ] && ! install_packages "$pm" "${tools[@]}"; then
+    say "stage=hyprcursor result=skipped reason=tools_install_failed packages=\"${tools[*]}\""
+    converted=()
+  fi
   if [ ${#converted[@]} -gt 0 ]; then
     if convert_cursor "$work/hyprcursor"; then
       swap_dir "$work/hyprcursor" "${XDG_DATA_HOME:-$HOME/.local/share}/icons/$hyprcursor_name"
