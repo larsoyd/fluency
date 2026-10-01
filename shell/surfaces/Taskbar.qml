@@ -20,11 +20,12 @@ PanelWindow {
     property alias start: start
     property alias search: search
     property alias notify: notify
+    property alias taskview: taskview
     property alias quick: quick
     property alias jump: jump
     readonly property var icons: Tray.split(TrayHost.items)
     readonly property var lines: Pictures.lines(Clock.now, Clock.pictures)
-    readonly property var flyouts: ({ start, search, notify, quick })
+    readonly property var flyouts: ({ start, search, taskview, notify, quick })
     readonly property var events: ({ "fluency-start": "start", "fluency-search": "search", "fluency-taskview": "taskview", "fluency-notify": "notify" })
 
     function states() {
@@ -110,6 +111,11 @@ PanelWindow {
 
     NotificationCenter {
         id: notify
+        screen: root.screen
+    }
+
+    TaskView {
+        id: taskview
         screen: root.screen
     }
 

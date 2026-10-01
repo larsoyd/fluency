@@ -11,6 +11,8 @@ local surfaces = {
     -- the menu fades out whole, a low threshold keeps its blur until the last frame
     { name = "fluency-context", ignore_alpha = 0.02, no_anim = true },
     { name = "fluency-notify", ignore_alpha = 0.02, no_anim = true },
+    -- the dim fades in, a low threshold blurs the desktop behind it from the first frame
+    { name = "fluency-taskview", ignore_alpha = 0.02, no_anim = true },
 }
 
 for _, surface in ipairs(surfaces) do

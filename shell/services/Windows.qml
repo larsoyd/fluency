@@ -19,7 +19,7 @@ Singleton {
     property var cleared: []
     property var launched: ({})
     readonly property var windows: ToplevelManager.toplevels.values.map(toplevel => {
-        const hypr = toplevel.HyprlandToplevel
+        const hypr = toplevel.HyprlandToplevel, ipc = hypr.handle?.lastIpcObject ?? {}
         return {
             address: "0x" + hypr.address,
             appId: toplevel.appId,
@@ -28,6 +28,9 @@ Singleton {
             urgent: hypr.handle?.urgent ?? false,
             monitor: hypr.handle?.monitor?.name ?? "",
             workspace: hypr.handle?.workspace?.name ?? "",
+            at: ipc.at ?? [0, 0],
+            size: ipc.size ?? [0, 0],
+            focus: ipc.focusHistoryID ?? -1,
         }
     })
 
@@ -115,6 +118,10 @@ Singleton {
         run({ action: "focus", address })
     }
 
+    function toplevel(address: string): var {
+        return ToplevelManager.toplevels.values.find(toplevel => "0x" + toplevel.HyprlandToplevel.address === address) ?? null
+    }
+
     function progress(appId: string): real { return -1 }
     function badge(appId: string): string { return "" }
 
@@ -137,6 +144,8 @@ Singleton {
                 for (const entry of plan.cleared) homes[entry.address] = entry.workspace
                 cleared = plan.cleared
                 for (const line of plan.lines) Hyprland.dispatch(line)
+            } else if (action.action === "workspace") {
+                for (const line of Hypr.workspace(action.workspace)) Hyprland.dispatch(line)
             } else if (!["focus", "minimize", "close"].includes(action.action)) {
                 throw new Error(`refused: unknown action ${action.action}`)
             } else if (!win) {

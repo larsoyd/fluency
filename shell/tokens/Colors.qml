@@ -67,6 +67,8 @@ QtObject {
     readonly property color cardFill: "#0DFFFFFF"
     readonly property color cardStroke: "#19000000"
     readonly property color textOnAccent: "#000000"
+    readonly property color taskViewDim: "#66000000"
+    readonly property color focusStroke: "#FFFFFF"
     readonly property color footerBand: "#09FFFFFF"
     // the explorer list palette, drawn see through over the wallpaper
     readonly property color desktopHoverFill: "#24E5F3FF"
