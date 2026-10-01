@@ -5,6 +5,6 @@ local lib = os.getenv("FLUENCY_PLUGIN_DIR") or (os.getenv("HOME") .. "/.local/li
 -- a nested test session runs its own daemon, an install without plugins has none
 if os.getenv("FLUENCY_NESTED") ~= "1" then
     hl.on("hyprland.start", function()
-        hl.exec_cmd("[ -x '" .. lib .. "/fluency-clipd' ] && FLUENCY_CLIP_IGNORE=" .. table.concat(ignore, ",") .. " exec '" .. lib .. "/fluency-clipd'")
+        hl.exec_cmd("test -x '" .. lib .. "/fluency-clipd' && FLUENCY_CLIP_IGNORE=" .. table.concat(ignore, ",") .. " exec '" .. lib .. "/fluency-clipd'")
     end)
 end
