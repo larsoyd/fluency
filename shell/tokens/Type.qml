@@ -3,7 +3,7 @@ import QtQuick
 import "../logic/fonts.mjs" as Fonts
 
 QtObject {
-    readonly property var families: ["Selawik", "Noto Sans"]
+    readonly property var families: ["Hind", "Noto Sans"]
     readonly property var iconFamilies: ["FluentSystemIcons-Regular"]
     readonly property string family: Fonts.firstAvailable(families, Qt.fontFamilies())
     readonly property string iconFamily: Fonts.firstAvailable(iconFamilies, Qt.fontFamilies())

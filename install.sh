@@ -15,8 +15,12 @@ block=$'\nrequire("fluency")\n'
 
 fluent_url=https://raw.githubusercontent.com/microsoft/fluentui-system-icons/a563cf9166f4f91aa617557ed272612b7f0a2f72/fonts/FluentSystemIcons-Regular.ttf
 fluent_sum=c5dab901c52362ecc94d3a1d2c88a5c060464eb9eb58bb5b0d64d17066af4d7f
-selawik_url=https://github.com/microsoft/Selawik/releases/download/1.01/Selawik_Release.zip
-selawik_sum=3f62c51e05e3b5a1e6241cf92a371f0be2ea1183aa87b30718bbd40832a8d423
+hind_url=https://raw.githubusercontent.com/google/fonts/ae83d01507fdd7827fb654f3760c4906e3f0abe0/ofl/hind
+hind_sums="Light:c31b8b6073b14f89187586fb1fa38710d8adae3429ef41e1a398dacbfe839e51
+Regular:01de158022f53077b52303e46de3b0ab5fb245222a7ffe25a2a57fdd9e969162
+Medium:70f9c1158390d0c93a8bc24b35b4be4b2439653372bbce7381a32c686fb91a98
+SemiBold:1742a1b0aba97b49da1d3ee3af568fa997c59a3cfe73829f7bec293f416d25dd
+Bold:330c54396bc27628c32e69b88654e41065722182c6f33b936a2a46d72c9d6774"
 cursor_url=https://github.com/Silicasandwhich/Bibata_Cursor_Translucent/archive/v1.1.2.tar.gz
 cursor_sum=b0398c478c5968977ea092f64b00ecd49e09f0574e8951acc0a32db3b5132930
 cursor_name=Bibata_Ghost
@@ -230,7 +234,7 @@ qml_module() {
 }
 
 check_deps() {
-  local need=(Hyprland hyprctl qs wl-copy gio gdbus xdg-open xdg-settings xdg-mime busctl systemctl zip unzip curl sha256sum fc-cache cmp diff QtQuick.Shapes QtQuick.Effects Qt.labs.folderlistmodel)
+  local need=(Hyprland hyprctl qs wl-copy gio gdbus xdg-open xdg-settings xdg-mime busctl systemctl zip curl sha256sum fc-cache cmp diff QtQuick.Shapes QtQuick.Effects Qt.labs.folderlistmodel)
   [ $plugins = 1 ] && need+=(cmake make pkg-config c++ notify-send flock wayland-scanner)
   local missing=() bin
   for bin in "${need[@]}"; do have "$bin" || missing+=("$bin"); done
@@ -543,22 +547,24 @@ export_source() {
 
 fetch_fonts() {
   mkdir -p "$work/dl" "$work/fonts"
-  [ $dry = 0 ] || { say "stage=fonts result=dry_run would_fetch=\"$fluent_url $selawik_url\""; return; }
+  [ $dry = 0 ] || { say "stage=fonts result=dry_run would_fetch=\"$fluent_url $hind_url\""; return; }
   timeout 120 curl -fsSL -o "$work/dl/fluent.ttf" "$fluent_url" || refuse "font_download url=$fluent_url"
-  timeout 120 curl -fsSL -o "$work/dl/selawik.zip" "$selawik_url" || refuse "font_download url=$selawik_url"
-  local got
+  local got style sum
   got=$(sha256sum "$work/dl/fluent.ttf" | cut -d' ' -f1)
   [ "$got" = "$fluent_sum" ] || refuse "font_checksum file=FluentSystemIcons-Regular.ttf got=$got want=$fluent_sum"
-  got=$(sha256sum "$work/dl/selawik.zip" | cut -d' ' -f1)
-  [ "$got" = "$selawik_sum" ] || refuse "font_checksum file=Selawik_Release.zip got=$got want=$selawik_sum"
   cp "$work/dl/fluent.ttf" "$work/fonts/FluentSystemIcons-Regular.ttf"
-  timeout 30 unzip -q -j "$work/dl/selawik.zip" '*.ttf' -d "$work/fonts" || refuse "font_unpack file=Selawik_Release.zip"
+  while IFS=: read -r style sum; do
+    timeout 120 curl -fsSL -o "$work/dl/Hind-$style.ttf" "$hind_url/Hind-$style.ttf" || refuse "font_download url=$hind_url/Hind-$style.ttf"
+    got=$(sha256sum "$work/dl/Hind-$style.ttf" | cut -d' ' -f1)
+    [ "$got" = "$sum" ] || refuse "font_checksum file=Hind-$style.ttf got=$got want=$sum"
+    cp "$work/dl/Hind-$style.ttf" "$work/fonts/"
+  done <<< "$hind_sums"
   cat > "$work/fontconf" <<'XML'
 <?xml version="1.0"?>
 <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
 <fontconfig>
   <alias binding="same">
-    <family>Selawik</family>
+    <family>Hind</family>
     <accept>
       <family>Noto Sans</family>
       <family>Noto Sans CJK SC</family>
@@ -799,7 +805,7 @@ build_config() {
   say "stage=verify result=ok"
 }
 
-# selawik covers latin only, noto takes the rest
+# hind covers latin and devanagari, noto takes the rest
 apply_fonts() {
   if same_tree "$work/fonts" "$fonts" && cmp -s "$work/fontconf" "$fontconf"; then say "stage=fonts result=same"; return; fi
   track "$fonts"
