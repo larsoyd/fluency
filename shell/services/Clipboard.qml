@@ -11,6 +11,8 @@ Singleton {
     readonly property bool ready: link.item?.connected ?? false
     property var entries: []
 
+    signal answered(string request, string result)
+
     function send(verb: string, id: int): string {
         if (!ready) return `refused: no clipboard daemon at ${dir}`
         link.item.write(Clip.request(verb, id < 0 ? undefined : id))
@@ -25,8 +27,9 @@ Singleton {
     function clear(): string { return send("clear", -1) }
 
     function take(message) {
-        if (message.entries) entries = message.entries
-        else if (message.refused || !message.result.startsWith("ok")) console.log(`[clipboard] request="${message.request ?? ""}" result="${message.refused ?? message.result}"`)
+        if (message.entries) return entries = message.entries
+        if (message.refused || !message.result.startsWith("ok")) console.log(`[clipboard] request="${message.request ?? ""}" result="${message.refused ?? message.result}"`)
+        if (message.request) answered(message.request, message.result)
     }
 
     // a socket that failed to connect never tries again, so each try gets a new one

@@ -118,6 +118,12 @@ struct Client {
     std::string in;
 };
 
+struct Pending {
+    int         fd;
+    std::string request;
+    int64_t     deadline;
+};
+
 struct Daemon {
     wl_display*                                                     display = nullptr;
     wl_seat*                                                        seat    = nullptr;
@@ -136,6 +142,7 @@ struct Daemon {
     std::string                                                     stamp = std::to_string(now());
     int                                                             server  = -1;
     bool                                                            initial = true;
+    std::vector<Pending>                                            pending;
 };
 
 static Daemon                d;
@@ -205,6 +212,20 @@ static void syncFiles() {
     for (const auto& folder : fs::directory_iterator(d.pins, error))
         if (!pinned.contains(folder.path().filename()))
             fs::remove_all(folder.path(), error);
+}
+
+static void reply(int fd, const std::string& request, const std::string& result) {
+    say("event=request request=\"%s\" result=\"%s\"", request.c_str(), result.c_str());
+    auto it = std::ranges::find(d.clients, fd, &Client::fd);
+    if (it != d.clients.end())
+        sendTo(*it, "{\"type\":\"result\",\"request\":\"" + escape(request) + "\",\"result\":\"" + escape(result) + "\"}\n");
+}
+
+// a paste sent on the answer must find the new selection, so the answer waits for hyprland to show it
+static void confirm(const char* result) {
+    for (const auto& wait : d.pending)
+        reply(wait.fd, wait.request, result);
+    d.pending.clear();
 }
 
 static void changed() {
@@ -359,8 +380,10 @@ static void deviceSelection(void*, ext_data_control_device_v1*, ext_data_control
         return say("event=selection offer=none");
     auto mimes = d.offers[offer];
     d.offers.erase(offer);
-    if (ours(mimes))
+    if (ours(mimes)) {
+        confirm("ok");
         return ext_data_control_offer_v1_destroy(offer);
+    }
     auto window = initial ? std::pair<std::string, std::string>{} : activeWindow();
     if (secret(mimes) || d.ignored.contains(window.first)) {
         say("event=selection result=skipped reason=%s app=%s", secret(mimes) ? "secret" : "ignored_app", window.first.c_str());
@@ -458,8 +481,10 @@ static void readClient(Client& client) {
         auto request = client.in.substr(0, end);
         client.in.erase(0, end + 1);
         auto result = answer(request);
-        say("event=request request=\"%s\" result=\"%s\"", request.c_str(), result.c_str());
-        sendTo(client, "{\"type\":\"result\",\"request\":\"" + escape(request) + "\",\"result\":\"" + escape(result) + "\"}\n");
+        if (result == "ok" && (request.starts_with("select ") || request.starts_with("text ")))
+            d.pending.push_back({client.fd, request, now() + 1000});
+        else
+            reply(client.fd, request, result);
         if (result.starts_with("ok") && request != "list")
             changed();
         else if (request == "list")
@@ -534,18 +559,30 @@ static int ctl(const std::string& socketPath, const std::string& request) {
     send(fd, line.data(), line.size(), MSG_NOSIGNAL);
     std::string in;
     char        buffer[65536];
-    // the first line is the list sent on connect, then the result, then the list asked for
-    const size_t want = request == "list" ? 3 : 2;
-    for (ssize_t got; std::ranges::count(in, '\n') < (long)want && (got = recv(fd, buffer, sizeof buffer, 0)) > 0;)
+    // the list sent on connect comes first, a list asked for comes after its result
+    auto done = [&] {
+        auto at = in.find("\"type\":\"result\"");
+        if (at == std::string::npos)
+            return false;
+        auto list = in.find("\"type\":\"entries\"", at);
+        return request != "list" || (list != std::string::npos && in.find('\n', list) != std::string::npos);
+    };
+    for (ssize_t got; !done() && (got = recv(fd, buffer, sizeof buffer, 0)) > 0;)
         in.append(buffer, got);
     close(fd);
-    auto lines = split(in, '\n');
-    if (lines.size() < want) {
-        std::printf("[clipd] ctl result=fail reason=short_reply lines=%zu\n", lines.size());
+    std::string result, entries;
+    for (const auto& line : split(in, '\n')) {
+        if (line.find("\"type\":\"result\"") != std::string::npos && result.empty())
+            result = line;
+        else if (!result.empty() && line.find("\"type\":\"entries\"") != std::string::npos && entries.empty())
+            entries = line;
+    }
+    if (result.empty() || (request == "list" && entries.empty())) {
+        std::printf("[clipd] ctl result=fail reason=short_reply bytes=%zu\n", in.size());
         return 1;
     }
-    std::printf("%s\n", lines[want - 1].c_str());
-    return lines[1].find("\"result\":\"ok") != std::string::npos ? 0 : 1;
+    std::printf("%s\n", request == "list" ? entries.c_str() : result.c_str());
+    return result.find("\"result\":\"ok") != std::string::npos ? 0 : 1;
 }
 
 static void stop(int) {
@@ -609,7 +646,7 @@ int main(int argc, char** argv) {
                     fds.push_back({read.fd, POLLIN, 0});
         for (const auto& job : d.writes)
             fds.push_back({job.fd, POLLOUT, 0});
-        int  timeout = d.capture || !d.writes.empty() ? 100 : -1;
+        int  timeout = d.capture || !d.writes.empty() || !d.pending.empty() ? 100 : -1;
         int  ready   = poll(fds.data(), fds.size(), timeout);
         if (ready < 0 && errno != EINTR) {
             wl_display_cancel_read(d.display);
@@ -644,6 +681,8 @@ int main(int argc, char** argv) {
         pumpReads(fds);
         if (d.capture && now() - d.capture->started > captureMs)
             finishCapture("timeout");
+        if (!d.pending.empty() && now() > d.pending.front().deadline)
+            confirm("refused: selection not confirmed");
         pumpWrites();
     }
     unlink((d.dir / "control").c_str());

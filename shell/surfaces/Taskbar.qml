@@ -173,12 +173,6 @@ PanelWindow {
     }
 
     HyprlandFocusGrab {
-        windows: [root, clipboard]
-        active: clipboard.open
-        onCleared: clipboard.open = false
-    }
-
-    HyprlandFocusGrab {
         windows: [root, search]
         active: search.open
         onCleared: search.open = false

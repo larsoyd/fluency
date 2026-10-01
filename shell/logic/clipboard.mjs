@@ -58,3 +58,21 @@ export function request(verb, id) {
     if (!verbs.includes(verb)) throw new Error(`refused: unknown clipboard request ${verb}`)
     return id === undefined ? `${verb}\n` : `${verb} ${id}\n`
 }
+
+const terminals = ["kitty", "foot", "footclient", "alacritty", "org.kde.konsole", "org.gnome.terminal", "org.gnome.ptyxis", "com.mitchellh.ghostty", "org.wezfurlong.wezterm", "xterm", "terminator", "tilix"]
+
+function window(address) {
+    if (!/^[0-9a-f]+$/.test(address)) throw new Error(`refused: bad window address ${address}`)
+    return `"address:0x${address}"`
+}
+
+// the window the user copied for gets the keys back, quickshell gives its address without 0x
+export function focus(address) {
+    return `hl.dsp.focus({ window = ${window(address)} })`
+}
+
+// terminals keep ctrl v for themselves and paste on ctrl shift v
+export function paste(address, app) {
+    const mods = terminals.includes(app.toLowerCase()) ? "CTRL SHIFT" : "CTRL"
+    return `hl.dsp.send_shortcut({ mods = "${mods}", key = "V", window = ${window(address)} })`
+}
