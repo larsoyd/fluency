@@ -70,7 +70,7 @@ Fluency is built for the version of **Hyprland** that Arch Linux, Debian sid and
 - Hyprland 0.56 or newer, with a Lua config (`~/.config/hypr/hyprland.lua`). A hyprlang `hyprland.conf` is refused.
 - Quickshell 0.3 or newer.
 - For the title bar and minimize plugins and the clipboard: `cmake`, `pkg-config`, a C++23 compiler, Hyprland's headers for the version that is running, `wayland-scanner`, the Wayland client headers and `wayland-protocols`.
-- Runtime tools: `wl-clipboard`, `glib2` (`gio`, `gdbus`), `xdg-utils`, `systemd`, `zip`, `unzip`, `curl`, `fontconfig`.
+- Runtime tools: `wl-clipboard`, `glib2` (`gio`, `gdbus`), `xdg-utils`, `systemd`, `zip`, `curl`, `fontconfig`.
 - The QML modules QtQuick.Shapes, QtQuick.Effects and Qt.labs.folderlistmodel. Debian ships them apart from Qt Quick, as `qml6-module-qtquick-shapes`, `qml6-module-qtquick-effects` and `qml6-module-qt-labs-folderlistmodel`.
 
 The installer checks for all of these. Run it with `--deps` and it installs what is missing through `pacman`, `dnf` or `apt`, using `sudo` or `pkexec`.
@@ -100,7 +100,7 @@ The engine gets a dark look, but only when it has no config yet: hyprqt6engine g
 
 GTK apps follow the same dark look through gsettings: the Breeze Dark theme when it is installed, the dark colour scheme, your icon theme and Bibata Ghost. Only settings you never changed yourself are set, anything you chose stays.
 
-Selawik only covers Latin scripts. A fontconfig file in `~/.config/fontconfig/conf.d/50-fluency.conf` makes Noto Sans, Noto Sans CJK and Noto Color Emoji the fallback for everything else. `--uninstall` removes it.
+[Hind](https://fonts.google.com/specimen/Hind) covers Latin and Devanagari. A fontconfig file in `~/.config/fontconfig/conf.d/50-fluency.conf` makes Noto Sans, Noto Sans CJK and Noto Color Emoji the fallback for everything else. `--uninstall` removes it.
 
 ## Install
 
@@ -113,7 +113,7 @@ cd fluency
 The installer checks everything first and writes nothing if a check fails, the recommended extras included:
 
 1. Hyprland and Quickshell versions.
-2. Fonts. It downloads Selawik (OFL) and Fluent System Icons (MIT) at pinned versions and checks their SHA-256.
+2. Fonts. It downloads Hind (OFL) from the Google Fonts repository and Fluent System Icons (MIT) at pinned versions and checks their SHA-256.
 3. Plugins. The plugin headers must match the running Hyprland, then it builds both plugins.
 4. Config. It builds your config with Fluency added and runs `Hyprland --verify-config` on it.
 
@@ -192,7 +192,7 @@ These environment variables change the defaults:
 
 ## Licenses
 
-Fluency is under the MIT license, see `LICENSE`. The title bar plugin is based on hyprbars by Vaxry (BSD 3-clause, `plugins/titlebar/LICENSE`). Selawik is under the SIL Open Font License. Fluent System Icons is under the MIT license. Both fonts are downloaded at install time and are not part of this repository. Bibata Translucent is under the GPL 3.0 and hyprqt6engine is under the BSD 3-clause license. Both are only downloaded when you choose them.
+Fluency is under the MIT license, see `LICENSE`. The title bar plugin is based on hyprbars by Vaxry (BSD 3-clause, `plugins/titlebar/LICENSE`). Hind is under the SIL Open Font License. Fluent System Icons is under the MIT license. Both fonts are downloaded at install time and are not part of this repository. Bibata Translucent is under the GPL 3.0 and hyprqt6engine is under the BSD 3-clause license. Both are only downloaded when you choose them.
 
 ## Contribution
 
