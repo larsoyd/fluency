@@ -1,12 +1,12 @@
 local binds = require("fluency.binds")
 
 -- click fires on release unless the pointer moved, a bound combo shadows it
-binds.bind("start", hl.dsp.event("fluency-start"), { click = true })
-binds.bind("sound", hl.dsp.event("fluency-sound"))
-binds.bind("search", hl.dsp.event("fluency-search"))
-binds.bind("taskview", hl.dsp.event("fluency-taskview"))
-binds.bind("notify", hl.dsp.event("fluency-notify"))
-binds.bind("clipboard", hl.dsp.event("fluency-clipboard"))
+binds.bind("start", hl.dsp.global("fluency:start"), { click = true })
+binds.bind("sound", hl.dsp.global("fluency:sound"))
+binds.bind("search", hl.dsp.global("fluency:search"))
+binds.bind("taskview", hl.dsp.global("fluency:taskview"))
+binds.bind("notify", hl.dsp.global("fluency:notify"))
+binds.bind("clipboard", hl.dsp.global("fluency:clipboard"))
 -- the app gets a key between alt down and up, or a lone alt opens its menu bar
 local function switch(event)
     return function()
