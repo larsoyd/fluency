@@ -1,18 +1,17 @@
 # Fluency
 
-**NOTE: At the moment of writing (01.10.2016) Fluency is still in active development without a proper release. Do not run this on production level machines.**
-
 [![Arch, Debian, Fedora](https://github.com/larsoyd/fluency/actions/workflows/distros.yml/badge.svg?branch=main)](https://github.com/larsoyd/fluency/actions/workflows/distros.yml)
 [![Hyprland 0.56.2](https://img.shields.io/badge/Hyprland-0.56.2-58E1FF?logo=hyprland&logoColor=white)](https://hypr.land)
 [![Quickshell 0.3](https://img.shields.io/badge/Quickshell-0.3-41CD52?logo=qt&logoColor=white)](https://quickshell.org)
 
-A desktop shell for Hyprland with elements inspired by the [Fluent design language](https://en.wikipedia.org/wiki/Fluent_Design_System), built with Quickshell and Hyprland's Lua config.
+**NOTE: At the moment of writing (01.10.2016) Fluency is still in active development without a proper release. Do not run this on production level machines.**
+
+A desktop shell for Hyprland with elements inspired by the [Fluent design language](https://en.wikipedia.org/wiki/Fluent_Design_System), built with Quickshell and Hyprland's Lua config. Fluency is built for the version of **Hyprland** that Arch Linux, Debian sid and Fedora ship. It is built for Arch Linux first so Arch should always work with it even if the others don't, however full compatibility with Debian & Fedora is the goal. Every push and a weekly run install it on all three with their own packages. 
+
 
 ![Fluency at 1920x1080 with the Start menu open](media/desktop.png)
 
 <sub>Shown with the [Papirus Dark](https://github.com/PapirusDevelopmentTeam/papirus-icon-theme) icons and the Bibata Ghost cursor from [Bibata Translucent](https://github.com/Silicasandwhich/Bibata_Cursor_Translucent).</sub>
-
-Fluency is built for the version of **Hyprland** that Arch Linux, Debian sid and Fedora ship. It is built for Arch Linux first so Arch should always work with it even if the others don't, however full compatibility with Debian & Fedora is the goal. Every push and a weekly run install it on all three with their own packages. 
 
 ## Features
 
