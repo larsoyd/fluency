@@ -40,6 +40,9 @@ QtObject {
     readonly property int taskViewOpen: 250
     readonly property int taskViewClose: 167
     readonly property int taskViewZoom: 250
+    // a quick alt tab switches before the switcher shows
+    readonly property int switcherDelay: 100
+    readonly property int switcherFade: 83
     readonly property int menuOpen: 250
     readonly property int menuFade: 83
     // direct exit of the fluent motion table, a blur cannot fade so the menu folds instead
@@ -72,5 +75,5 @@ QtObject {
     ]
 
     // measured from 30 or 50 fps captures or guessed, replace when a 120 fps capture exists
-    readonly property var provisional: ["indicatorResize", "curveIndicator", "flyoutOpen", "flyoutClose", "reflow", "iconMinimize", "iconRestore", "toastShown", "toastIn", "toastOut", "startOpen", "startClose", "curveStartClose", "osdShown", "pageSlide", "searchOpen", "searchClose", "calendarFold", "notifyOpen", "notifyClose", "taskViewOpen", "taskViewClose", "taskViewZoom"]
+    readonly property var provisional: ["indicatorResize", "curveIndicator", "flyoutOpen", "flyoutClose", "reflow", "iconMinimize", "iconRestore", "toastShown", "toastIn", "toastOut", "startOpen", "startClose", "curveStartClose", "osdShown", "pageSlide", "searchOpen", "searchClose", "calendarFold", "notifyOpen", "notifyClose", "taskViewOpen", "taskViewClose", "taskViewZoom", "switcherDelay"]
 }
