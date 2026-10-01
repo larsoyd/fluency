@@ -4,7 +4,6 @@
 
 #include <any>
 #include <hyprland/src/Compositor.hpp>
-#include <hyprland/src/desktop/view/Window.hpp>
 #include <hyprland/src/desktop/state/WindowState.hpp>
 #include <hyprland/src/config/ConfigManager.hpp>
 #include <hyprland/src/config/shared/parserUtils/ParserUtils.hpp>
@@ -21,6 +20,7 @@
 
 #include "barDeco.hpp"
 #include "globals.hpp"
+#include "compat.hpp"
 
 extern "C" {
 #include <lua.h>
@@ -33,11 +33,11 @@ APICALL EXPORT std::string PLUGIN_API_VERSION() {
 }
 
 static void onNewWindow(PHLWINDOW window) {
-    if (!window->m_X11DoesntWantBorders) {
-        if (std::ranges::any_of(window->m_windowDecorations, [](const auto& d) { return d->getDisplayName() == "Hyprbar"; }))
+    if (!compat::wantsNoBorder(window)) {
+        if (std::ranges::any_of(compat::decorations(window), [](const auto& d) { return d->getDisplayName() == "Hyprbar"; }))
             return;
 
-        auto bar = makeUnique<CHyprBar>(window);
+        auto bar = compat::makeDecoration<CHyprBar>(window);
         g_pGlobalState->bars.emplace_back(bar);
         bar->m_self = bar;
         HyprlandAPI::addWindowDecoration(PHANDLE, window, std::move(bar));
@@ -64,7 +64,7 @@ static void onUpdateWindowRules(PHLWINDOW window) {
         return;
 
     (*BARIT)->updateRules();
-    window->updateWindowDecos();
+    compat::updateDecorations(window);
 }
 
 int newLuaButton(lua_State* L) {
@@ -256,7 +256,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
 
     // add deco to existing windows
     for (auto& w : Desktop::windowState()->windows()) {
-        if (w->isHidden() || !w->m_isMapped)
+        if (w->isHidden() || !compat::mapped(w))
             continue;
 
         onNewWindow(w);
