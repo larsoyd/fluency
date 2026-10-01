@@ -92,3 +92,9 @@ export function miniature(windows, screen) {
         w: win.size[0] / screen.width, h: win.size[1] / screen.height,
     }))
 }
+
+// windows of a closed desktop go to the one before it, the first gives them to the next
+export function neighbour(desktops, id) {
+    const at = desktops.findIndex(desk => desk.id === id), other = desktops[at > 0 ? at - 1 : at + 1]
+    return other ? other.id : 0
+}

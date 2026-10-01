@@ -28,6 +28,7 @@ Item {
     signal dismissed()
     signal switched(int id)
     signal created()
+    signal deskClosed(int id)
 
     function pick(index) {
         if (!items[index] || zooming >= 0) return
@@ -141,5 +142,6 @@ Item {
         wallpaper: root.wallpaper
         onSwitched: id => root.switched(id)
         onCreated: root.created()
+        onClosed: id => root.deskClosed(id)
     }
 }

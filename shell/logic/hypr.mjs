@@ -76,3 +76,29 @@ export function workspace(id) {
     if (!Number.isInteger(id) || id < 1) throw new Error(`refused: bad workspace ${JSON.stringify(id)}`)
     return [`hl.dsp.focus({ workspace = ${id} })`]
 }
+
+// a workspace hyprland keeps while empty, as a desktop of windows stays until it is closed
+export function rule(id, monitor, keep) {
+    workspace(id)
+    if (!/^[A-Za-z0-9-]+$/.test(monitor ?? "")) throw new Error(`refused: bad monitor ${JSON.stringify(monitor)}`)
+    return `hl.workspace_rule({ workspace = "${id}", monitor = "${monitor}", persistent = ${keep} })`
+}
+
+export function evacuate(windows, id, target) {
+    workspace(target)
+    return windows.filter(win => win.workspace === String(id))
+        .map(win => `hl.dsp.window.move({ window = ${selector(win)}, workspace = "${target}", follow = false })`)
+}
+
+// focus events are newer than hyprland's history, which only moves on a refresh
+export function rank(recent, address, history) {
+    const at = recent.indexOf(address)
+    if (at >= 0) return at
+    return history >= 0 ? recent.length + history : -1
+}
+
+export function focused(recent, hex) {
+    if (!hex) return recent
+    const address = "0x" + hex
+    return [address, ...recent.filter(other => other !== address)]
+}
