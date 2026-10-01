@@ -50,7 +50,7 @@ Item {
 
         Item {
             width: parent.width
-            height: Math.max(16, appName.implicitHeight)
+            height: Type.caption.lineHeight
 
             Image {
                 id: appIcon
@@ -81,6 +81,7 @@ Item {
             objectName: "title"
             renderType: Text.NativeRendering
             width: parent.width
+            height: Type.bodyStrong.lineHeight
             text: root.title
             elide: Text.ElideRight
             color: Colors.textPrimary
@@ -89,18 +90,26 @@ Item {
             font.weight: Type.bodyStrong.weight
         }
 
-        Text {
-            objectName: "body"
-            renderType: Text.NativeRendering
+        Item {
             width: parent.width
-            text: root.body
-            textFormat: Text.PlainText
-            wrapMode: Text.Wrap
-            maximumLineCount: 3
-            elide: Text.ElideRight
-            color: Colors.textSecondary
-            font.family: Type.family
-            font.pixelSize: Type.body.size
+            height: body.lineCount * Type.body.lineHeight
+
+            Text {
+                id: body
+                objectName: "body"
+                renderType: Text.NativeRendering
+                width: parent.width
+                lineHeightMode: Text.FixedHeight
+                lineHeight: Type.body.lineHeight
+                text: root.body
+                textFormat: Text.PlainText
+                wrapMode: Text.Wrap
+                maximumLineCount: 3
+                elide: Text.ElideRight
+                color: Colors.textSecondary
+                font.family: Type.family
+                font.pixelSize: Type.body.size
+            }
         }
 
         // the column's own spacing is part of the gap above the bar
@@ -133,6 +142,7 @@ Item {
                 renderType: Text.NativeRendering
                 y: Metrics.toastSectionGap - column.spacing + Metrics.toastProgressHeight + 4
                 width: parent.width - valueLabel.width - 8
+                height: Type.caption.lineHeight
                 text: root.status
                 elide: Text.ElideRight
                 color: Colors.textSecondary
@@ -146,6 +156,7 @@ Item {
                 renderType: Text.NativeRendering
                 anchors.right: parent.right
                 y: statusText.y
+                height: Type.caption.lineHeight
                 text: root.valueText
                 color: Colors.textSecondary
                 font.family: Type.family
