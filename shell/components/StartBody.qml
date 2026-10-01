@@ -118,16 +118,14 @@ Flickable {
             font.pixelSize: Type.caption.size
         }
 
-        Text {
+        FluentIcon {
             id: moreGlyph
             objectName: "showAllGlyph"
-            renderType: Text.NativeRendering
             x: moreText.x + moreText.implicitWidth + Metrics.startMoreTextGap
             anchors.verticalCenter: parent.verticalCenter
-            text: Glyphs.glyph("more")
+            name: Glyphs.glyph("more")
             color: moreText.color
-            font.family: Type.iconFamily
-            font.pixelSize: Metrics.startMoreGlyph
+            size: Metrics.startMoreGlyph
         }
 
         MouseArea {

@@ -61,16 +61,12 @@ Item {
         font.pixelSize: Type.body.size
     }
 
-    component Glyph: Text {
+    component Glyph: FluentIcon {
         signal clicked()
         width: Metrics.toastCloseSize
         height: Metrics.toastCloseSize
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-        renderType: Text.NativeRendering
         color: Colors.textPrimary
-        font.family: Type.iconFamily
-        font.pixelSize: Type.caption.size
+        size: Type.caption.size
 
         Rectangle {
             anchors.fill: parent
@@ -104,7 +100,7 @@ Item {
             objectName: "fold"
             x: parent.width - width - (Metrics.notifyHeader - height) / 2
             anchors.verticalCenter: parent.verticalCenter
-            text: Glyphs.glyph(root.collapsed ? "up" : "down")
+            name: Glyphs.glyph(root.collapsed ? "up" : "down")
             onClicked: root.collapsed = !root.collapsed
         }
     }
@@ -134,7 +130,7 @@ Item {
             objectName: "previous"
             x: next.x - width
             y: (Metrics.calendarMonthRow - height) / 2
-            text: Glyphs.glyph("up")
+            name: Glyphs.glyph("up")
             onClicked: root.page(-1)
         }
 
@@ -143,7 +139,7 @@ Item {
             objectName: "next"
             x: root.width - root.inset - (Metrics.calendarCell - width) / 2 - width
             y: (Metrics.calendarMonthRow - height) / 2
-            text: Glyphs.glyph("down")
+            name: Glyphs.glyph("down")
             onClicked: root.page(1)
         }
 

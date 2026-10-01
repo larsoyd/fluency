@@ -89,16 +89,13 @@ Item {
         border.width: Metrics.flyoutBorder
         border.color: Colors.startSearchStroke
 
-        Text {
-
-            renderType: Text.NativeRendering
+        FluentIcon {
             objectName: "searchIcon"
             x: Metrics.startSearchIconX
             anchors.verticalCenter: parent.verticalCenter
-            text: Glyphs.glyph("search")
+            name: Glyphs.glyph("search")
             color: Colors.textPrimary
-            font.family: Type.iconFamily
-            font.pixelSize: Metrics.startGlyph
+            size: Metrics.startGlyph
         }
 
         Text {
@@ -170,16 +167,13 @@ Item {
                 visible: picture.status !== Image.Ready
             }
 
-            Text {
-
-                renderType: Text.NativeRendering
+            FluentIcon {
                 objectName: "avatarGlyph"
                 anchors.centerIn: parent
                 visible: picture.status !== Image.Ready
-                text: Glyphs.glyph("user")
+                name: Glyphs.glyph("user")
                 color: Colors.textPrimary
-                font.family: Type.iconFamily
-                font.pixelSize: Metrics.startGlyph
+                size: Metrics.startGlyph
             }
 
             Image {
@@ -232,15 +226,12 @@ Item {
         width: Metrics.startFooterButton
         onClicked: root.powerAsked()
 
-        Text {
-
-            renderType: Text.NativeRendering
+        FluentIcon {
             objectName: "powerGlyph"
             anchors.centerIn: parent
-            text: Glyphs.glyph("power")
+            name: Glyphs.glyph("power")
             color: Colors.textPrimary
-            font.family: Type.iconFamily
-            font.pixelSize: Metrics.startGlyph
+            size: Metrics.startGlyph
         }
     }
 }

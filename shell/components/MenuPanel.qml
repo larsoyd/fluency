@@ -78,30 +78,24 @@ Item {
                     color: !row.modelData.enabled ? "transparent" : area.pressed ? Colors.menuItemPressed : area.containsMouse ? Colors.menuItemHover : "transparent"
                 }
 
-                Text {
-
-                    renderType: Text.NativeRendering
+                FluentIcon {
                     objectName: "mark:" + row.index
                     visible: !row.line && !!row.modelData.checked
                     x: Metrics.menuItemMarginX + Metrics.menuItemPaddingX
                     anchors.verticalCenter: parent.verticalCenter
-                    text: Glyphs.glyph("check")
+                    name: Glyphs.glyph("check")
                     color: row.modelData.enabled ? Colors.textPrimary : Colors.textDisabled
-                    font.family: Type.iconFamily
-                    font.pixelSize: Type.body.size
+                    size: Type.body.size
                 }
 
-                Text {
-
-                    renderType: Text.NativeRendering
+                FluentIcon {
                     objectName: "glyph:" + row.index
                     visible: !row.line && !!row.modelData.glyph
                     x: Metrics.menuItemMarginX + Metrics.menuItemPaddingX
                     anchors.verticalCenter: parent.verticalCenter
-                    text: row.modelData.glyph ?? ""
+                    name: row.modelData.glyph ?? ""
                     color: row.modelData.enabled ? Colors.textPrimary : Colors.textDisabled
-                    font.family: Type.iconFamily
-                    font.pixelSize: Type.body.size
+                    size: Type.body.size
                 }
 
                 Text {
@@ -119,18 +113,15 @@ Item {
                     font.pixelSize: Type.body.size
                 }
 
-                Text {
-
-                    renderType: Text.NativeRendering
+                FluentIcon {
                     objectName: "more:" + row.index
                     visible: !row.line && !!row.modelData.more
                     anchors.right: parent.right
                     anchors.rightMargin: Metrics.menuItemMarginX + Metrics.menuItemPaddingX
                     anchors.verticalCenter: parent.verticalCenter
-                    text: Glyphs.glyph("more")
+                    name: Glyphs.glyph("more")
                     color: Colors.textSecondary
-                    font.family: Type.iconFamily
-                    font.pixelSize: Type.caption.size
+                    size: Type.caption.size
                 }
 
                 MouseArea {

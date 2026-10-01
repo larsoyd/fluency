@@ -36,13 +36,12 @@ Item {
         width: Metrics.trayGlyphSize
         height: Metrics.trayGlyphSize
 
-        Text {
+        FluentIcon {
             objectName: "glyph"
             anchors.centerIn: parent
-            text: Tray.volume(root.level, root.muted)
+            name: Tray.volume(root.level, root.muted)
             color: Colors.textPrimary
-            font.family: Type.iconFamily
-            font.pixelSize: Metrics.trayGlyphSize
+            size: Metrics.trayGlyphSize
         }
     }
 

@@ -85,7 +85,7 @@ Item {
             objectName: "searchIcon"
             x: Metrics.searchBoxIconX
             anchors.verticalCenter: parent.verticalCenter
-            text: Glyphs.glyph("search")
+            name: Glyphs.glyph("search")
         }
 
         Label {
@@ -189,11 +189,9 @@ Item {
         font.weight: Type.bodyStrong.weight
     }
 
-    component Glyph: Text {
-        renderType: Text.NativeRendering
+    component Glyph: FluentIcon {
         color: Colors.textPrimary
-        font.family: Type.iconFamily
-        font.pixelSize: Metrics.startGlyph
+        size: Metrics.startGlyph
     }
 
     // an app draws its icon, a folder its glyph in the same box
@@ -209,8 +207,8 @@ Item {
         }
         Glyph {
             anchors.centerIn: parent
-            text: parent.glyph
-            font.pixelSize: parent.glyphSize
+            name: parent.glyph
+            size: parent.glyphSize
         }
     }
 

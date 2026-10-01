@@ -24,11 +24,10 @@ Rectangle {
     border.width: root.focused ? 2 : 1
     border.color: root.focused ? Colors.focusStroke : Colors.cardStroke
 
-    component Glyph: Text {
+    component Glyph: FluentIcon {
         anchors.centerIn: parent
         color: Colors.textPrimary
-        font.family: Type.iconFamily
-        font.pixelSize: Type.body.size
+        size: Type.body.size
     }
 
     component Button: Item {
@@ -163,12 +162,11 @@ Rectangle {
                     spacing: 4
                     opacity: tile.enabled ? 1 : 0.4
 
-                    Text {
+                    FluentIcon {
                         anchors.horizontalCenter: parent.horizontalCenter
-                        text: tile.modelData.glyph
+                        name: tile.modelData.glyph
                         color: Colors.textPrimary
-                        font.family: Type.iconFamily
-                        font.pixelSize: 20
+                        size: 20
                     }
 
                     Text {
@@ -197,7 +195,7 @@ Rectangle {
         y: 4
         onClicked: root.moreToggled()
 
-        Glyph { text: Glyphs.glyph("moreHorizontal") }
+        Glyph { name: Glyphs.glyph("moreHorizontal") }
     }
 
     Button {
@@ -208,7 +206,7 @@ Rectangle {
 
         Glyph {
             objectName: "pinGlyph"
-            text: Glyphs.glyph("pin")
+            name: Glyphs.glyph("pin")
             color: root.entry.pinned ? Colors.accentLight2 : Colors.textPrimary
         }
     }

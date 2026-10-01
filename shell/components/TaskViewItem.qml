@@ -92,12 +92,11 @@ Item {
             radius: Metrics.buttonRadius
             color: shut.containsMouse ? Colors.menuItemHover : "transparent"
 
-            Text {
+            FluentIcon {
                 anchors.centerIn: parent
-                text: Glyphs.glyph("close")
+                name: Glyphs.glyph("close")
                 color: Colors.textPrimary
-                font.family: Type.iconFamily
-                font.pixelSize: Type.caption.size
+                size: Type.caption.size
             }
 
             MouseArea {

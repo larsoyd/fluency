@@ -131,13 +131,12 @@ FocusScope {
         border.width: 1
         border.color: Colors.startSearchStroke
 
-        Text {
+        FluentIcon {
             x: Metrics.clipPad
             anchors.verticalCenter: parent.verticalCenter
-            text: Glyphs.glyph("search")
+            name: Glyphs.glyph("search")
             color: Colors.textSecondary
-            font.family: Type.iconFamily
-            font.pixelSize: Type.caption.size
+            size: Type.caption.size
         }
 
         Label {

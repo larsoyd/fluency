@@ -50,12 +50,11 @@ Item {
         width: Metrics.quickButton
         height: Metrics.quickButton
 
-        Text {
+        FluentIcon {
             anchors.centerIn: parent
-            text: parent.glyph
+            name: parent.glyph
             color: Colors.textPrimary
-            font.family: Type.iconFamily
-            font.pixelSize: Metrics.trayGlyphSize
+            size: Metrics.trayGlyphSize
         }
     }
 
@@ -203,13 +202,12 @@ Item {
                             color: Colors.accentLight2
                         }
 
-                        Text {
+                        FluentIcon {
                             x: Metrics.soundRowIconX - Metrics.soundInsetX
                             anchors.verticalCenter: parent.verticalCenter
-                            text: Glyphs.glyph("speakers")
+                            name: Glyphs.glyph("speakers")
                             color: Colors.textPrimary
-                            font.family: Type.iconFamily
-                            font.pixelSize: Metrics.trayGlyphSize
+                            size: Metrics.trayGlyphSize
                         }
 
                         Label {

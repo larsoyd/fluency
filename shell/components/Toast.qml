@@ -209,18 +209,15 @@ Item {
         }
     }
 
-    Text {
+    FluentIcon {
         objectName: "close"
         anchors.right: parent.right
         anchors.top: parent.top
         width: Metrics.toastCloseSize
         height: Metrics.toastCloseSize
-        horizontalAlignment: Text.AlignHCenter
-        verticalAlignment: Text.AlignVCenter
-        text: Glyphs.glyph("close")
+        name: Glyphs.glyph("close")
         color: Colors.textSecondary
-        font.family: Type.iconFamily
-        font.pixelSize: Type.caption.size
+        size: Type.caption.size
 
         MouseArea {
             anchors.fill: parent
