@@ -151,8 +151,9 @@ load() {
     name=$(basename "$so" .so) name=${name#lib}
     sum=$(sha256sum < "$so" | cut -c1-64)
     if grep -q "\"name\": *\"$name\"" <<< "$loaded"; then
-      # the build hyprland holds is the one this file was when it loaded, a reinstall swaps it
-      if [ "$(cat "$lib/.loaded-$name" 2>/dev/null)" = "$sum" ]; then say "stage=load name=$name result=already"; continue; fi
+      # unload goes by path, so only a build this dir loaded can be swapped for the new one
+      [ -f "$lib/.loaded-$name" ] || { say "stage=load name=$name result=already reason=loaded_elsewhere"; continue; }
+      if [ "$(cat "$lib/.loaded-$name")" = "$sum" ]; then say "stage=load name=$name result=already"; continue; fi
       [ "$(timeout 10 hyprctl plugin unload "$so" 2>&1)" = ok ] || { say "stage=unload name=$name result=fail"; fails=$((fails + 1)); continue; }
       say "stage=unload name=$name result=ok reason=new_build"
     fi
