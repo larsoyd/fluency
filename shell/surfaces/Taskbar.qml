@@ -23,10 +23,11 @@ PanelWindow {
     property alias taskview: taskview
     property alias quick: quick
     property alias jump: jump
+    property alias clipboard: clipboard
     readonly property var icons: Tray.split(TrayHost.items)
     readonly property var lines: Pictures.lines(Clock.now, Clock.pictures)
-    readonly property var flyouts: ({ start, search, taskview, notify, quick })
-    readonly property var events: ({ "fluency-start": "start", "fluency-search": "search", "fluency-taskview": "taskview", "fluency-notify": "notify" })
+    readonly property var flyouts: ({ start, clipboard, search, taskview, notify, quick })
+    readonly property var events: ({ "fluency-start": "start", "fluency-search": "search", "fluency-taskview": "taskview", "fluency-notify": "notify", "fluency-clipboard": "clipboard" })
 
     function states() {
         const out = {}
@@ -109,6 +110,13 @@ PanelWindow {
         screen: root.screen
     }
 
+    ClipboardHistory {
+        id: clipboard
+        screen: root.screen
+        // the group moves as tasks come and go, so the button is found when it opens
+        onOpenChanged: if (open) anchorX = bar.centerOf("clipboard")
+    }
+
     NotificationCenter {
         id: notify
         screen: root.screen
@@ -162,6 +170,12 @@ PanelWindow {
         windows: [root, start]
         active: start.open
         onCleared: start.open = false
+    }
+
+    HyprlandFocusGrab {
+        windows: [root, clipboard]
+        active: clipboard.open
+        onCleared: clipboard.open = false
     }
 
     HyprlandFocusGrab {

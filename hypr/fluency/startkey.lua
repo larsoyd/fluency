@@ -4,6 +4,7 @@ hl.bind("SUPER + CTRL + V", hl.dsp.event("fluency-sound"))
 hl.bind("SUPER + S", hl.dsp.event("fluency-search"))
 hl.bind("SUPER + TAB", hl.dsp.event("fluency-taskview"))
 hl.bind("SUPER + N", hl.dsp.event("fluency-notify"))
+hl.bind("SUPER + V", hl.dsp.event("fluency-clipboard"))
 -- the app gets a key between alt down and up, or a lone alt opens its menu bar
 local function switch(event)
     return function()
