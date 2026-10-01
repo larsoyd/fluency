@@ -172,6 +172,7 @@ These environment variables change the defaults:
 - `FLUENCY_PINS`: comma separated desktop ids for the first Start and taskbar pins.
 - `FLUENCY_TRAY_SCREEN`: the output that shows the full tray. The default is the screen at 0,0.
 - `FLUENCY_DESKTOP_DIR`: the folder shown on the desktop. The default is `~/Desktop`.
+- `FLUENCY_AUTOSTART_MINIMIZED`: comma separated desktop ids of autostart apps that start minimized to the taskbar, for example `org.mozilla.Thunderbird.desktop`. Set it with `hl.env` in your `hyprland.lua` before `require("fluency")`.
 
 ## Licenses
 
