@@ -406,6 +406,7 @@ Item {
                 label: result.name
                 detail: height === Metrics.searchBest ? result.kindName : ""
                 forceHovered: parent.modelData.index === root.selectedIndex
+                onHoveredChanged: if (hovered) root.selectedIndex = parent.modelData.index
                 onClicked: root.acted("open", result.kind, result.key)
             }
         }
