@@ -279,6 +279,15 @@ QtObject {
     readonly property int clipSource: 16
     readonly property int clipSearch: 32
     readonly property int clipEmpty: 120
+    // no source for the flyout height, set by eye
+    readonly property int clipMaxHeight: 460
+    // the fluent scroll bar, a thin line that widens under the pointer
+    readonly property int scrollBar: 12
+    readonly property int scrollThumbThin: 2
+    readonly property int scrollThumbWide: 6
+    readonly property int scrollThumbGap: 2
+    readonly property int scrollThumbLeast: 30
+    readonly property int scrollHideDelay: 2000
     // x, y, opacity of each copy, a dark core one down and right fading out around it
     readonly property var desktopShadow: [[0, 0, 0.5], [1, 1, 1], [1, 0, 0.5], [0, 1, 0.5], [2, 1, 0.35], [1, 2, 0.35], [2, 2, 0.3], [-1, 0, 0.15], [0, -1, 0.15]]
     // desktop context menu, measured at 125 percent
