@@ -4,7 +4,7 @@ set -uo pipefail
 
 here=$(cd "$(dirname "$0")" && pwd)
 usage='fluency-plugins.sh abi|build <dest>|load <lib>'
-title="Updating title bars"
+title="Updating plugins"
 toasts=0 note_id="" tmp=""
 
 say() { echo "[plugins] $*"; }
