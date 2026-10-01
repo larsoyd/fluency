@@ -2,7 +2,7 @@ export function firstAvailable(wanted, available) {
     return wanted.find(family => available.includes(family)) ?? ""
 }
 
-// hind at a fluent size draws digits and words about a tenth smaller than segoe ui variable
+// hind draws digits and words about a tenth smaller than the fluent font at the same size
 const scales = { Hind: 1.08 }
 
 export function scale(family) {
