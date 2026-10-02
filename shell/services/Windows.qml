@@ -8,6 +8,7 @@ import Quickshell.Hyprland
 import "../logic/hypr.mjs" as Hypr
 import "../logic/icons.mjs" as Icons
 import "../logic/apps.mjs" as Apps
+import "../logic/previews.mjs" as Previews
 
 Singleton {
     id: root
@@ -120,6 +121,7 @@ Singleton {
     }
 
     function toplevel(address: string): var {
+        if (!Previews.capturable(root.windows.find(win => win.address === address)?.size)) return null
         return ToplevelManager.toplevels.values.find(toplevel => "0x" + toplevel.HyprlandToplevel.address === address) ?? null
     }
 
