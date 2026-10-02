@@ -1,9 +1,12 @@
 local minimize = require("fluency.minimize")
 
--- a minimized window keeps the box it had, so its app never redraws for a tile nobody sees
+-- a minimized window keeps its box, one that opened here has none and gets the work area
 hl.layout.register("fluency-keep", {
     recalculate = function(ctx)
-        for _, target in ipairs(ctx.targets) do target:place(target.box) end
+        for _, target in ipairs(ctx.targets) do
+            local box = target.box
+            target:place((box.w > 0 and box.h > 0) and box or ctx.area)
+        end
     end,
 })
 
