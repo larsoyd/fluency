@@ -64,8 +64,8 @@ PanelWindow {
             preview: Component {
                 ScreencopyView {
                     readonly property bool ready: hasContent
-                    captureSource: root.open ? Windows.toplevel(parent.address) : null
-                    live: root.open
+                    captureSource: root.visible ? Windows.toplevel(parent.address) : null
+                    live: root.visible
                 }
             }
             onPicked: address => root.pick(address)
