@@ -1,5 +1,6 @@
 #include "barDeco.hpp"
 #include "appIcon.hpp"
+#include "decoMode.hpp"
 
 #include <hyprland/src/Compositor.hpp>
 #include <hyprland/src/desktop/state/FocusState.hpp>
@@ -691,10 +692,7 @@ void CHyprBar::updateRules() {
 
     m_bForcedBarColor   = std::nullopt;
     m_bForcedTitleColor = std::nullopt;
-    m_hidden            = false;
 
-    if (PWINDOW->m_ruleApplicator->m_otherProps.props.contains(g_pGlobalState->nobarRuleIdx))
-        m_hidden = truthy(PWINDOW->m_ruleApplicator->m_otherProps.props.at(g_pGlobalState->nobarRuleIdx)->effect);
     if (PWINDOW->m_ruleApplicator->m_otherProps.props.contains(g_pGlobalState->barColorRuleIdx))
         m_bForcedBarColor = CHyprColor(Config::ParserUtils::parseColor(PWINDOW->m_ruleApplicator->m_otherProps.props.at(g_pGlobalState->barColorRuleIdx)->effect).value_or(0));
     if (PWINDOW->m_ruleApplicator->m_otherProps.props.contains(g_pGlobalState->titleColorRuleIdx))
@@ -702,7 +700,23 @@ void CHyprBar::updateRules() {
 
     const auto size = PWINDOW->size(Desktop::View::IGeometric::GEOMETRIC_GOAL);
     // tiny floating popups like a slider tooltip get no caption buttons
-    m_hidden = m_hidden || (compat::floating(PWINDOW) && size.x > 0 && size.x <= 320 && size.y > 0 && size.y <= 64);
+    const bool POPUP = compat::floating(PWINDOW) && size.x > 0 && size.x <= 320 && size.y > 0 && size.y <= 64;
+    // then a rule either way, then what the app said about drawing its own titlebar
+    const auto RULED  = PWINDOW->m_ruleApplicator->m_otherProps.props.contains(g_pGlobalState->nobarRuleIdx);
+    const auto OWN    = ownDecorations(PWINDOW);
+    const auto REASON = POPUP ? "popup" : RULED ? "rule" : OWN ? "app" : "default";
+    if (POPUP)
+        m_hidden = true;
+    else if (RULED)
+        m_hidden = truthy(PWINDOW->m_ruleApplicator->m_otherProps.props.at(g_pGlobalState->nobarRuleIdx)->effect);
+    else
+        m_hidden = OWN.value_or(false);
+
+    const auto DECIDED = std::format("own_decorations={} bar={} reason={}", OWN ? (*OWN ? "client" : "server") : "none", m_hidden ? "off" : "on", REASON);
+    if (DECIDED != m_lastDecided) {
+        m_lastDecided = DECIDED;
+        LOG(Log::DEBUG, "[fluencytitlebar] window={:x} class={} {}", (uintptr_t)PWINDOW.get(), PWINDOW->m_class, DECIDED);
+    }
 
     if (prevHidden != m_hidden)
         g_pDecorationPositioner->repositionDeco(this);

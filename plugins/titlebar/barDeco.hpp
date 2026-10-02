@@ -116,6 +116,7 @@ class CHyprBar : public IHyprWindowDecoration {
     CHyprSignalListener m_pMouseMoveCallback;
 
     std::string         m_szLastTitle;
+    std::string         m_lastDecided;
 
     bool                m_bDraggingThis  = false;
     bool                m_bTouchEv       = false;
