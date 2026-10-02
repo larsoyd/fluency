@@ -27,12 +27,15 @@ return {
     -- shadow28 in fluent is a 0 14px 28px key shadow
     shadow = { offset = 14, range = 28 },
 
-    ms = { faster = 83, fast = 167, normal = 250 },
+    ms = { faster = 83, fast = 167, normal = 250, slow = 333 },
     curve = {
         decelerate     = { { 0, 0 },     { 0, 1 } },
         decelerate_max = { { 0.1, 0.9 }, { 0.2, 1 } },
         accelerate     = { { 0.9, 0.1 }, { 1, 0.2 } },
         easy           = { { 0.33, 0 },  { 0.67, 1 } },
         linear         = { { 0, 0 },     { 1, 1 } },
+        -- fitted to frames of a real minimize and restore, minimize is restore played backwards
+        restore        = { { 0.155, 0.234 }, { 0.021, 0.998 } },
+        minimize       = { { 0.979, 0.002 }, { 0.845, 0.766 } },
     },
 }

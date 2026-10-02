@@ -14,6 +14,12 @@ namespace compat {
     inline const std::string& workspaceName(const PHLWORKSPACE& ws) {
         return ws->addressableName();
     }
+    inline bool visible(const PHLWORKSPACE& ws) {
+        return ws->visible();
+    }
+    inline PHLANIMVAR<float>& alpha(const PHLWINDOW& w, Desktop::View::eWindowAlpha which) {
+        return w->presentation().alpha(which);
+    }
     inline CHyprSignalListener onMinimizeRequest(const PHLWINDOW& w, std::function<void(PHLWINDOW)> fn) {
         return w->backend().m_events.stateRequest.listen([weak = PHLWINDOWREF{w}, fn](const Desktop::View::SBackendStateRequest& request) {
             if (const auto w = weak.lock(); w && request.minimized.value_or(false))
@@ -36,6 +42,12 @@ namespace compat {
     }
     inline const std::string& workspaceName(const PHLWORKSPACE& ws) {
         return ws->m_name;
+    }
+    inline bool visible(const PHLWORKSPACE& ws) {
+        return ws->isVisible();
+    }
+    inline PHLANIMVAR<float>& alpha(const PHLWINDOW& w, Desktop::View::eWindowAlpha which) {
+        return w->alpha(which);
     }
     inline std::optional<bool> asked(const PHLWINDOW& w) {
         if (const auto xdg = w->m_xdgSurface.lock(); xdg && xdg->m_toplevel)
