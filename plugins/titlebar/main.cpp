@@ -268,6 +268,11 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
 }
 
 APICALL EXPORT void PLUGIN_EXIT() {
+    for (const auto& bar : std::vector(g_pGlobalState->bars)) {
+        if (const auto BAR = bar.get(); BAR && BAR->getOwner())
+            compat::dropDecoration(BAR->getOwner(), BAR);
+    }
+
     for (auto& m : State::monitorState()->monitors())
         m->m_scheduledRecalc = true;
 
