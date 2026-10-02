@@ -2,6 +2,7 @@ import QtQuick
 import qs.tokens
 import "../logic/acrylic.mjs" as Acrylic
 import "../logic/clipboard.mjs" as Clip
+import "../logic/curve.mjs" as Curve
 import "../logic/glyphs.mjs" as Glyphs
 
 FocusScope {
@@ -15,6 +16,7 @@ FocusScope {
     property var iconOf: app => ""
     property int cursor: -1
     property int opened: -1
+    property alias resizing: resizing
     readonly property var found: Clip.filter(entries, query)
     readonly property int shown: list.count
     readonly property int listTop: Metrics.clipHeader + (query ? Metrics.clipSearch + Metrics.clipGap : 0)
@@ -49,6 +51,14 @@ FocusScope {
     width: Metrics.clipWidth
     height: Math.min(maxHeight, Metrics.clipMaxHeight, listTop + (list.count ? list.contentHeight + Metrics.clipInset : Metrics.clipEmpty))
     onQueryChanged: cursor = -1
+
+    Behavior on height {
+        NumberAnimation {
+            id: resizing
+            duration: Motion.resize
+            easing.bezierCurve: Curve.easing(Motion.curvePointToPoint)
+        }
+    }
     onCursorChanged: if (cursor >= 0) list.positionViewAtIndex(cursor, ListView.Contain)
 
     Keys.onPressed: event => {
@@ -151,11 +161,16 @@ FocusScope {
 
     Column {
         objectName: "empty"
-        visible: list.count === 0
+        visible: opacity > 0
+        opacity: list.count === 0 ? 1 : 0
         y: root.listTop + (Metrics.clipEmpty - height) / 2
         x: Metrics.clipInset
         width: parent.width - 2 * Metrics.clipInset
         spacing: 4
+
+        Behavior on opacity {
+            NumberAnimation { duration: Motion.controlFaster }
+        }
 
         Label {
             objectName: "emptyTitle"
