@@ -2,6 +2,7 @@ import QtQuick
 import qs.tokens
 import "../logic/acrylic.mjs" as Acrylic
 import "../logic/glyphs.mjs" as Glyphs
+import "../logic/curve.mjs" as Curve
 
 Item {
     id: root
@@ -15,6 +16,7 @@ Item {
     property string status: ""
     property string valueText: ""
     property var buttons: []
+    property alias resizing: resizing
     readonly property var fill: Acrylic.fill({
         tint: [Colors.flyoutTint.r, Colors.flyoutTint.g, Colors.flyoutTint.b],
         luminosityOpacity: Colors.flyoutLuminosityOpacity,
@@ -26,6 +28,14 @@ Item {
 
     width: Metrics.toastWidth
     height: column.height + 2 * Metrics.toastPadding + (actions.visible ? Metrics.toastSectionGap + actions.height : 0)
+
+    Behavior on height {
+        NumberAnimation {
+            id: resizing
+            duration: Motion.resize
+            easing.bezierCurve: Curve.easing(Motion.curvePointToPoint)
+        }
+    }
 
     Rectangle {
         objectName: "backdrop"
@@ -43,6 +53,7 @@ Item {
 
     Column {
         id: column
+        objectName: "column"
         x: Metrics.toastPadding
         y: Metrics.toastPadding
         width: parent.width - 2 * Metrics.toastPadding - Metrics.toastCloseSize
