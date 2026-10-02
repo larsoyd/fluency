@@ -2,11 +2,13 @@ import QtQuick
 import qs.tokens
 import "../logic/acrylic.mjs" as Acrylic
 import "../logic/tray.mjs" as Tray
+import "../logic/curve.mjs" as Curve
 
 Item {
     id: root
 
     property var icons: []
+    property alias resizing: resizing
     readonly property var grid: Tray.flyout(icons.length, Metrics)
     readonly property var fill: Acrylic.fill({
         tint: [Colors.flyoutTint.r, Colors.flyoutTint.g, Colors.flyoutTint.b],
@@ -18,6 +20,21 @@ Item {
 
     width: grid.width
     height: grid.height
+
+    Behavior on width {
+        NumberAnimation {
+            duration: Motion.resize
+            easing.bezierCurve: Curve.easing(Motion.curvePointToPoint)
+        }
+    }
+
+    Behavior on height {
+        NumberAnimation {
+            id: resizing
+            duration: Motion.resize
+            easing.bezierCurve: Curve.easing(Motion.curvePointToPoint)
+        }
+    }
 
     Slots {
         id: slots
