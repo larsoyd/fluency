@@ -51,6 +51,9 @@ namespace compat {
     inline auto decorations(const PHLWINDOW& w) {
         return w->presentation().decorations();
     }
+    inline void dropDecoration(const PHLWINDOW& w, IHyprWindowDecoration* deco) {
+        w->presentation().removeDecoration(deco);
+    }
     inline void updateDecorations(const PHLWINDOW& w) {
         w->presentation().updateDecorations();
     }
@@ -133,6 +136,14 @@ namespace compat {
     }
     inline void updateDecorations(const PHLWINDOW& w) {
         w->updateWindowDecos();
+    }
+    // an unmapped window keeps a removed decoration until it maps again, past the unload of its code
+    inline void dropDecoration(const PHLWINDOW& w, IHyprWindowDecoration* deco) {
+        const auto IT = std::ranges::find_if(w->m_windowDecorations, [deco](const auto& d) { return d.get() == deco; });
+        if (IT == w->m_windowDecorations.end())
+            return;
+        g_pDecorationPositioner->uncacheDecoration(deco);
+        w->m_windowDecorations.erase(IT);
     }
     template <typename T>
     inline UP<T> makeDecoration(const PHLWINDOW& w) {
