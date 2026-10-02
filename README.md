@@ -21,6 +21,7 @@ Fluency is built for the version of **Hyprland** that Arch Linux, Debian sid and
 - Pinned apps and open windows on one row, centred, with a running, active and attention indicator per button
 - Drag to reorder, scroll to cycle a group's windows, middle click to open another
 - Jump lists on right click, with the app's own actions, pin and close
+- Hover a button for live previews of its windows: click one to switch to it, middle click to close it
 - A short bounce when a window minimizes or comes back
 
 **Start**
@@ -30,7 +31,7 @@ Fluency is built for the version of **Hyprland** that Arch Linux, Debian sid and
 
 **Search**
 - A pane of its own: top apps, recent apps and quick links to your folders
-- Results with a best match and a preview with Open and pin actions, filtered by All, Apps or Folders
+- Results with a best match and a preview with Open and pin actions, filtered by All, Apps or Folders. The preview follows the pointer and the arrow keys
 
 **Notifications**
 - Toasts that slide in, with app icon, title and body
@@ -39,7 +40,7 @@ Fluency is built for the version of **Hyprland** that Arch Linux, Debian sid and
 - A calendar card under the notifications that folds away
 
 **Clipboard**
-- Clipboard history from its taskbar button beside Start, or Super + V
+- Clipboard history from its taskbar button beside Start, or Super + V, in a flyout of fixed height that scrolls
 - A copy stays after the app that made it closes
 - Text, rich text, pictures and files keep every format they were copied in
 - Pin what you use often, delete one item, or clear all but the pinned
@@ -92,6 +93,8 @@ Recommended, not required:
 | Fluent Dark for GTK | Fluent-Dark is missing | none, see below |
 | Firefox, the browser | you have no web browser | `firefox` |
 | Noto fonts | Noto Sans is missing | Noto Sans, Noto Sans CJK and Noto Color Emoji, named per distribution |
+| the Hyprland desktop portal | it is missing | `xdg-desktop-portal-hyprland` |
+| a portal that opens file dialogs | no installed portal can (KDE, GTK, GNOME or LXQt) | `xdg-desktop-portal-gtk` |
 
 When one of them is offered, the installer asks whether to install it. `--recommended` installs them all without asking, and `--no-recommended` skips them. Without a terminal to ask on, it only names them.
 
@@ -106,6 +109,8 @@ hyprqt6engine is not packaged either, so the installer builds it from a pinned c
 The engine gets a dark look, but only when it has no config yet: hyprqt6engine gets Breeze Dark in `~/.config/hypr/hyprqt6engine.conf`, and qt6ct gets the dark Kvantum style in `~/.config/qt6ct/qt6ct.conf`. A config you already have is never changed.
 
 GTK apps follow the same dark look through gsettings: the Fluent Dark theme when it is installed (Breeze Dark otherwise), the dark colour scheme, your icon theme and Bibata Ghost. Only settings you never changed yourself are set, anything you chose stays.
+
+Apps open files through the desktop portal. The installer writes `~/.config/xdg-desktop-portal/hyprland-portals.conf` with the Hyprland portal and the file dialog of the portals you have, KDE's first, then GTK, GNOME and LXQt. A file with that name you wrote yourself is left alone. A running portal reads it at your next login. `--uninstall` removes it.
 
 [Hind](https://fonts.google.com/specimen/Hind) covers Latin and Devanagari. A fontconfig file in `~/.config/fontconfig/conf.d/50-fluency.conf` makes Noto Sans, Noto Sans CJK and Noto Color Emoji the fallback for everything else. `--uninstall` removes it.
 
@@ -163,7 +168,7 @@ Other options:
 
 ```bash
 ./install.sh --dry-run      # check everything, write nothing
-./install.sh --recommended  # also install Papirus, kitty, Dolphin, Bibata Ghost, Fluent Dark and Firefox
+./install.sh --recommended  # also install Papirus, kitty, Dolphin, Bibata Ghost, Fluent Dark, Firefox and the portals
 ./install.sh --no-plugins   # skip the title bar and minimize plugins
 ./install.sh --uninstall    # take away what the installer made
 ```
