@@ -18,6 +18,9 @@
 #include "ghost.hpp"
 
 void makeLeaves();
+void watchToast(const PHLWINDOW& w);
+void forgetToast(Desktop::View::CWindow* w);
+void dropToasts();
 
 // the config binds one of these to each monitor, the shell and the window keys use the same names
 static const std::string PREFIX = "special:minimized";
@@ -300,10 +303,14 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     HyprlandAPI::addLuaFunction(handle, "fluencyminimize", "still", luaStill);
 
     static auto opened    = Event::bus()->m_events.window.openEarly.listen([](PHLWINDOW w) { watch(w); });
-    static auto mapped    = Event::bus()->m_events.window.open.listen([](PHLWINDOW w) { g_last[w.get()] = w->m_workspace; });
+    static auto mapped    = Event::bus()->m_events.window.open.listen([](PHLWINDOW w) {
+        g_last[w.get()] = w->m_workspace;
+        watchToast(w);
+    });
     static auto destroyed = Event::bus()->m_events.window.destroy.listen([](PHLWINDOWREF w) {
         g_listeners.erase(w.get());
         g_last.erase(w.get());
+        forgetToast(w.get());
     });
     static auto moved     = Event::bus()->m_events.window.moveToWorkspace.listen(onMoved);
     static auto checks    = Event::bus()->m_events.render.preChecks.listen(onPreChecks);
@@ -312,10 +319,11 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
     for (const auto& w : Desktop::windowState()->windows())
         if (compat::mapped(w)) {
             watch(w);
+            watchToast(w);
             g_last[w.get()] = w->m_workspace;
         }
 
-    return {"fluencyminimize", "minimize on a client's request, fly windows to and from the taskbar, let go of the focus of a minimized window", "larsoyd", "0.3"};
+    return {"fluencyminimize", "minimize on a client's request, fly windows to and from the taskbar, let go of the focus of a minimized window, put steam's toasts where fluency's show", "larsoyd", "0.4"};
 }
 
 // the pictures live in hyprland's list but their code lives here
@@ -329,4 +337,5 @@ APICALL EXPORT void PLUGIN_EXIT() {
         Desktop::fadingOutState()->cleanupForMonitor(monitor);
     g_restores.clear();
     g_listeners.clear();
+    dropToasts();
 }

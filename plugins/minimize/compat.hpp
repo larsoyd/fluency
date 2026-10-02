@@ -27,6 +27,21 @@ namespace compat {
                 fn(w);
         });
     }
+    inline bool overrideRedirect(const PHLWINDOW& w) {
+        return w->backend().isX11() && w->backend().traits().overrideRedirect;
+    }
+    inline CBox x11Box(const PHLWINDOW& w) {
+        return w->backend().geometry().box;
+    }
+    inline const std::string& title(const PHLWINDOW& w) {
+        return w->metadata().title();
+    }
+    inline const std::string& appID(const PHLWINDOW& w) {
+        return w->metadata().appID();
+    }
+    inline CHyprSignalListener onX11Geometry(const PHLWINDOW& w, std::function<void()> fn) {
+        return w->backend().m_events.geometryChanged.listen([fn](const CBox&) { fn(); });
+    }
 }
 #else
 // TODO: temporary compat maintained for a few months after release then removed
@@ -67,6 +82,23 @@ namespace compat {
         if (const auto x11 = w->m_xwaylandSurface.lock())
             return x11->m_events.stateChanged.listen(handler);
         return nullptr;
+    }
+    inline bool overrideRedirect(const PHLWINDOW& w) {
+        return w->isX11OverrideRedirect();
+    }
+    inline CBox x11Box(const PHLWINDOW& w) {
+        const auto x11 = w->m_xwaylandSurface.lock();
+        return x11 ? x11->m_geometry : CBox{};
+    }
+    inline const std::string& title(const PHLWINDOW& w) {
+        return w->m_title;
+    }
+    inline const std::string& appID(const PHLWINDOW& w) {
+        return w->m_class;
+    }
+    inline CHyprSignalListener onX11Geometry(const PHLWINDOW& w, std::function<void()> fn) {
+        const auto x11 = w->m_xwaylandSurface.lock();
+        return x11 ? x11->m_events.setGeometry.listen(fn) : nullptr;
     }
 }
 #endif
