@@ -15,7 +15,7 @@ Item {
     property real zoom: 0
     property alias holder: holder
     property bool live: false
-    readonly property bool hovered: area.containsMouse
+    readonly property bool hovered: hover.hovered
 
     signal clicked()
     signal closeClicked()
@@ -46,10 +46,12 @@ Item {
         border.color: Colors.focusStroke
     }
 
+    // a handler keeps the hover while the pointer is over the close button
+    HoverHandler { id: hover }
+
     MouseArea {
         id: area
         anchors.fill: parent
-        hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.MiddleButton
         onClicked: mouse => mouse.button === Qt.MiddleButton ? root.middleClicked() : root.clicked()
     }
