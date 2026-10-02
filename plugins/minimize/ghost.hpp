@@ -22,6 +22,7 @@ class CGhost final : public Desktop::IFadeout {
     double                   scale() const;
     CBox                     window() const;
     SP<Render::IFramebuffer> picture() const;
+    void                     repaint(SP<Render::IFramebuffer> picture);
     void                     stop();
 
     int                                   m_frames = 0;
