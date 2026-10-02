@@ -2,6 +2,7 @@ import QtQuick
 import qs.tokens
 import "../logic/acrylic.mjs" as Acrylic
 import "../logic/previews.mjs" as Previews
+import "../logic/curve.mjs" as Curve
 
 // the windows of one taskbar button side by side, drawn as the task view cards
 Item {
@@ -10,6 +11,8 @@ Item {
     property var items: []
     property Component preview: null
     property int room: 0
+    property bool glides: true
+    property alias resizing: resizing
     readonly property var laid: Previews.layout(items.map(item => item.size), {
         width: Metrics.previewWidth, height: Metrics.previewHeight, gap: Metrics.previewGap, pad: Metrics.previewPad, title: Metrics.taskViewTitle,
     }, room)
@@ -23,6 +26,23 @@ Item {
 
     width: laid.width
     height: laid.height
+
+    Behavior on width {
+        enabled: root.glides
+        NumberAnimation {
+            id: resizing
+            duration: Motion.resize
+            easing.bezierCurve: Curve.easing(Motion.curvePointToPoint)
+        }
+    }
+
+    Behavior on height {
+        enabled: root.glides
+        NumberAnimation {
+            duration: Motion.resize
+            easing.bezierCurve: Curve.easing(Motion.curvePointToPoint)
+        }
+    }
 
     Rectangle {
         objectName: "backdrop"
