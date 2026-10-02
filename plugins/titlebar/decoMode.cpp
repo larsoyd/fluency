@@ -1,6 +1,6 @@
 #include "decoMode.hpp"
 
-#include <hyprland/src/desktop/view/Window.hpp>
+#include "compat.hpp"
 
 #define private public
 #include <hyprland/src/protocols/ServerDecorationKDE.hpp>

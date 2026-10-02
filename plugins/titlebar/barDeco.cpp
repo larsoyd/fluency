@@ -715,7 +715,7 @@ void CHyprBar::updateRules() {
     const auto DECIDED = std::format("own_decorations={} bar={} reason={}", OWN ? (*OWN ? "client" : "server") : "none", m_hidden ? "off" : "on", REASON);
     if (DECIDED != m_lastDecided) {
         m_lastDecided = DECIDED;
-        LOG(Log::DEBUG, "[fluencytitlebar] window={:x} class={} {}", (uintptr_t)PWINDOW.get(), PWINDOW->m_class, DECIDED);
+        LOG(Log::DEBUG, "[fluencytitlebar] window={:x} class={} {}", (uintptr_t)PWINDOW.get(), compat::appID(PWINDOW), DECIDED);
     }
 
     if (prevHidden != m_hidden)
