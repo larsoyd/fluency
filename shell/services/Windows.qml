@@ -156,7 +156,7 @@ Singleton {
                 for (const monitor of Hyprland.monitors.values) shown[monitor.name] = monitor.activeWorkspace?.name
                 const home = Hypr.hidden(win) ? Hypr.home(win, homes, shown) : win.workspace
                 if (action.action === "minimize" && !Hypr.hidden(win)) homes[win.address] = win.workspace
-                for (const line of Hypr[action.action](win, home)) Hyprland.dispatch(line)
+                for (const line of Hypr[action.action](win, home, action.still === true)) Hyprland.dispatch(line)
             }
         } catch (e) {
             result = e.message
