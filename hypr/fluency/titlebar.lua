@@ -61,14 +61,8 @@ if hl.plugin.fluencytitlebar then
         })
     end
 
-    -- these draw a titlebar of their own
-    hl.window_rule({
-        name  = "own-titlebar",
-        match = { class = "^(firefox)$" },
-        ["fluencytitlebar:no_bar"] = true,
-    })
-
-    -- the tiled steam client has its own caption buttons, its login and update windows float and do not
+    -- wayland apps say whether they draw their own titlebar, steam runs under xwayland and says nothing
+    -- its tiled client has its own caption buttons, its login and update windows float and do not
     hl.window_rule({
         name  = "steam-main",
         match = { class = "^steam$", float = false },
