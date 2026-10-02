@@ -5,6 +5,7 @@
 #if __has_include(<hyprland/src/desktop/view/window/WindowBackend.hpp>)
 #include <hyprland/src/desktop/view/window/Window.hpp>
 #include <hyprland/src/desktop/view/window/WindowBackend.hpp>
+#include <hyprland/src/desktop/view/window/WindowPresentation.hpp>
 #include <hyprland/src/workspace/HLWorkspace.hpp>
 
 namespace compat {
