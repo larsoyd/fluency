@@ -26,3 +26,9 @@ hl.animation({ leaf = "fadeLayersIn",  enabled = true, speed = speed(ms.fast),  
 hl.animation({ leaf = "fadeLayersOut", enabled = true, speed = speed(ms.faster), bezier = "linear" })
 hl.animation({ leaf = "workspaces",    enabled = true, speed = speed(ms.normal), bezier = "decelerate",     style = "slidefade 20%" })
 hl.animation({ leaf = "zoomFactor",    enabled = true, speed = speed(ms.normal), bezier = "decelerate" })
+
+-- the minimize plugin makes these leaves, so they only exist once it loaded
+if hl.plugin.fluencyminimize then
+    hl.animation({ leaf = "fluencyMinimize", enabled = true, speed = speed(ms.fast), bezier = "minimize" })
+    hl.animation({ leaf = "fluencyRestore",  enabled = true, speed = speed(ms.slow), bezier = "restore" })
+end
