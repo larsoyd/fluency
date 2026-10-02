@@ -54,6 +54,8 @@ QtObject {
     readonly property int menuShowDelay: 400
     readonly property int osdShown: 2000
     readonly property int pageSlide: 167
+    // a card that changes size is an existing element of the fluent motion table, point to point
+    readonly property int resize: 250
 
     // start and toasts run a fifth longer like the hyprland windows and layers
     readonly property real calm: 1.2

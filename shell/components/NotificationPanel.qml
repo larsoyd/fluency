@@ -4,6 +4,7 @@ import "../logic/glyphs.mjs" as Glyphs
 import "../logic/acrylic.mjs" as Acrylic
 import "../logic/notify.mjs" as Notify
 import "../logic/toast.mjs" as Words
+import "../logic/curve.mjs" as Curve
 
 Item {
     id: root
@@ -12,6 +13,7 @@ Item {
     property bool dnd: false
     property int maxHeight: 0
     property var iconOf: n => ""
+    property alias resizing: resizing
     readonly property var fill: Acrylic.fill({
         tint: [Colors.flyoutTint.r, Colors.flyoutTint.g, Colors.flyoutTint.b],
         luminosityOpacity: Colors.flyoutLuminosityOpacity,
@@ -26,6 +28,14 @@ Item {
 
     width: Metrics.notifyWidth
     height: Math.min(maxHeight, Metrics.notifyHeader + (groups.length ? column.height + Metrics.notifyInset : Metrics.notifyEmpty))
+
+    Behavior on height {
+        NumberAnimation {
+            id: resizing
+            duration: Motion.resize
+            easing.bezierCurve: Curve.easing(Motion.curvePointToPoint)
+        }
+    }
 
     Rectangle {
         objectName: "backdrop"
@@ -122,7 +132,8 @@ Item {
 
     Label {
         objectName: "empty"
-        visible: !root.groups.length
+        visible: opacity > 0
+        opacity: root.groups.length ? 0 : 1
         y: Metrics.notifyHeader
         width: parent.width
         height: Metrics.notifyEmpty
@@ -130,6 +141,10 @@ Item {
         verticalAlignment: Text.AlignVCenter
         text: "No new notifications"
         color: Colors.textSecondary
+
+        Behavior on opacity {
+            NumberAnimation { duration: Motion.controlFaster }
+        }
     }
 
     Flickable {
