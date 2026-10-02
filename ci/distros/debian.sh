@@ -1,5 +1,6 @@
 setup() {
-  local obs=https://download.opensuse.org/repositories/home:/AvengeMedia:/danklinux/Debian_Unstable
+  # the mirror download.opensuse.org sends to served a quickshell that did not match the index
+  local obs=https://downloadcontent.opensuse.org/repositories/home:/AvengeMedia:/danklinux/Debian_Unstable
   export DEBIAN_FRONTEND=noninteractive
   timeout 600 apt-get update && timeout 600 apt-get install -y curl ca-certificates gpg || return
   timeout 60 curl -fsSL "$obs/Release.key" | gpg --dearmor > /usr/share/keyrings/danklinux.gpg || return
