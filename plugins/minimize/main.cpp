@@ -164,7 +164,23 @@ static void restoreFlight(const PHLWINDOW& w, const PHLMONITOR& monitor) {
     fly("restore", w, CGhost::create(monitor, picture, box, from, box, "fluencyRestore"), box, true, source, anchor, takeover);
 }
 
+// the window keeps drawing under its restore, a video goes on playing in the picture
+static void repaint(const PHLMONITOR& monitor) {
+    for (auto& flight : g_flights) {
+        const auto w = flight.window.lock();
+        if (!w || !flight.hidden || flight.ghost->monitor() != monitor || flight.ghost->done())
+            continue;
+        auto& fade = compat::alpha(w, Desktop::View::WINDOW_ALPHA_MOVE_FROM_WORKSPACE);
+        fade->setValueAndWarp(1.F);
+        const auto picture = g_pHyprRenderer->makeSnapshotFB(w);
+        fade->setValueAndWarp(0.F);
+        if (picture)
+            flight.ghost->repaint(picture);
+    }
+}
+
 static void onPreChecks(PHLMONITOR monitor) {
+    repaint(monitor);
     std::erase_if(g_restores, [&monitor](const PHLWINDOWREF& ref) {
         const auto w = ref.lock();
         if (!w || !w->m_monitor)

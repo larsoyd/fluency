@@ -80,6 +80,10 @@ SP<Render::IFramebuffer> CGhost::picture() const {
     return m_framebuffer;
 }
 
+void CGhost::repaint(SP<Render::IFramebuffer> picture) {
+    m_framebuffer = picture;
+}
+
 void CGhost::stop() {
     m_realPosition->warp();
     m_realSize->warp();
