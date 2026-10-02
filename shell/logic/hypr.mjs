@@ -25,11 +25,14 @@ export function home(win, homes, shown) {
     return shown[win.monitor]
 }
 
-export function focus(win, workspace) {
+// a still restore skips the flight, task view zooms the window in itself
+export function focus(win, workspace, still) {
     const window = selector(win), steps = [`hl.dsp.focus({ window = ${window} })`]
     if (!hidden(win)) return steps
     if (!workspace) throw new Error(`refused: no workspace to restore ${win.address} to`)
-    return [`hl.dsp.window.move({ window = ${window}, workspace = ${quote(workspace)} })`, ...steps]
+    const move = `hl.dsp.window.move({ window = ${window}, workspace = ${quote(workspace)} })`
+    if (!still) return [move, ...steps]
+    return [`hl.plugin.fluencyminimize and hl.plugin.fluencyminimize.still(${quote(win.address)}) or hl.dsp.no_op()`, move, ...steps]
 }
 
 export function minimize(win) {

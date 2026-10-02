@@ -5,6 +5,7 @@ import Quickshell.Wayland
 import qs.tokens
 import qs.components
 import qs.services
+import "../logic/anchors.mjs" as Anchors
 import "../logic/clock.mjs" as Pictures
 import "../logic/flyouts.mjs" as Flyouts
 import "../logic/tasks.mjs" as Tasks
@@ -29,6 +30,10 @@ PanelWindow {
     readonly property var icons: Tray.split(TrayHost.items)
     readonly property var lines: Pictures.lines(Clock.now, Clock.pictures)
     readonly property var flyouts: ({ start, clipboard, search, taskview, notify, quick })
+    readonly property var buttonPoints: Anchors.points(bar.tasks, { width: bar.width, tray: tray.width, system: bar.system.length, extent: Metrics.buttonExtent, height: Metrics.taskbarHeight },
+        { name: screen.name, x: screen.x, y: screen.y, width: screen.width, height: screen.height })
+
+    onButtonPointsChanged: Flights.put(screen.name, buttonPoints)
 
     function states() {
         const out = {}

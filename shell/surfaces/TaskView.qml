@@ -75,7 +75,7 @@ PanelWindow {
                 live: root.open
             }
         }
-        onPicked: address => root.run({ action: "focus", address })
+        onPicked: address => root.run({ action: "focus", address, still: true })
         onCloseAsked: address => Windows.run({ action: "close", address })
         onDismissed: root.open = false
         onSwitched: id => root.run({ action: "workspace", workspace: id })
