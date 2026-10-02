@@ -1,3 +1,8 @@
+// a window hyprland never sized has no picture, and asking for one takes the shell down
+export function capturable(size) {
+    return size?.[0] > 0 && size?.[1] > 0
+}
+
 // a window keeps its shape inside the box and is never blown up
 export function fit(size, box) {
     const [w, h] = size
