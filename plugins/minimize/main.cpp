@@ -21,6 +21,8 @@ void makeLeaves();
 void watchToast(const PHLWINDOW& w);
 void forgetToast(Desktop::View::CWindow* w);
 void dropToasts();
+bool hookCapture(HANDLE handle);
+void dropRefused();
 
 // the config binds one of these to each monitor, the shell and the window keys use the same names
 static const std::string PREFIX = "special:minimized";
@@ -298,6 +300,8 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
         throw std::runtime_error("[fluencyminimize] refused: version mismatch");
     }
 
+    if (!hookCapture(handle))
+        HyprlandAPI::addNotification(handle, "[fluencyminimize] refused: no capture function to guard", CHyprColor{1.0, 0.2, 0.2, 1.0}, 5000);
     makeLeaves();
     HyprlandAPI::addLuaFunction(handle, "fluencyminimize", "anchors", luaAnchors);
     HyprlandAPI::addLuaFunction(handle, "fluencyminimize", "still", luaStill);
@@ -323,7 +327,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
             g_last[w.get()] = w->m_workspace;
         }
 
-    return {"fluencyminimize", "minimize on a client's request, fly windows to and from the taskbar, let go of the focus of a minimized window, put steam's toasts where fluency's show", "larsoyd", "0.4"};
+    return {"fluencyminimize", "minimize on a client's request, fly windows to and from the taskbar, let go of the focus of a minimized window, put steam's toasts where fluency's show, answer a capture of a closed window with a failed frame", "larsoyd", "0.4"};
 }
 
 // the pictures live in hyprland's list but their code lives here
@@ -338,4 +342,5 @@ APICALL EXPORT void PLUGIN_EXIT() {
     g_restores.clear();
     g_listeners.clear();
     dropToasts();
+    dropRefused();
 }

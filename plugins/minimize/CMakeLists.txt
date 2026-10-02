@@ -4,7 +4,7 @@ project(fluencyminimize VERSION 0.1)
 
 set(CMAKE_CXX_STANDARD 23)
 
-add_library(fluencyminimize SHARED main.cpp ghost.cpp leaves.cpp toast.cpp)
+add_library(fluencyminimize SHARED main.cpp capture.cpp ghost.cpp leaves.cpp toast.cpp)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(deps REQUIRED IMPORTED_TARGET hyprland libdrm libinput libudev pixman-1 wayland-server xkbcommon)
