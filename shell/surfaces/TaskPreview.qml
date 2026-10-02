@@ -61,6 +61,8 @@ PanelWindow {
             id: panel
             objectName: "panel"
             room: root.screen.width - 2 * Metrics.flyoutOffset
+            // a preview that is not showing yet takes its size at once and fades in
+            glides: root.fade > 0
             preview: Component {
                 ScreencopyView {
                     readonly property bool ready: hasContent
