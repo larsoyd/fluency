@@ -345,7 +345,7 @@ size_t CHyprBar::getVisibleButtonCount(Config::INTEGER barButtonPadding, Config:
     return count;
 }
 
-void CHyprBar::renderBarButtons(CBox* barBox, const float scale, const float a) {
+void CHyprBar::renderBarButtons(compat::RenderContext& ctx, CBox* barBox, const float scale, const float a) {
     const auto BARBUTTONPADDING = g_pGlobalState->config.barButtonPadding->value();
     const auto BARPADDING       = g_pGlobalState->config.barPadding->value();
     const auto ALIGNBUTTONS     = g_pGlobalState->config.barButtonsAlignment->value();
@@ -383,8 +383,8 @@ void CHyprBar::renderBarButtons(CBox* barBox, const float scale, const float a) 
             CBox fillBox = *barBox;
             fillBox.h += rounding * scale * 3;
             CRegion damage{buttonBox};
-            damage.intersect(g_pHyprRenderer->m_renderData.damage);
-            g_pHyprOpenGL->renderRect(fillBox, color,
+            damage.intersect(compat::damage(ctx));
+            compat::renderRect(ctx, fillBox, color,
                 {.damage = &damage, .round = static_cast<int>(radius), .roundingPower = compat::roundingPower(window)});
         }
 
@@ -392,7 +392,7 @@ void CHyprBar::renderBarButtons(CBox* barBox, const float scale, const float a) 
     }
 }
 
-void CHyprBar::renderBarButtonsText(CBox* barBox, const float scale, const float a) {
+void CHyprBar::renderBarButtonsText(compat::RenderContext& ctx, CBox* barBox, const float scale, const float a) {
     const auto HEIGHT           = g_pGlobalState->config.barHeight->value();
     const auto BARBUTTONPADDING = g_pGlobalState->config.barButtonPadding->value();
     const auto BARPADDING       = g_pGlobalState->config.barPadding->value();
@@ -437,7 +437,7 @@ void CHyprBar::renderBarButtonsText(CBox* barBox, const float scale, const float
         CBox       pos   = {iconX, iconY, tex->m_size.x, tex->m_size.y};
 
         if (!ICONONHOVER || (ICONONHOVER && m_iButtonHoverState > 0))
-            g_pHyprOpenGL->renderTexture(tex, pos, {.a = a});
+            compat::renderTexture(ctx, tex, pos, {.a = a});
         offset += scaledButtonsPad + scaledButtonSize;
 
         bool currentBit = (m_iButtonHoverState & (1 << i)) != 0;
@@ -449,7 +449,7 @@ void CHyprBar::renderBarButtonsText(CBox* barBox, const float scale, const float
     }
 }
 
-void CHyprBar::draw(PHLMONITOR pMonitor, const float& a, const compat::Presentation& presentation) {
+void CHyprBar::draw(compat::RenderContext& ctx, PHLMONITOR pMonitor, const float& a, const compat::Presentation& presentation) {
     const auto ENABLED = g_pGlobalState->config.enabled->value();
 
     if (m_bLastEnabledState != ENABLED) {
@@ -466,10 +466,10 @@ void CHyprBar::draw(PHLMONITOR pMonitor, const float& a, const compat::Presentat
         return;
 
     auto data = CBarPassElement::SBarData{this, a, presentation};
-    g_pHyprRenderer->m_renderPass.add(makeUnique<CBarPassElement>(data));
+    compat::addPass(ctx, makeUnique<CBarPassElement>(data));
 }
 
-void CHyprBar::renderPass(PHLMONITOR pMonitor, const float& a, const compat::Presentation& presentation) {
+void CHyprBar::renderPass(compat::RenderContext& ctx, PHLMONITOR pMonitor, const float& a, const compat::Presentation& presentation) {
     const auto  PWINDOW = m_pWindow.lock();
 
     static auto PENABLEBLURGLOBAL = CConfigValue<Config::BOOL>("decoration:blur:enabled");
@@ -524,7 +524,7 @@ void CHyprBar::renderPass(PHLMONITOR pMonitor, const float& a, const compat::Pre
     if (titleBarBox.w < 1 || titleBarBox.h < 1)
         return;
 
-    g_pHyprOpenGL->scissor(titleBarBox);
+    compat::scissor(ctx, titleBarBox);
 
     if (ROUNDING) {
         // the +1 is a shit garbage temp fix until renderRect supports an alpha matte
@@ -548,7 +548,7 @@ void CHyprBar::renderPass(PHLMONITOR pMonitor, const float& a, const compat::Pre
         glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
 
         windowBox.translate(WORKSPACEOFFSET).scale(pMonitor->m_scale).round();
-        g_pHyprOpenGL->renderRect(windowBox, CHyprColor(0, 0, 0, 0), {.round = static_cast<int>(scaledRounding), .roundingPower = compat::roundingPower(m_pWindow.lock())});
+        compat::renderRect(ctx, windowBox, CHyprColor(0, 0, 0, 0), {.round = static_cast<int>(scaledRounding), .roundingPower = compat::roundingPower(m_pWindow.lock())});
         glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 
         glStencilFunc(GL_NOTEQUAL, 1, -1);
@@ -556,9 +556,9 @@ void CHyprBar::renderPass(PHLMONITOR pMonitor, const float& a, const compat::Pre
     }
 
     if (SHOULDBLUR)
-        g_pHyprOpenGL->renderRect(titleBarBox, color, {.round = static_cast<int>(scaledRounding), .roundingPower = compat::roundingPower(m_pWindow.lock()), .blur = true, .blurA = a});
+        compat::renderRect(ctx, titleBarBox, color, {.round = static_cast<int>(scaledRounding), .roundingPower = compat::roundingPower(m_pWindow.lock()), .blur = true, .blurA = a});
     else
-        g_pHyprOpenGL->renderRect(titleBarBox, color, {.round = static_cast<int>(scaledRounding), .roundingPower = compat::roundingPower(m_pWindow.lock())});
+        compat::renderRect(ctx, titleBarBox, color, {.round = static_cast<int>(scaledRounding), .roundingPower = compat::roundingPower(m_pWindow.lock())});
 
     if (m_lastScale != pMonitor->m_scale) {
         m_pTextTex = nullptr;
@@ -615,17 +615,17 @@ void CHyprBar::renderPass(PHLMONITOR pMonitor, const float& a, const compat::Pre
 
         if (m_pAppIcon) {
             CBox iconBox = {textBox.x + xOffset - iconSpace, textBox.y + std::round((BARBUF.y - iconSize) / 2), double(iconSize), double(iconSize)};
-            g_pHyprOpenGL->renderTexture(m_pAppIcon, iconBox, {.a = a});
+            compat::renderTexture(ctx, m_pAppIcon, iconBox, {.a = a});
         }
-        g_pHyprOpenGL->renderTexture(m_pTextTex, titleBox, {.a = a});
+        compat::renderTexture(ctx, m_pTextTex, titleBox, {.a = a});
     }
 
-    renderBarButtons(&textBox, pMonitor->m_scale, a);
+    renderBarButtons(ctx, &textBox, pMonitor->m_scale, a);
     m_bButtonsDirty = false;
 
-    g_pHyprOpenGL->scissor(nullptr);
+    compat::noScissor(ctx);
 
-    renderBarButtonsText(&textBox, pMonitor->m_scale, a);
+    renderBarButtonsText(ctx, &textBox, pMonitor->m_scale, a);
 
     m_bWindowSizeChanged = false;
     m_bTitleColorChanged = false;
