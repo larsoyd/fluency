@@ -62,10 +62,10 @@ if hl.plugin.fluencytitlebar then
     end
 
     -- wayland apps say whether they draw their own titlebar, steam runs under xwayland and says nothing
-    -- its tiled client has its own caption buttons, its login and update windows float and do not
+    -- its windows draw their own caption buttons
     hl.window_rule({
-        name  = "steam-main",
-        match = { class = "^steam$", float = false },
+        name  = "steam",
+        match = { class = "^steam$" },
         ["fluencytitlebar:no_bar"] = true,
     })
 end
