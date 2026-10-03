@@ -201,3 +201,75 @@ namespace compat {
         return p && !pinned(w) ? p->m_renderOffset->value() : Vector2D();
     }
 }
+
+#include <hyprland/src/render/OpenGL.hpp>
+#include <hyprland/src/render/Renderer.hpp>
+
+#if __has_include(<hyprland/src/render/Context.hpp>)
+#include <hyprland/src/render/Context.hpp>
+
+#define COMPAT_RENDER_CONTEXT 1
+
+namespace compat {
+    using RenderContext = Render::CRenderContext;
+    using RectData      = Render::GL::CHyprOpenGLImpl::SRectRenderData;
+    using TextureData   = Render::GL::CHyprOpenGLImpl::STextureRenderData;
+
+    inline PHLMONITOR monitor(RenderContext& ctx) {
+        return ctx.m_data.pMonitor.lock();
+    }
+    inline const CRegion& damage(RenderContext& ctx) {
+        return ctx.m_data.damage;
+    }
+    inline void addPass(RenderContext& ctx, UP<IPassElement>&& element) {
+        Render::IHyprRenderer::addPassElement(ctx, std::move(element));
+    }
+    inline void dropPasses(const std::string& type) {
+        g_pHyprRenderer->context().m_pass.removeAllOfType(type);
+    }
+    inline void renderRect(RenderContext& ctx, const CBox& box, const CHyprColor& color, RectData data) {
+        Render::GL::g_pHyprOpenGL->renderRect(ctx, box, color, data);
+    }
+    inline void renderTexture(RenderContext& ctx, SP<Render::ITexture> tex, const CBox& box, TextureData data) {
+        Render::GL::g_pHyprOpenGL->renderTexture(ctx, tex, box, data);
+    }
+    inline void scissor(RenderContext& ctx, const CBox& box) {
+        Render::GL::g_pHyprOpenGL->scissor(ctx, box);
+    }
+    inline void noScissor(RenderContext& ctx) {
+        Render::GL::g_pHyprOpenGL->scissor(ctx, nullptr);
+    }
+}
+#else
+// TODO: temporary compat maintained for a few months after release then removed
+namespace compat {
+    struct RenderContext {};
+    using RectData    = Render::GL::CHyprOpenGLImpl::SRectRenderData;
+    using TextureData = Render::GL::CHyprOpenGLImpl::STextureRenderData;
+
+    inline PHLMONITOR monitor(RenderContext&) {
+        return g_pHyprRenderer->m_renderData.pMonitor.lock();
+    }
+    inline const CRegion& damage(RenderContext&) {
+        return g_pHyprRenderer->m_renderData.damage;
+    }
+    inline void addPass(RenderContext&, UP<IPassElement>&& element) {
+        g_pHyprRenderer->m_renderPass.add(std::move(element));
+    }
+    inline void dropPasses(const std::string& type) {
+        g_pHyprRenderer->m_renderPass.removeAllOfType(type);
+    }
+    inline void renderRect(RenderContext&, const CBox& box, const CHyprColor& color, RectData data) {
+        Render::GL::g_pHyprOpenGL->renderRect(box, color, data);
+    }
+    inline void renderTexture(RenderContext&, SP<Render::ITexture> tex, const CBox& box, TextureData data) {
+        Render::GL::g_pHyprOpenGL->renderTexture(tex, box, data);
+    }
+    inline void scissor(RenderContext&, const CBox& box) {
+        Render::GL::g_pHyprOpenGL->scissor(box);
+    }
+    inline void noScissor(RenderContext&) {
+        Render::GL::g_pHyprOpenGL->scissor(nullptr);
+    }
+}
+#endif

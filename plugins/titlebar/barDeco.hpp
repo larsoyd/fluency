@@ -31,7 +31,14 @@ class CHyprBar : public IHyprWindowDecoration {
 
     virtual void                       onPositioningReply(const SDecorationPositioningReply& reply);
 
-    virtual void                       draw(PHLMONITOR, float const& a, const compat::Presentation& presentation);
+    virtual void                       draw(compat::RenderContext& ctx, PHLMONITOR, float const& a, const compat::Presentation& presentation);
+#ifndef COMPAT_RENDER_CONTEXT
+    // TODO: temporary compat maintained for a few months after release then removed
+    virtual void draw(PHLMONITOR pMonitor, float const& a, const compat::Presentation& presentation) {
+        compat::RenderContext ctx;
+        draw(ctx, pMonitor, a, presentation);
+    }
+#endif
 #ifndef COMPAT_PRESENTABLE
     // TODO: temporary compat maintained for a few months after release then removed
     virtual void draw(PHLMONITOR pMonitor, float const& a) {
@@ -88,10 +95,10 @@ class CHyprBar : public IHyprWindowDecoration {
 
     Vector2D                   cursorRelativeToBar();
 
-    void                       renderPass(PHLMONITOR, float const& a, const compat::Presentation& presentation);
+    void                       renderPass(compat::RenderContext& ctx, PHLMONITOR, float const& a, const compat::Presentation& presentation);
     void                       renderBarTitle(const Vector2D& bufferSize, const float scale);
-    void renderBarButtons(CBox* barBox, const float scale, const float a);
-    void renderBarButtonsText(CBox* barBox, const float scale, const float a);
+    void renderBarButtons(compat::RenderContext& ctx, CBox* barBox, const float scale, const float a);
+    void renderBarButtonsText(compat::RenderContext& ctx, CBox* barBox, const float scale, const float a);
     void damageOnButtonHover();
 
     bool inputIsValid();
