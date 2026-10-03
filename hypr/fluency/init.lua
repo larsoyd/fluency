@@ -1,6 +1,7 @@
 require("fluency.animations")
 require("fluency.looks")
 require("fluency.alone")
+require("fluency.floating")
 require("fluency.cursor")
 require("fluency.xwayland")
 require("fluency.minimized")
